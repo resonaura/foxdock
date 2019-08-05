@@ -1,0 +1,29 @@
+﻿<Window x:Class="FoxDock.Dialog"
+         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:fw="clr-namespace:SourceChord.FluentWPF;assembly=FluentWPF"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:local="clr-namespace:FoxDock"
+        mc:Ignorable="d"
+        Title="Dialog" WindowState="Maximized" Height="260" Width="500" AllowsTransparency="True" Background="Transparent" Topmost="True" ShowInTaskbar="False" WindowStyle="None" WindowStartupLocation="CenterScreen">
+    <Grid Name="MainGrid" fw:PointerTracker.Enabled="True">
+        <Grid.Background>
+            <SolidColorBrush Color="#060606" Opacity=".6"></SolidColorBrush>
+        </Grid.Background>
+        <Border Name="DialogPanel" Background="#222" HorizontalAlignment="Center" VerticalAlignment="Center" Width="350" Height="150" CornerRadius="5">
+            <Border.Effect>
+                <DropShadowEffect Direction="271" BlurRadius="26" ShadowDepth="15" Opacity="0.5"/>
+            </Border.Effect>
+            <StackPanel VerticalAlignment="Center">
+                <Label Foreground="#ddd" HorizontalAlignment="Center" Name="DialogLabel">[dialog text]</Label>
+                <StackPanel Orientation="Horizontal" Margin="0, 30, 0, 0" HorizontalAlignment="Center">
+                    <Button Click="NoButton_Click" Name="NoButton" Cursor="Hand" Style="{StaticResource ButtonAccentRevealStyle}" Content="No" Foreground="White" Width="150" Height="30" Margin="5"></Button>
+                    <Button Click="YesButton_Click" Name="YesButton" Cursor="Hand" Style="{StaticResource ButtonAccentRevealStyle}" Content="Yes" Foreground="White" Width="150" Height="30" Margin="5"></Button>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        
+    </Grid>
+</Window>
