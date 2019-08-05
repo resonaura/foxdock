@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Color = System.Windows.Media.Color;
 
 namespace FoxDock
 {
@@ -134,7 +135,44 @@ namespace FoxDock
 
 
         }
-        
+
+        public string theme = String.Empty;
+        public static void ThemeAnimate(string theme, Border App_bg, Tooltip tooltip, Border WhiteOverlay, Border BlackOverlay, List<DockIcon> combined)
+        {
+            double black_opacity = 0;
+            double white_opacity = 0;
+
+            if(theme == "0")
+            {
+                black_opacity = 0.5;
+                white_opacity = 0;
+                tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+            }
+            if(theme == "1")
+            {
+                black_opacity = 0;
+                white_opacity = 0.5;
+                tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+            }
+            foreach(DockIcon ic in combined)
+            {
+                if (theme == "0")
+                {
+                    ic.Theme = "Dark";
+                }
+                if(theme == "1")
+                {
+                    ic.Theme = "Light";
+                }
+            }
+            DoubleAnimation op1 = Animations.OpacityAnimation(BlackOverlay.Opacity, black_opacity);
+            BlackOverlay.BeginAnimation(System.Windows.Controls.Image.OpacityProperty, op1);
+
+            DoubleAnimation op2 = Animations.OpacityAnimation(WhiteOverlay.Opacity, white_opacity);
+            WhiteOverlay.BeginAnimation(System.Windows.Controls.Image.OpacityProperty, op2);
+        }
         public static DoubleAnimation OpacityAnimation(double from, double to, double duration = 0.5)
         {
             DoubleAnimation anim = new DoubleAnimation

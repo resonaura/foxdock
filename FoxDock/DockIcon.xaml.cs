@@ -25,6 +25,7 @@ namespace FoxDock
         public static readonly DependencyProperty HighlightProperty = DependencyProperty.Register("Highlight", typeof(bool), typeof(DockIcon));
         public static readonly DependencyProperty SizeProperty = DependencyProperty.Register("Size", typeof(double), typeof(DockIcon));
         public static readonly DependencyProperty LabelProperty = DependencyProperty.Register("Label", typeof(string), typeof(DockIcon));
+        public static readonly DependencyProperty ThemeProperty = DependencyProperty.Register("Theme", typeof(string), typeof(DockIcon));
 
         public static readonly RoutedEvent ClickEvent = EventManager.RegisterRoutedEvent("Click", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(DockIcon));
 
@@ -52,6 +53,21 @@ namespace FoxDock
             get { return (BitmapSource)GetValue(SourceProperty); }
             set {
                 SetValue(SourceProperty, value);
+            }
+        }
+        public string Theme
+        {
+            get { return (string)GetValue(ThemeProperty); }
+            set {
+                if(value == "Dark")
+                {
+                    HighlightDot.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                } else if(value == "Light")
+                {
+                    HighlightDot.Background = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                }
+                
+                SetValue(ThemeProperty, value);
             }
         }
         public bool Highlight

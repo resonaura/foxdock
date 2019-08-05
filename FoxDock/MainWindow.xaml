@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:FoxDock"
         xmlns:controls="clr-namespace:BlurryControls.Controls;assembly=BlurryControls"
         mc:Ignorable="d"
-        Title="FoxDock"  MouseDown="Window_MouseDown"  MouseMove="Draggable_icon_MouseMove" Topmost="True" Activated="App_Activated" SizeChanged="Window_SizeChanged" MouseEnter="Window_MouseEnter" MouseLeave="Window_MouseLeave" DragEnter="Main_Drop_Enter" DragLeave="Window_DragLeave" Drop="Main_Drop" AllowDrop="True" Height="80" ShowInTaskbar="False" ResizeMode="NoResize" WindowStyle="None" AllowsTransparency="True" Background="Transparent" Icon="icon.ico" WindowStartupLocation="Manual" Top="-100" Name="DockMain">
+        Title="FoxDock"  MouseDown="Window_MouseDown" Activated="DockMain_Activated" MouseMove="Draggable_icon_MouseMove" Topmost="True" SizeChanged="Window_SizeChanged" MouseEnter="Window_MouseEnter" MouseLeave="Window_MouseLeave" DragEnter="Main_Drop_Enter" DragLeave="Window_DragLeave" Drop="Main_Drop" AllowDrop="True" Height="80" ShowInTaskbar="False" ResizeMode="NoResize" WindowStyle="None" AllowsTransparency="True" Background="Transparent" Icon="icon.ico" WindowStartupLocation="Manual" Top="-100" Name="DockMain">
 
     <Window.Resources>
         <Style TargetType="Image">
@@ -176,9 +176,9 @@
 
         <StackPanel Name="App_full_bg" Opacity="1">
             <Grid>
-                <Border CornerRadius="5, 5, 0, 0" Background="#fff" Name="WhiteOverlay" Opacity="0.05" Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
+                <Border CornerRadius="5, 5, 0, 0" Background="#fff" Name="WhiteOverlay" Opacity="0.0" Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
                 <Border CornerRadius="5, 5, 0, 0" Background="#000" Name="BlackOverlay" Opacity="0.1" Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
-                <Border CornerRadius="5, 5, 0, 0" Background="#000" Name="App_bg" Opacity="0.5"  Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
+                <Border CornerRadius="5, 5, 0, 0" Name="App_bg" Opacity="0.5"  Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
             </Grid>
             
         </StackPanel>

@@ -34,7 +34,7 @@ namespace FoxDock
 {
     public partial class MainWindow : Window
     {
-        
+
         public static Cache cache = new Cache();
         private System.Timers.Timer mainTimer = new System.Timers.Timer();
         private System.Timers.Timer mouseTimer = new System.Timers.Timer();
@@ -43,7 +43,7 @@ namespace FoxDock
         private Settings settings = new Settings();
         private Dialog dialog;
 
-        
+
         public static bool lock_slider = true;
         public WinStates winStates = new WinStates();
         public bool isInitedAS = false;
@@ -51,7 +51,6 @@ namespace FoxDock
         public MainWindow()
         {
             InitializeComponent();
-                
             WindowAPI.window = this;
 
             int taskbar = 0;
@@ -62,12 +61,12 @@ namespace FoxDock
             }
             taskbar_g = taskbar;
 
-            
+
 
             RoutedEventHandler handler = null;
             handler = (s, e) =>
             {
-                
+
 
                 PresentationSource source = PresentationSource.FromVisual(this);
 
@@ -92,20 +91,20 @@ namespace FoxDock
                 settings.Trans_bar.Value = cache.bg_trans;
                 settings.ScaleSlider.Value = cache.scaleFactor;
 
-                
+
                 size = (int)(defsize * cache.scaleFactor);
-                
+
                 double new_h = size + size / 2.5;
                 double new_top = System.Windows.SystemParameters.PrimaryScreenHeight - new_h;
 
                 animateHChange(new_top, new_h);
 
-                SetWallpaperAccentForUI(true);
+                AutoWallUI(true);
 
                 cache = CacheOperations.LoadCache(cache);
 
                 App_full_bg.Opacity = cache.bg_trans;
-                
+
 
                 settings.StartupToggle.IsChecked = cache.runAtStartup;
 
@@ -114,8 +113,8 @@ namespace FoxDock
             Loaded += handler;
 
             WindowAPI.MakeWin();
-            
-            SetWallpaperAccentForUI();
+
+            AutoWallUI();
 
             this.StateChanged += MainWindow_StateChanged;
 
@@ -148,13 +147,13 @@ namespace FoxDock
             SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
             SystemEvents.UserPreferenceChanging += SystemEvents_UserPreferenceChanging;
             cache = CacheOperations.LoadCache(cache);
-            if(!isInitedAS)
+            if (!isInitedAS)
             {
                 size = (int)(defsize * cache.scaleFactor);
                 settings.ScaleSlider.Value = cache.scaleFactor;
                 isInitedAS = true;
             }
-            
+
             if (cache.dock_apps_path != null)
             {
                 foreach (string path in cache.dock_apps_path)
@@ -164,7 +163,7 @@ namespace FoxDock
             }
             lock_slider = false;
 
-            
+
 
 
         }
@@ -176,7 +175,7 @@ namespace FoxDock
             //consoleLog(dpiY);
             if (cache.enableTopmost)
             {
-                
+
                 double top = System.Windows.SystemParameters.PrimaryScreenHeight - (size + size / 2.5) - taskbar_g;
 
                 if (y >= System.Windows.SystemParameters.PrimaryScreenHeight - 20)
@@ -187,7 +186,7 @@ namespace FoxDock
                 }
                 else
                 {
-                    if(y < System.Windows.SystemParameters.PrimaryScreenHeight - (System.Windows.SystemParameters.PrimaryScreenHeight - top))
+                    if (y < System.Windows.SystemParameters.PrimaryScreenHeight - (System.Windows.SystemParameters.PrimaryScreenHeight - top))
                     {
                         if (WindowAPI.IsOnDesktop())
                         {
@@ -204,16 +203,16 @@ namespace FoxDock
 
                         }
                     }
-                    
+
                 }
             }
-            
-            
+
+
         }
 
         private void MainWindow_StateChanged(object sender, EventArgs e)
         {
-            if(!cache.enableTopmost)
+            if (!cache.enableTopmost)
                 WindowAPI.SendToBack(this);
         }
 
@@ -225,14 +224,16 @@ namespace FoxDock
         private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
         {
             //Debug.WriteLine(1);
-            //SetWallpaperAccentForUI();
+            //AutoWallUI();
         }
 
         // required constants.
         public const int SPI_SETDESKWALLPAPER = 20;
         public const int WM_SETTINGCHANGE = 0x001A;
         public const int WM_SYSCOMMAND = 0x0112;
+        public const int WM_THEMECHANGED = 0x031A;
         public const int SC_MINIMIZE = 0xF020;
+        public const int WM_WININICHANGE = 0x001A;
 
         // let's override WndProc...
         protected override void OnSourceInitialized(EventArgs e)
@@ -247,12 +248,9 @@ namespace FoxDock
             // if it's WM_SETTINGCHANGE
             if (msg == WM_SETTINGCHANGE)
             {
-                if (wParam.ToInt32() == SPI_SETDESKWALLPAPER)
-                {
-                    // do something here...
-                    SetWallpaperAccentForUI();
-                }
+                AutoWallUI();
             }
+
 
 
             return IntPtr.Zero;
@@ -260,7 +258,7 @@ namespace FoxDock
 
         private void WallTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            SetWallpaperAccentForUI();
+            AutoWallUI();
         }
 
         private void addIconToPanel(string path)
@@ -345,10 +343,10 @@ namespace FoxDock
             Img_MouseMoveDo(sender);
         }
         private bool breakHintMove = false;
-        private string lastWall = string.Empty;
+        private string lastTheme = string.Empty;
         private System.Drawing.Color ldominant = new System.Drawing.Color();
 
-        
+
         private void ifAppRunned(DockIcon image)
         {
             if (!move_lock)
@@ -438,12 +436,13 @@ namespace FoxDock
                             if (already_runned)
                             {
                                 if (i < MainPanel.Children.Count && i >= 0) ifAppRunned(MainPanel.Children[i] as DockIcon);
-                            } else
+                            }
+                            else
                             {
                                 if (i < MainPanel.Children.Count && i >= 0) ifNotAppRunned(MainPanel.Children[i] as DockIcon);
                             }
                         });
-                        
+
                     }
                     catch (Exception ex)
                     {
@@ -462,7 +461,7 @@ namespace FoxDock
 
         public void ShowDock()
         {
-            
+
             double top = System.Windows.SystemParameters.PrimaryScreenHeight - this.Height - taskbar_g;
             DoubleAnimation myDoubleAnimation = new DoubleAnimation
             {
@@ -470,7 +469,7 @@ namespace FoxDock
                 To = top,
                 Duration = TimeSpan.FromSeconds(0.5),
                 EasingFunction = new PowerEase(),
-                    
+
             };
             myDoubleAnimation.Completed += (x, y) =>
             {
@@ -480,8 +479,8 @@ namespace FoxDock
             Timeline.SetDesiredFrameRate(myDoubleAnimation, 60);
             this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
             this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(this.Opacity, 1));
-            
-            
+
+
         }
         public void HideDock()
         {
@@ -501,7 +500,7 @@ namespace FoxDock
         }
         private void MainTimer_Tick(object sender, EventArgs e)
         {
-            
+
             int taskbar = 0;
             WindowAPI.TaskBarLocation location = WindowAPI.GetTaskBarLocation();
             if (location == WindowAPI.TaskBarLocation.BOTTOM)
@@ -542,85 +541,48 @@ namespace FoxDock
             }
 
         }
-        
+
         public void AutoTooltipAndDockPosition()
         {
-            if(!startup_animation_completed) return;
+            if (!startup_animation_completed) return;
             double top = System.Windows.SystemParameters.PrimaryScreenHeight - this.Height - taskbar_g;
             //consoleLog(taskbar_g);
             tooltip.Top = top - tooltip.Height;
-            
+
             DoubleAnimation fastda = new DoubleAnimation
             {
                 From = this.Top,
                 To = top,
                 Duration = TimeSpan.FromMilliseconds(0)
             };
-            if(!dockHidden)
+            if (!dockHidden)
                 this.BeginAnimation(TopProperty, fastda);
         }
-        public void SetWallpaperAccentForUI(bool upd = false)
+        public void AutoWallUI(bool upd = false)
         {
             Task.Factory.StartNew(() =>
             {
-                var wpReg = Registry.CurrentUser.OpenSubKey("Control Panel\\Desktop", false);
-                var wallpaperPath = wpReg.GetValue("WallPaper").ToString();
+                var wpReg = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", false);
+                var theme = wpReg.GetValue("SystemUsesLightTheme").ToString();
                 wpReg.Close();
 
-                if (wallpaperPath != string.Empty)
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    Bitmap wall = new Bitmap(wallpaperPath);
-                    Bitmap zipwall = new Bitmap(wall, 300, 200);
-                    System.Drawing.Color dominant = Animations.GetDominantColor(zipwall);
-
-                    if (wallpaperPath != lastWall || ldominant != dominant || upd)
+                    List<DockIcon> combined = new List<DockIcon>();
+                    foreach (DockIcon di in MainPanel.Children)
                     {
-                        Application.Current.Dispatcher.Invoke(() => Animations.DominantBGAnimate(dominant, App_bg, tooltip, WhiteOverlay, BlackOverlay));
-
-                        ldominant = dominant;
-                        lastWall = wallpaperPath;
+                        combined.Add(di);
                     }
-                    lastWall = wallpaperPath;
-                }
+                    foreach (DockIcon di in AIcons.Children)
+                    {
+                        combined.Add(di);
+                    }
+                    Animations.ThemeAnimate(theme, App_bg, tooltip, WhiteOverlay, BlackOverlay, combined);
+                });
             });
         }
-        
-        private void App_Activated(object sender, EventArgs e)
-        {
-            if (!cache.enableTopmost)
-                WindowAPI.SendToBack(this);
-            var wpReg = Registry.CurrentUser.OpenSubKey("Control Panel\\Desktop", false);
-            var wallpaperPath = wpReg.GetValue("WallPaper").ToString();
-            wpReg.Close();
-
-            Bitmap wall;
-            try
-            {
-                wall = new Bitmap(wallpaperPath);
-            }
-            catch
-            {
-                return;
-            }
-            
-            Bitmap zipwall = new Bitmap(wall, 300, 200);
-            System.Drawing.Color dominant = Animations.GetDominantColor(zipwall);
-
-            if (wallpaperPath != lastWall)
-            {
-                BrushAnimation brushAnimation = new BrushAnimation
-                {
-                    From = App_bg.Background,
-                    To = new SolidColorBrush(System.Windows.Media.Color.FromArgb(100, dominant.R, dominant.G, dominant.B)),
-                    Duration = TimeSpan.FromSeconds(0.5)
-                };
-                Timeline.SetDesiredFrameRate(brushAnimation, 30);
-                App_bg.BeginAnimation(Border.BackgroundProperty, brushAnimation);
-                lastWall = wallpaperPath;
-            }
 
 
-        }
         public void consoleLog(object cdd)
         {
             Debug.WriteLine(cdd);
@@ -684,7 +646,7 @@ namespace FoxDock
                 }
             }
         }
-        
+
 
         private bool apprunned = false;
         /// <summary>
@@ -757,7 +719,8 @@ namespace FoxDock
             if (IsLink(path))
             {
                 return GetShortcutTarget(path);
-            } else
+            }
+            else
             {
                 return path;
             }
@@ -799,21 +762,22 @@ namespace FoxDock
                             int real_windows = 0;
 
                             var allChildWindows = WindowAPI.EnumerateProcessWindowHandles(process.First().Id);
-                            
+
                             for (int i = 0; i < proc_c; i++)
                             {
                                 Process proc = process[i];
-                                
-                                
+
+
 
                                 if (proc.MainWindowHandle == IntPtr.Zero || app_name == "explorer")
                                 {
-                                    if(i == proc_c-1 && real_windows == 0 || app_name == "explorer")
+                                    if (i == proc_c - 1 && real_windows == 0 || app_name == "explorer")
                                         System.Diagnostics.Process.Start(cache.dock_apps_path[current_index]);
-                                } else
+                                }
+                                else
                                 {
                                     real_windows++;
-                                    
+
                                     if (WindowAPI.IsIconic(proc.MainWindowHandle))
                                     {
                                         WindowAPI.SetForegroundWindow(proc.MainWindowHandle);
@@ -822,12 +786,12 @@ namespace FoxDock
                                     }
                                     else
                                     {
-                                        
+
                                         WindowAPI.ShowWindowAsync(proc.MainWindowHandle, WindowAPI.SW_MINIMIZE);
 
                                     }
                                 }
-                               // consoleLog(real_windows);
+                                // consoleLog(real_windows);
 
 
                             }
@@ -835,7 +799,8 @@ namespace FoxDock
 
 
 
-                        } else
+                        }
+                        else
                         {
                             System.Diagnostics.Process.Start(cache.dock_apps_path[current_index]);
                         }
@@ -845,7 +810,8 @@ namespace FoxDock
                     {
                         Debug.WriteLine(ex.Message + " beda #8");
                     }
-                } else
+                }
+                else
                 {
 
 
@@ -886,18 +852,20 @@ namespace FoxDock
             }
             context_icon = img;
         }
-        public class WinStates {
+        public class WinStates
+        {
             public List<string> names = new List<string>();
             public List<int> states = new List<int>();
 
             public void Set(string name, int state)
             {
-                if(!names.Contains(name))
+                if (!names.Contains(name))
                 {
                     names.Add(name);
                     states.Add(state);
 
-                } else
+                }
+                else
                 {
                     states[names.IndexOf(name)] = state;
                 }
@@ -905,16 +873,17 @@ namespace FoxDock
             public int Get(string name)
             {
                 int index = names.IndexOf(name);
-                if(index != -1)
+                if (index != -1)
                 {
                     return states[index];
-                } else
+                }
+                else
                 {
                     return 1;
                 }
             }
         }
-        
+
         private bool isDown;
         private UIElement down_icon;
         private UIElement context_icon;
@@ -923,7 +892,7 @@ namespace FoxDock
             apprunned = false;
             if (e.LeftButton == MouseButtonState.Pressed)
                 isDown = true;
-            
+
 
             DockIcon img = sender as DockIcon;
 
@@ -931,8 +900,8 @@ namespace FoxDock
             {
                 SetContextIcon(img);
             }
-                
-            
+
+
 
             down_icon = img;
 
@@ -949,9 +918,9 @@ namespace FoxDock
 
         }
         public static int defsize = 56;
-        
+
         public int size = (int)(defsize * cache.scaleFactor);
-        
+
 
         private void Img_MouseLeaveDo(object sender)
         {
@@ -1010,18 +979,18 @@ namespace FoxDock
                 To = height,
                 Duration = TimeSpan.FromSeconds(0)
             };
-            if(startup_animation_completed)
+            if (startup_animation_completed)
             {
                 this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
             }
-            
+
             this.BeginAnimation(Window.HeightProperty, myDoubleAnimation2);
-            
+
         }
         private double hint_width = 0;
         private void animateHint(double left_pos, double width, int index, double top_pos, int opacity, double dur = 0.1, bool breakdis = false)
         {
-            
+
             DoubleAnimation myDoubleAnimation2 = new DoubleAnimation
             {
                 From = tooltip.app_hint.Opacity,
@@ -1037,10 +1006,10 @@ namespace FoxDock
                 Duration = TimeSpan.FromSeconds(dur),
                 EasingFunction = new SineEase()
             };
-            
+
             thicknessAnimation.Completed += (x, y) =>
             {
-                if(breakdis)
+                if (breakdis)
                 {
                     breakHintMove = false;
                 }
@@ -1049,7 +1018,7 @@ namespace FoxDock
 
             tooltip.app_hint.BeginAnimation(Window.MarginProperty, thicknessAnimation);
             //tooltip.app_hint.BeginAnimation(Window.OpacityProperty, myDoubleAnimation2);
-            
+
         }
         private double oldX = 0;
         private double mouseSpeed = 0;
@@ -1102,17 +1071,18 @@ namespace FoxDock
                 if (current_index != -1)
                 {
                     current_label = cache.dock_apps[current_index];
-                } else
+                }
+                else
                 {
                     current_label = img.Label;
                 }
-                
 
-                if((string)tooltip.app_hint.Content != current_label)
+
+                if ((string)tooltip.app_hint.Content != current_label)
                 {
                     int speed = 0;
                     speed = System.Windows.Forms.SystemInformation.MouseSpeed;
-                    
+
                     bool break_an = false;
                     if (mouseSpeed > 13) break_an = true;
                     //Debug.WriteLine(mouseSpeed);
@@ -1125,7 +1095,7 @@ namespace FoxDock
                         Duration = TimeSpan.FromMilliseconds(100),
                         EasingFunction = new SineEase()
                     };
-                    if(!break_an)
+                    if (!break_an)
                         tooltip.app_hint.BeginAnimation(OpacityProperty, opacityAnimation);
 
                     DoubleAnimation scaleAnimation = new DoubleAnimation
@@ -1150,9 +1120,9 @@ namespace FoxDock
                     //if (!break_an)
                     //    tooltip.hintTrans.BeginAnimation(TranslateTransform.YProperty, transYAnimation);
 
-                    
+
                 }
-                
+
                 tooltip.app_hint.Visibility = Visibility.Visible;
 
                 if (current_index != -1)
@@ -1197,7 +1167,7 @@ namespace FoxDock
                 double real_hint_width = label.ActualWidth;
 
                 DockIcon uIElement = img;
-                
+
                 var element_Visual_Relative = uIElement.TransformToVisual((Visual)Content);
 
                 System.Windows.Point offset = element_Visual_Relative.Transform(new System.Windows.Point(0, 0));
@@ -1230,7 +1200,7 @@ namespace FoxDock
                 isHovered = true;
                 Application.Current.Dispatcher.Invoke(() => Img_MouseEnterDo(sender));
             });
-            
+
         }
         private bool isDrop = false;
         private void Main_Drop_Enter(object sender, DragEventArgs e)
@@ -1325,9 +1295,9 @@ namespace FoxDock
                     combined.Add(di);
                 }
 
-                
 
-                foreach(DockIcon img_cur in combined)
+
+                foreach (DockIcon img_cur in combined)
                 {
 
                     if (img_cur != null)
@@ -1365,8 +1335,8 @@ namespace FoxDock
                 RemoveFromDock(dimg);
             }
             tooltip.app_hint.Content = string.Empty;
-            
-            
+
+
             //tooltip.app_hint.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0, 25, 25, 25));
             animateHint(tooltip.app_hint.Margin.Left - 100, tooltip.app_hint.Width, -1, 0, 0);
             tooltip.app_hint.Visibility = Visibility.Hidden;
@@ -1388,7 +1358,7 @@ namespace FoxDock
 
             }
 
-            
+
         }
         public void UpdateWidthAndHighlight()
         {
@@ -1452,7 +1422,7 @@ namespace FoxDock
                                     System.Threading.Thread.Sleep(300);
                                     Application.Current.Dispatcher.Invoke(() => UpdateWidthAndHighlight());
                                 });
-                                
+
                             }
                             else
                             {
@@ -1480,22 +1450,22 @@ namespace FoxDock
                 {
                     Debug.WriteLine("Пздц");
                 }
-                
+
             }
-            
+
         }
         private void Window_DragLeave(object sender, DragEventArgs e)
         {
             isDrop = false;
         }
 
-        
 
-        
+
+
 
         private void Window_MouseEnter(object sender, MouseEventArgs e)
         {
-            
+
         }
         private bool startup_animation_completed = false;
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -1508,12 +1478,13 @@ namespace FoxDock
 
             double new_h = size + size / 2.5;
             double top = System.Windows.SystemParameters.PrimaryScreenHeight - new_h - taskbar_g;
-            if(!startup_animation_completed) {
+            if (!startup_animation_completed)
+            {
                 cache = CacheOperations.LoadCache(cache);
                 size = (int)(defsize * cache.scaleFactor);
                 //consoleLog(size + " !!! " + cache.scaleFactor);
 
-                
+
                 this.Height = new_h;
                 DoubleAnimation myDoubleAnimation = new DoubleAnimation
                 {
@@ -1521,13 +1492,14 @@ namespace FoxDock
                     To = top,
                     Duration = TimeSpan.FromSeconds(0.5),
                     EasingFunction = new PowerEase(),
-                    
+
                 };
                 Timeline.SetDesiredFrameRate(myDoubleAnimation, 60);
                 myDoubleAnimation.Completed += MyDoubleAnimation_Completed;
                 this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
                 this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(0, 1));
-            } else
+            }
+            else
             {
                 DoubleAnimation fastda = new DoubleAnimation
                 {
@@ -1537,7 +1509,7 @@ namespace FoxDock
                 };
                 this.BeginAnimation(TopProperty, fastda);
             }
-            
+
             tooltip.Top = top - tooltip.Height;
 
         }
@@ -1585,7 +1557,7 @@ namespace FoxDock
                 settings.Toggle_Loaded_Do(settings.DisableBlurToggle);
                 settings.Toggle_Loaded_Do(settings.StarDustEnableToggle);
             }
-           
+
         }
 
         private void RemoveFromDockButton_Click(object sender, RoutedEventArgs e)
@@ -1623,7 +1595,7 @@ namespace FoxDock
                 System.Windows.Forms.Application.Restart();
                 System.Windows.Application.Current.Shutdown();
             };
-            
+
             tooltip.Close();
             settings.Close();
             this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
@@ -1634,7 +1606,7 @@ namespace FoxDock
         private bool AbsIconDrag = false;
         private void Draggable_icon_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if(e.LeftButton == MouseButtonState.Pressed)
+            if (e.LeftButton == MouseButtonState.Pressed)
                 AbsIconDrag = true;
             move_lock = true;
         }
@@ -1649,7 +1621,8 @@ namespace FoxDock
             if (result != null)
             {
                 return true;
-            } else
+            }
+            else
             {
                 return false;
             }
@@ -1665,10 +1638,11 @@ namespace FoxDock
 
             foreach (DockIcon img in images)
             {
-                if(i >= ditem_index)
+                if (i >= ditem_index)
                 {
                     right.Add(img);
-                } else
+                }
+                else
                 {
                     left.Add(img);
                 }
@@ -1725,7 +1699,7 @@ namespace FoxDock
                     allElements.Add(ci);
                     oAllElements.Add(ci);
                 }
-                    
+
             }
             bool lock_cycle = false;
             foreach (DockIcon cur in allElements)
@@ -1737,8 +1711,8 @@ namespace FoxDock
 
                     if (cur_index != lastMindex)
                     {
-                        
-                        if(cur_index != -1)
+
+                        if (cur_index != -1)
                         {
                             oAllElements = MoveImg(down_index, cur_index, oAllElements);
                             cache.dock_apps = MoveString(down_index, cur_index, cache.dock_apps);
@@ -1751,7 +1725,7 @@ namespace FoxDock
                             {
                                 MainPanel.Children.Remove(img);
                             }
-                            
+
                             foreach (DockIcon img in oAllElements)
                             {
                                 MainPanel.Children.Add(img);
@@ -1804,11 +1778,11 @@ namespace FoxDock
         private void fishEyeForIcons(double x)
         {
             List<DockIcon> combined = new List<DockIcon>();
-            foreach(DockIcon di in MainPanel.Children)
+            foreach (DockIcon di in MainPanel.Children)
             {
                 combined.Add(di);
             }
-            foreach(DockIcon di in AIcons.Children)
+            foreach (DockIcon di in AIcons.Children)
             {
                 combined.Add(di);
             }
@@ -1816,20 +1790,21 @@ namespace FoxDock
             if (width < 300) width = 300;
             double[] big_array = new double[(int)width];
 
-            
+
             int end = 300;
-            for(int i = 0; i < end; i++)
+            for (int i = 0; i < end; i++)
             {
                 double m_val = 0;
-                if(i < end/2)
+                if (i < end / 2)
                 {
                     m_val = i;
-                } else
+                }
+                else
                 {
                     m_val = end - (i);
                 }
 
-                int index = (int)(i + width * x-end/2);
+                int index = (int)(i + width * x - end / 2);
 
                 if (index < width && index >= 0)
                 {
@@ -1838,7 +1813,7 @@ namespace FoxDock
             }
 
             double[] single_array = new double[(int)combined.Count];
-            
+
             if (!panelIconsAnimating)
             {
                 for (int i = 0; i < combined.Count; i++)
@@ -1851,13 +1826,13 @@ namespace FoxDock
 
                     DockIcon image = combined[i] as DockIcon;
                     double newsize = size * (big_array[m] / 50 / 5 + 1);
-                    
-                    if(newsize >= fe_max_size-1)
+
+                    if (newsize >= fe_max_size - 1)
                     {
                         fe_max_size = newsize;
-                        
 
-                        if(!isHovered && fe_max_size_el != i)
+
+                        if (!isHovered && fe_max_size_el != i)
                         {
                             Img_MouseEnterDo(combined[i]);
                             if (i < MainPanel.Children.Count)
@@ -1865,12 +1840,13 @@ namespace FoxDock
                                 SetContextIcon((DockIcon)MainPanel.Children[i]);
                                 context_icon = MainPanel.Children[i];
                             }
-                            
-                            
+
+
                             fe_max_size_el = i;
-                        } else
+                        }
+                        else
                         {
-                            if(!isHovered)
+                            if (!isHovered)
                             {
                                 Img_MouseMoveDo(combined[fe_max_size_el]);
                                 if (i < MainPanel.Children.Count)
@@ -1897,11 +1873,11 @@ namespace FoxDock
                             panelIconsAnimating = false;
 
                         };
-                        if(image.Size != newsize)
+                        if (image.Size != newsize)
                         {
                             image.BeginAnimation(DockIcon.SizeProperty, doubleAnimation);
                         }
-                        
+
                         panelIconsAnimating = true;
                     }
                     else
@@ -1913,14 +1889,14 @@ namespace FoxDock
                             Duration = TimeSpan.FromMilliseconds(0),
                             EasingFunction = new SineEase()
                         };
-                        if(image.Size != newsize)
+                        if (image.Size != newsize)
                         {
                             image.BeginAnimation(DockIcon.SizeProperty, doubleAnimation);
                         }
                     }
                 }
-                
-                
+
+
             }
 
             //consoleLog(String.Join(", ", single_array));
@@ -1935,19 +1911,19 @@ namespace FoxDock
             fishEyeForIcons(gl_x / DockMain.Width);
             if (isDown || AbsIconDrag)
             {
-                
-                
+
+
                 DockIcon dicon = down_icon as DockIcon;
-                
+
                 Draggable_icon.Source = dicon.Source;
 
 
-                
+
 
                 Draggable_icon.Margin = new Thickness(x, y, 0, 0);
 
                 MainPanel.Opacity = .8;
-                if(Draggable_icon_an)
+                if (Draggable_icon_an)
                 {
                     DoubleAnimation myDoubleAnimation1 = new DoubleAnimation
                     {
@@ -1960,8 +1936,9 @@ namespace FoxDock
                     Timeline.SetDesiredFrameRate(myDoubleAnimation1, 30);
                     Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
                 }
-                
-            } else
+
+            }
+            else
             {
                 DoubleAnimation myDoubleAnimation1 = new DoubleAnimation
                 {
@@ -1984,20 +1961,20 @@ namespace FoxDock
                     {
                         consoleLog("Tooltip show error");
                     }
-                    
+
                 };
                 Timeline.SetDesiredFrameRate(myDoubleAnimation1, 30);
                 Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
-                
+
             }
-            
+
         }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if(e.RightButton == MouseButtonState.Pressed)
+            if (e.RightButton == MouseButtonState.Pressed)
             {
-                if(context_icon == null)
+                if (context_icon == null)
                 {
                     RemoveFromDockButton.Opacity = .5;
                     RemoveFromDockButton.IsEnabled = false;
@@ -2057,8 +2034,14 @@ namespace FoxDock
         private void DockIcon_Click(object sender, RoutedEventArgs e)
         {
             DockIcon icon = sender as DockIcon;
-            
 
+
+        }
+
+        private void DockMain_Activated(object sender, EventArgs e)
+        {
+            if (!cache.enableTopmost)
+                WindowAPI.SendToBack(this);
         }
     }
 }
