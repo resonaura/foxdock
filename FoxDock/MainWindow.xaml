@@ -177,7 +177,7 @@
         <StackPanel Name="App_full_bg" Opacity="1">
             <Grid>
                 <Border CornerRadius="5, 5, 0, 0" Background="#fff" Name="WhiteOverlay" Opacity="0.05" Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
-                <Border CornerRadius="5, 5, 0, 0" Background="#000" Name="BlackOverlay" Opacity="0.05" Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
+                <Border CornerRadius="5, 5, 0, 0" Background="#000" Name="BlackOverlay" Opacity="0.1" Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
                 <Border CornerRadius="5, 5, 0, 0" Background="#000" Name="App_bg" Opacity="0.5"  Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
             </Grid>
             

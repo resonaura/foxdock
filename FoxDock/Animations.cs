@@ -44,6 +44,7 @@ namespace FoxDock
 
             return System.Drawing.Color.FromArgb(r, g, b);
         }
+        
         public static void DominantBGAnimate(System.Drawing.Color dominant, Border App_bg, Tooltip tooltip, Border WhiteOverlay, Border BlackOverlay)
         {
             try
@@ -98,7 +99,7 @@ namespace FoxDock
                 BrushAnimation brushAnimation3 = new BrushAnimation
                 {
                     From = App_bg.Background,
-                    To = new SolidColorBrush(System.Windows.Media.Color.FromArgb(250, dominant.R, dominant.G, dominant.B)),
+                    To = new SolidColorBrush(System.Windows.Media.Color.FromArgb(30, dominant.R, dominant.G, dominant.B)),
                     Duration = TimeSpan.FromSeconds(0.5)
                 };
                 Timeline.SetDesiredFrameRate(brushAnimation3, 60);
@@ -109,8 +110,13 @@ namespace FoxDock
 
                 double white_per = 1 - black_per;
 
-                double black_opacity = 0.5 * white_per;
-                double white_opacity = 0.5 * black_per;
+                double black_opacity = 0.7 * white_per;
+                double white_opacity = 0.7 * black_per;
+
+                /*var uiSettings = new System.Windows.UI.ViewManagement.UISettings();
+                var color = uiSettings.getColorValue(
+                Windows.UI.ViewManagement.UIColorType.background
+                );*/
 
                 DoubleAnimation op1 = Animations.OpacityAnimation(BlackOverlay.Opacity, black_opacity);
                 BlackOverlay.BeginAnimation(System.Windows.Controls.Image.OpacityProperty, op1);
@@ -128,6 +134,7 @@ namespace FoxDock
 
 
         }
+        
         public static DoubleAnimation OpacityAnimation(double from, double to, double duration = 0.5)
         {
             DoubleAnimation anim = new DoubleAnimation
