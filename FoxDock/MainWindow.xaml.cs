@@ -53,6 +53,8 @@ namespace FoxDock
             InitializeComponent();
             WindowAPI.window = this;
 
+
+
             int taskbar = 0;
             WindowAPI.TaskBarLocation location = WindowAPI.GetTaskBarLocation();
             if (location == WindowAPI.TaskBarLocation.BOTTOM)
@@ -100,6 +102,7 @@ namespace FoxDock
                 animateHChange(new_top, new_h);
 
                 AutoWallUI(true);
+                DockLockUpdateUI();
 
                 cache = CacheOperations.LoadCache(cache);
 
@@ -166,6 +169,19 @@ namespace FoxDock
 
 
 
+        }
+        public void DockLockUpdateUI()
+        {
+            if (cache.dockLock)
+            {
+                LockDockButton.Header = "Unlock Dock";
+                LockDockIcon.Text = "\uE785";
+            }
+            else
+            {
+                LockDockButton.Header = "Lock Dock";
+                LockDockIcon.Text = "\uE72E";
+            }
         }
         public double dpiY = 1;
         private void MouseTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -617,13 +633,13 @@ namespace FoxDock
 
         private void Main_Drop(object sender, DragEventArgs e)
         {
+            if (cache.dockLock) return;
             isDrop = false;
-            consoleLog(e.Data.GetFormats()[0]);
+
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 try
                 {
-                    move_lock = true;
                     string[] s = (string[])e.Data.GetData(DataFormats.FileDrop);
 
                     foreach (string fn in s)
@@ -902,18 +918,21 @@ namespace FoxDock
             }
 
 
-
-            down_icon = img;
-
-            DoubleAnimation myDoubleAnimation = new DoubleAnimation
+            if (!cache.dockLock)
             {
-                From = img.Opacity,
-                To = 0.5,
-                Duration = TimeSpan.FromSeconds(0.2),
-                EasingFunction = new SineEase()
-            };
-            Timeline.SetDesiredFrameRate(myDoubleAnimation, 30);
-            img.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation);
+                down_icon = img;
+
+                DoubleAnimation myDoubleAnimation = new DoubleAnimation
+                {
+                    From = img.Opacity,
+                    To = 0.5,
+                    Duration = TimeSpan.FromSeconds(0.2),
+                    EasingFunction = new SineEase()
+                };
+                Timeline.SetDesiredFrameRate(myDoubleAnimation, 30);
+                img.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation);
+            }
+
 
 
         }
@@ -1207,8 +1226,15 @@ namespace FoxDock
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                e.Effects = DragDropEffects.Copy;
-                isDrop = true;
+                if(!cache.dockLock)
+                {
+                    e.Effects = DragDropEffects.Copy;
+                    isDrop = true;
+                } else
+                {
+                    e.Effects = DragDropEffects.None;
+                }
+                
             }
         }
         private void ExitDock()
@@ -1329,7 +1355,7 @@ namespace FoxDock
 
                 }
             }
-            if (down_icon != null && isDown && !apprunned)
+            if (down_icon != null && isDown && !apprunned && !cache.dockLock)
             {
                 DockIcon dimg = down_icon as DockIcon;
                 RemoveFromDock(dimg);
@@ -1362,7 +1388,21 @@ namespace FoxDock
         }
         public void UpdateWidthAndHighlight()
         {
-            double new_width = (MainPanel.Children.Count + AIcons.Children.Count) * (size + 10) + size / 30 + 15 + size / 2;
+            int summary_icons_count = (MainPanel.Children.Count + AIcons.Children.Count);
+
+            double summary_icons_width = summary_icons_count * size;
+            double summary_icons_margin = summary_icons_count * 10;
+            double separator_size_and_margin = 2 + 20;
+            double free_space = size / 2;
+
+            double addt = 0;
+
+            if (size < 56) addt = size / 2;
+            if (size < 53) addt = size;
+
+            consoleLog(size);
+
+            double new_width = summary_icons_width + summary_icons_margin + separator_size_and_margin + free_space + addt;
             //consoleLog(new_width);
             if (new_width < 100) new_width = 100;
             this.Width = new_width;
@@ -1909,64 +1949,73 @@ namespace FoxDock
             double x = gl_x - Draggable_icon.Width / 2;
             double y = e.GetPosition(DockMain).Y - Draggable_icon.Height / 2;
             fishEyeForIcons(gl_x / DockMain.Width);
-            if (isDown || AbsIconDrag)
+
+
+            if ((isDown || AbsIconDrag))
             {
 
-
-                DockIcon dicon = down_icon as DockIcon;
-
-                Draggable_icon.Source = dicon.Source;
-
-
-
-
-                Draggable_icon.Margin = new Thickness(x, y, 0, 0);
-
-                MainPanel.Opacity = .8;
-                if (Draggable_icon_an)
+                if (!cache.dockLock)
                 {
-                    DoubleAnimation myDoubleAnimation1 = new DoubleAnimation
+                    DockIcon dicon = down_icon as DockIcon;
+
+                    Draggable_icon.Source = dicon.Source;
+
+
+
+
+                    Draggable_icon.Margin = new Thickness(x, y, 0, 0);
+
+                    MainPanel.Opacity = .8;
+                    if (Draggable_icon_an)
                     {
-                        From = Draggable_icon.Opacity,
-                        To = 1,
-                        Duration = TimeSpan.FromSeconds(0.1),
-                        EasingFunction = new SineEase()
-                    };
-                    Draggable_icon_an = false;
-                    Timeline.SetDesiredFrameRate(myDoubleAnimation1, 30);
-                    Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
+                        DoubleAnimation myDoubleAnimation1 = new DoubleAnimation
+                        {
+                            From = Draggable_icon.Opacity,
+                            To = 1,
+                            Duration = TimeSpan.FromSeconds(0.1),
+                            EasingFunction = new SineEase()
+                        };
+                        Draggable_icon_an = false;
+                        Timeline.SetDesiredFrameRate(myDoubleAnimation1, 30);
+                        Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
+                    }
                 }
 
             }
             else
             {
-                DoubleAnimation myDoubleAnimation1 = new DoubleAnimation
+                if (!cache.dockLock)
                 {
-                    From = Draggable_icon.Opacity,
-                    To = 0,
-                    Duration = TimeSpan.FromSeconds(0.1),
-                    EasingFunction = new SineEase()
-                };
-                myDoubleAnimation1.Completed += (a, es) =>
-                {
-                    Draggable_icon.Source = null;
-                    Draggable_icon_an = true;
-
-                    try
+                    DoubleAnimation myDoubleAnimation1 = new DoubleAnimation
                     {
-                        if (!lockSizeChange)
-                            tooltip.Show();
-                    }
-                    catch
+                        From = Draggable_icon.Opacity,
+                        To = 0,
+                        Duration = TimeSpan.FromSeconds(0.1),
+                        EasingFunction = new SineEase()
+                    };
+                    myDoubleAnimation1.Completed += (a, es) =>
                     {
-                        consoleLog("Tooltip show error");
-                    }
+                        Draggable_icon.Source = null;
+                        Draggable_icon_an = true;
 
-                };
-                Timeline.SetDesiredFrameRate(myDoubleAnimation1, 30);
-                Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
+
+
+                    };
+                    Timeline.SetDesiredFrameRate(myDoubleAnimation1, 30);
+                    Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
+                }
 
             }
+            try
+            {
+                if (!lockSizeChange)
+                    tooltip.Show();
+            }
+            catch
+            {
+                consoleLog("Tooltip show error");
+            }
+
 
         }
 
@@ -2042,6 +2091,19 @@ namespace FoxDock
         {
             if (!cache.enableTopmost)
                 WindowAPI.SendToBack(this);
+        }
+
+        private void MenuItem_Click_1(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void LockDockButton_Click(object sender, RoutedEventArgs e)
+        {
+            cache = CacheOperations.LoadCache(cache);
+            cache.dockLock = !cache.dockLock;
+            DockLockUpdateUI();
+            CacheOperations.StoreCache(cache);
         }
     }
 }

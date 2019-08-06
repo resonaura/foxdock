@@ -17,5 +17,6 @@ namespace FoxDock
         public double scaleFactor = 1;
         public double bg_trans = 1;
         public bool dockAutoHide = true;
+        public bool dockLock = false;
     }
 }

@@ -100,7 +100,7 @@
                     <Setter Property="Background" TargetName="templateRoot">
                         <Setter.Value>
                             <SolidColorBrush Color="White" Opacity=".1">
-                                
+
                             </SolidColorBrush>
                         </Setter.Value>
                     </Setter>
@@ -126,7 +126,7 @@
             <ContextMenu Margin="20" Style="{StaticResource DarkContextMenu}" Name="MainContextMenu" Background="#222">
                 <ContextMenu.Effect>
                     <DropShadowEffect Direction="271" BlurRadius="20" Opacity="0.5">
-                        
+
                     </DropShadowEffect>
                 </ContextMenu.Effect>
                 <ContextMenu.ItemTemplate>
@@ -155,7 +155,13 @@
                         <TextBlock Foreground="White" VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" Text="&#xECC9;" FontSize="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <Separator Name="ImgHoverSeparator" Background="#2d2d2d" Height="2"></Separator>
+                <Separator Background="#2d2d2d" Height="2"></Separator>
+                <MenuItem Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="#999" Header="Lock Dock" Name="LockDockButton" Click="LockDockButton_Click">
+                    <MenuItem.Icon>
+                        <TextBlock Foreground="White" VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" Name="LockDockIcon" Text="&#xE72E;" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator Background="#2d2d2d" Height="2"></Separator>
                 <MenuItem Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="#999" Header="Dock settings" Name="SettingsButton" Click="SettingsButton_Click">
                     <MenuItem.Icon>
                         <TextBlock Foreground="White" VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" Text="&#xE713;" FontSize="14"/>
@@ -180,10 +186,10 @@
                 <Border CornerRadius="5, 5, 0, 0" Background="#000" Name="BlackOverlay" Opacity="0.1" Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
                 <Border CornerRadius="5, 5, 0, 0" Name="App_bg" Opacity="0.5"  Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
             </Grid>
-            
+
         </StackPanel>
-        
-        
+
+
         <controls:BlurryUserControl Name="StarDust" Visibility="Hidden" Opacity=".2" BlurContainer="{Binding ElementName=DockIcons}" BlurRadius="30" Height="80" VerticalAlignment="Center">
             <controls:BlurryUserControl.OpacityMask>
                 <VisualBrush>
