@@ -112,6 +112,27 @@ namespace FoxDock
                 settings.StartupToggle.IsChecked = cache.runAtStartup;
 
                 Timeline.DesiredFrameRateProperty.OverrideMetadata(typeof(Timeline), new FrameworkPropertyMetadata { DefaultValue = 60 });
+
+                cache = CacheOperations.LoadCache(cache);
+                size = (int)(defsize * cache.scaleFactor);
+                //consoleLog(size + " !!! " + cache.scaleFactor);
+
+
+                this.Height = new_h;
+
+                double top = System.Windows.SystemParameters.PrimaryScreenHeight - this.Height - taskbar_g;
+                DoubleAnimation myDoubleAnimation = new DoubleAnimation
+                {
+                    From = top + this.Height + taskbar_g,
+                    To = top,
+                    Duration = TimeSpan.FromSeconds(0.5),
+                    EasingFunction = new PowerEase(),
+
+                };
+                Timeline.SetDesiredFrameRate(myDoubleAnimation, 60);
+                myDoubleAnimation.Completed += MyDoubleAnimation_Completed;
+                this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
+                this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(0, 1));
             };
             Loaded += handler;
 
@@ -918,20 +939,17 @@ namespace FoxDock
             }
 
 
-            if (!cache.dockLock)
-            {
-                down_icon = img;
+            down_icon = img;
 
-                DoubleAnimation myDoubleAnimation = new DoubleAnimation
-                {
-                    From = img.Opacity,
-                    To = 0.5,
-                    Duration = TimeSpan.FromSeconds(0.2),
-                    EasingFunction = new SineEase()
-                };
-                Timeline.SetDesiredFrameRate(myDoubleAnimation, 30);
-                img.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation);
-            }
+            DoubleAnimation myDoubleAnimation = new DoubleAnimation
+            {
+                From = img.Opacity,
+                To = 0.5,
+                Duration = TimeSpan.FromSeconds(0.2),
+                EasingFunction = new SineEase()
+            };
+            Timeline.SetDesiredFrameRate(myDoubleAnimation, 30);
+            img.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation);
 
 
 
@@ -1518,28 +1536,7 @@ namespace FoxDock
 
             double new_h = size + size / 2.5;
             double top = System.Windows.SystemParameters.PrimaryScreenHeight - new_h - taskbar_g;
-            if (!startup_animation_completed)
-            {
-                cache = CacheOperations.LoadCache(cache);
-                size = (int)(defsize * cache.scaleFactor);
-                //consoleLog(size + " !!! " + cache.scaleFactor);
-
-
-                this.Height = new_h;
-                DoubleAnimation myDoubleAnimation = new DoubleAnimation
-                {
-                    From = top + this.Height + taskbar_g,
-                    To = top,
-                    Duration = TimeSpan.FromSeconds(0.5),
-                    EasingFunction = new PowerEase(),
-
-                };
-                Timeline.SetDesiredFrameRate(myDoubleAnimation, 60);
-                myDoubleAnimation.Completed += MyDoubleAnimation_Completed;
-                this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
-                this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(0, 1));
-            }
-            else
+            if (startup_animation_completed)
             {
                 DoubleAnimation fastda = new DoubleAnimation
                 {
