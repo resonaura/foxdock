@@ -53,7 +53,9 @@ namespace FoxDock
             InitializeComponent();
             WindowAPI.window = this;
 
-
+            Process[] explorer_p = Process.GetProcessesByName("explorer");
+            string explorer_name = explorer_p[0].MainModule.FileVersionInfo.FileDescription;
+            ExplorerIcon.Label = explorer_name;
 
             int taskbar = 0;
             WindowAPI.TaskBarLocation location = WindowAPI.GetTaskBarLocation();
@@ -657,11 +659,15 @@ namespace FoxDock
             if (cache.dockLock) return;
             isDrop = false;
 
+            
+            consoleLog(string.Join(", ", e.Data.GetFormats()));
+
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 try
                 {
                     string[] s = (string[])e.Data.GetData(DataFormats.FileDrop);
+                    
 
                     foreach (string fn in s)
                     {
