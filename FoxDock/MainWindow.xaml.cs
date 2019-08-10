@@ -2303,6 +2303,17 @@ namespace FoxDock
             DockIcon ic = sender as DockIcon;
             List<object> items = new List<object>();
 
+            DoubleAnimation myDoubleAnimation = new DoubleAnimation
+            {
+                From = ic.Opacity,
+                To = 1,
+                Duration = TimeSpan.FromSeconds(0.2),
+                EasingFunction = new SineEase(),
+
+            };
+            Timeline.SetDesiredFrameRate(myDoubleAnimation, 30);
+            ic.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation);
+
             SHDocVw.ShellWindows shellWindows = new SHDocVw.ShellWindows();
 
             if(e.ChangedButton == MouseButton.Left)
@@ -2397,6 +2408,16 @@ namespace FoxDock
             DockIcon ic = sender as DockIcon;
             List<object> items = new List<object>();
 
+            DoubleAnimation myDoubleAnimation = new DoubleAnimation
+            {
+                From = ic.Opacity,
+                To = 1,
+                Duration = TimeSpan.FromSeconds(0.2),
+                EasingFunction = new SineEase(),
+
+            };
+            Timeline.SetDesiredFrameRate(myDoubleAnimation, 30);
+            ic.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation);
 
             if (e.ChangedButton == MouseButton.Left)
             {
@@ -2458,6 +2479,21 @@ namespace FoxDock
             contextMenu.PlacementTarget = ic;
             contextMenu.IsOpen = true;
             e.Handled = true;
+        }
+
+        private void ExplorerIcon_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            DockIcon ic = sender as DockIcon;
+            DoubleAnimation myDoubleAnimation = new DoubleAnimation
+            {
+                From = ic.Opacity,
+                To = 0.5,
+                Duration = TimeSpan.FromSeconds(0.2),
+                EasingFunction = new SineEase(),
+
+            };
+            Timeline.SetDesiredFrameRate(myDoubleAnimation, 30);
+            ic.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation);
         }
     }
 }
