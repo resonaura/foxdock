@@ -32,6 +32,7 @@ using Point = System.Windows.Point;
 using Shell32;
 using Path = System.IO.Path;
 using Color = System.Windows.Media.Color;
+using System.ComponentModel;
 
 namespace FoxDock
 {
@@ -238,7 +239,7 @@ namespace FoxDock
                 {
 
                     if (dockHidden)
-                        Application.Current.Dispatcher.Invoke(() => ShowDock());
+                        SafeInvoke(() => ShowDock());
                 }
                 else
                 {
@@ -247,13 +248,13 @@ namespace FoxDock
                         if (WindowAPI.IsOnDesktop())
                         {
                             if (dockHidden)
-                                Application.Current.Dispatcher.Invoke(() => ShowDock());
+                                SafeInvoke(() => ShowDock());
                         }
                         else
                         {
                             if (!dockHidden && cache.dockAutoHide)
                             {
-                                Application.Current.Dispatcher.Invoke(() => HideDock());
+                                SafeInvoke(() => HideDock());
                                 hide_trigger = false;
                             }
 
@@ -352,7 +353,7 @@ namespace FoxDock
                 Task.Factory.StartNew(() =>
                 {
                     System.Threading.Thread.Sleep(300);
-                    Application.Current.Dispatcher.Invoke(() => UpdateWidthAndHighlight());
+                    SafeInvoke(() => UpdateWidthAndHighlight());
                 });
 
 
@@ -435,7 +436,7 @@ namespace FoxDock
             if (substrInStr("Chrome", app_name))
                 app_name = "chrome";
             if (substrInStr("FL Studio", app_name))
-                app_name = "fl64";
+                app_name = "fl";
             if (substrInStr("Visual Studio Code", app_name))
                 app_name = "vscode";
             if (substrInStr("Visual Studio", app_name) && substrInStr("Blend", app_name))
@@ -487,7 +488,7 @@ namespace FoxDock
 
                     try
                     {
-                        Application.Current.Dispatcher.Invoke(() =>
+                        SafeInvoke(() =>
                         {
                             if (already_runned)
                             {
@@ -554,6 +555,18 @@ namespace FoxDock
             this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
             this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(this.Opacity, 0));
         }
+        private void SafeInvoke(Action act)
+        {
+            try
+            {
+                Application.Current.Dispatcher.Invoke(act);
+            }
+            catch
+            {
+                consoleLog("Invoke error");
+            }
+        }
+       
         private void MainTimer_Tick(object sender, EventArgs e)
         {
             SHDocVw.ShellWindows shellWindows = new SHDocVw.ShellWindows();
@@ -562,10 +575,10 @@ namespace FoxDock
 
             if(shellWindows.Count > 0)
             {
-                Application.Current.Dispatcher.Invoke(() => ExplorerIcon.Highlight = true);
+                SafeInvoke(() => ExplorerIcon.Highlight = true);
             } else
             {
-                Application.Current.Dispatcher.Invoke(() => ExplorerIcon.Highlight = false);
+                SafeInvoke(() => ExplorerIcon.Highlight = false);
             }
             bool rb_matches = false;
             foreach (SHDocVw.InternetExplorer ie in shellWindows)
@@ -577,12 +590,20 @@ namespace FoxDock
             }
             if(rb_matches)
             {
-                Application.Current.Dispatcher.Invoke(() => TrashIcon.Highlight = true);
+                SafeInvoke(() => TrashIcon.Highlight = true);
             } else
             {
-                Application.Current.Dispatcher.Invoke(() => TrashIcon.Highlight = false);
+                SafeInvoke(() => TrashIcon.Highlight = false);
             }
-            Application.Current.Dispatcher.Invoke(() => TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions()));
+            try
+            {
+                Application.Current.Dispatcher.Invoke(() => TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions()));
+            }
+            catch
+            {
+
+            }
+            
             int taskbar = 0;
             WindowAPI.TaskBarLocation location = WindowAPI.GetTaskBarLocation();
             if (location == WindowAPI.TaskBarLocation.BOTTOM)
@@ -600,7 +621,7 @@ namespace FoxDock
 
                 try
                 {
-                    Application.Current.Dispatcher.Invoke(() => animateHChange(System.Windows.SystemParameters.PrimaryScreenHeight - this.Height, this.Height));
+                    SafeInvoke(() => animateHChange(System.Windows.SystemParameters.PrimaryScreenHeight - this.Height, this.Height));
                 }
                 catch (Exception ex)
                 {
@@ -615,7 +636,7 @@ namespace FoxDock
             try
             {
                 if (startup_animation_completed && !lockSizeChange)
-                    Application.Current.Dispatcher.Invoke(() => AutoTooltipAndDockPosition());
+                    SafeInvoke(() => AutoTooltipAndDockPosition());
             }
             catch
             {
@@ -648,7 +669,7 @@ namespace FoxDock
                 var theme = wpReg.GetValue("SystemUsesLightTheme").ToString();
                 wpReg.Close();
 
-                Application.Current.Dispatcher.Invoke(() =>
+                SafeInvoke(() =>
                 {
                     List<DockIcon> combined = new List<DockIcon>();
                     foreach (DockIcon di in MainPanel.Children)
@@ -1050,7 +1071,7 @@ namespace FoxDock
         {
             Task.Factory.StartNew(() =>
             {
-                Application.Current.Dispatcher.Invoke(() => Img_MouseLeaveDo(sender));
+                SafeInvoke(() => Img_MouseLeaveDo(sender));
             });
         }
         private void animateSizeChange(int start, int end, DockIcon e, double dur = 0.1)
@@ -1317,7 +1338,7 @@ namespace FoxDock
             Task.Factory.StartNew(() =>
             {
                 isHovered = true;
-                Application.Current.Dispatcher.Invoke(() => Img_MouseEnterDo(sender));
+                SafeInvoke(() => Img_MouseEnterDo(sender));
             });
 
         }
@@ -1561,7 +1582,7 @@ namespace FoxDock
                                 Task.Factory.StartNew(() =>
                                 {
                                     System.Threading.Thread.Sleep(300);
-                                    Application.Current.Dispatcher.Invoke(() => UpdateWidthAndHighlight());
+                                    SafeInvoke(() => UpdateWidthAndHighlight());
                                 });
 
                             }
@@ -2297,7 +2318,71 @@ namespace FoxDock
                 }
             }
         }
+        private Separator GenerateSeparator()
+        {
+            Separator separator = new Separator();
+            separator.Height = 2;
+            separator.Background = new SolidColorBrush(Color.FromRgb(45, 45, 45));
 
+            return separator;
+        }
+        private MenuItem CloneMenuItem(MenuItem source)
+        {
+            MenuItem result = new MenuItem();
+
+            if(source != null)
+            {
+
+
+                result.Style = source.Style;
+                result.CommandParameter = source.CommandParameter;
+                result.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
+                result.Padding = source.Padding;
+                result.Background = source.Background;
+                result.Foreground = source.Foreground;
+
+                TextBlock ti = new TextBlock();
+                ti.Text = (source.Icon as TextBlock).Text;
+                ti.FontFamily = new System.Windows.Media.FontFamily("Segoe MDL2 Assets");
+                ti.FontSize = 14;
+                ti.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+
+                ti.VerticalAlignment = CloseSomeAppButton.VerticalAlignment;
+
+                result.Icon = ti;
+                result.Header = source.Header;
+
+                
+                
+                switch(source.Name)
+                {
+                    case "CloseSomeAppButton":
+                        result.Click += CloseSomeAppButton_Click;
+                        break;
+                    case "OpenNewButton":
+                        result.Click += OpenNewButton_Click;
+                        break;
+                    case "RemoveFromDockButton":
+                        result.Click += RemoveFromDockButton_Click;
+                        break;
+                    case "LockDockButton":
+                        result.Click += LockDockButton_Click;
+                        break;
+                    case "SettingsButton":
+                        result.Click += SettingsButton_Click;
+                        break;
+                    case "RestartButton":
+                        result.Click += RestartButton_Click;
+                        break;
+                    case "ExitButton":
+                        result.Click += MenuItem_Click;
+                        break;
+                }
+
+            }
+
+            return result;
+        }
         private void ExplorerIcon_MouseUp(object sender, MouseButtonEventArgs e)
         {
             DockIcon ic = sender as DockIcon;
@@ -2347,11 +2432,6 @@ namespace FoxDock
             
 
             string filename;
-
-            Separator separator = new Separator();
-            separator.Height = 2;
-            separator.Background = new SolidColorBrush(Color.FromRgb(45, 45, 45));
-
             
             foreach (SHDocVw.InternetExplorer ie in shellWindows)
             {
@@ -2375,12 +2455,26 @@ namespace FoxDock
                 
             }
             if(shellWindows.Count > 0)
-                items.Add(separator);
+                items.Add(GenerateSeparator());
             items.Add(GenerateMenuItem("\uE8A7", "Open new", () =>
             {
                 System.Diagnostics.Process.Start("explorer");
                 return 1;
             }));
+            items.Add(GenerateMenuItem("\uE8BB", "Close all", () =>
+            {
+                foreach (SHDocVw.InternetExplorer ie in shellWindows)
+                {
+                    ie.Quit();
+                }
+                return 1;
+            }));
+            items.Add(GenerateSeparator());
+            items.Add(CloneMenuItem(LockDockButton));
+            items.Add(GenerateSeparator());
+            items.Add(CloneMenuItem(SettingsButton));
+            items.Add(CloneMenuItem(RestartButton));
+            items.Add(CloneMenuItem(ExitButton));
 
 
             ContextMenu contextMenu = GenerateContextMenu(items);
@@ -2471,6 +2565,12 @@ namespace FoxDock
                 TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
                 return 1;
             }));
+            items.Add(GenerateSeparator());
+            items.Add(CloneMenuItem(LockDockButton));
+            items.Add(GenerateSeparator());
+            items.Add(CloneMenuItem(SettingsButton));
+            items.Add(CloneMenuItem(RestartButton));
+            items.Add(CloneMenuItem(ExitButton));
 
 
             ContextMenu contextMenu = GenerateContextMenu(items);
