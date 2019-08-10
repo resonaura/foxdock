@@ -29,6 +29,9 @@ using System.Windows.Threading;
 using System.Drawing.Drawing2D;
 using System.Windows.Media.Effects;
 using Point = System.Windows.Point;
+using Shell32;
+using Path = System.IO.Path;
+using Color = System.Windows.Media.Color;
 
 namespace FoxDock
 {
@@ -51,11 +54,25 @@ namespace FoxDock
         public MainWindow()
         {
             InitializeComponent();
+
             WindowAPI.window = this;
 
-            Process[] explorer_p = Process.GetProcessesByName("explorer");
-            string explorer_name = explorer_p[0].MainModule.FileVersionInfo.FileDescription;
-            ExplorerIcon.Label = explorer_name;
+
+            try
+            {
+                Process[] explorer_p = Process.GetProcessesByName("explorer");
+                string explorer_name = explorer_p[0].MainModule.FileVersionInfo.FileDescription;
+                ExplorerIcon.Label = explorer_name;
+            }
+            catch
+            {
+
+            }
+
+            string epath = Environment.GetEnvironmentVariable("windir") + "\\explorer.exe";
+            consoleLog(epath);
+            ExplorerIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetSystemIcon(epath).ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+            TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
 
             int taskbar = 0;
             WindowAPI.TaskBarLocation location = WindowAPI.GetTaskBarLocation();
@@ -539,7 +556,33 @@ namespace FoxDock
         }
         private void MainTimer_Tick(object sender, EventArgs e)
         {
+            SHDocVw.ShellWindows shellWindows = new SHDocVw.ShellWindows();
 
+            string filename;
+
+            if(shellWindows.Count > 0)
+            {
+                Application.Current.Dispatcher.Invoke(() => ExplorerIcon.Highlight = true);
+            } else
+            {
+                Application.Current.Dispatcher.Invoke(() => ExplorerIcon.Highlight = false);
+            }
+            bool rb_matches = false;
+            foreach (SHDocVw.InternetExplorer ie in shellWindows)
+            {
+                if(ie.LocationName == "Recycle Bin" || ie.LocationName == "Корзина" || ie.LocationName == "Кошик")
+                {
+                    rb_matches = true;
+                }
+            }
+            if(rb_matches)
+            {
+                Application.Current.Dispatcher.Invoke(() => TrashIcon.Highlight = true);
+            } else
+            {
+                Application.Current.Dispatcher.Invoke(() => TrashIcon.Highlight = false);
+            }
+            Application.Current.Dispatcher.Invoke(() => TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions()));
             int taskbar = 0;
             WindowAPI.TaskBarLocation location = WindowAPI.GetTaskBarLocation();
             if (location == WindowAPI.TaskBarLocation.BOTTOM)
@@ -625,6 +668,39 @@ namespace FoxDock
         public void consoleLog(object cdd)
         {
             Debug.WriteLine(cdd);
+        }
+        private static Icon GetTrashIcon()
+        {
+            try
+            {
+                Win32E.SHFILEINFO psfi = new Win32E.SHFILEINFO();
+                
+                Guid riid = new Guid("46EB5926-582E-4017-9FDF-E8998DAA0950");
+                Win32E.IImageList ppv;
+                Win32E.SHGetImageList(4, ref riid, out ppv);
+                IntPtr picon = IntPtr.Zero;
+                int flags = 0;
+
+                Shell shell = new Shell();
+                Folder recycleBin = shell.NameSpace(10);
+                int itemsCount = recycleBin.Items().Count;
+
+                int i = 31;
+                if(itemsCount > 0)
+                {
+                    i = 32;
+                }
+
+                ppv.GetIcon(i, flags, ref picon);
+                Icon icon = (Icon)System.Drawing.Icon.FromHandle(picon).Clone();
+                Win32E.DestroyIcon(psfi.hIcon);
+                return icon;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message + " beda #4");
+            }
+            return (Icon)null;
         }
         private static Icon GetSystemIcon(string path)
         {
@@ -1315,6 +1391,7 @@ namespace FoxDock
             panelIconsAnimated = false;
 
             Draggable_icon.Source = null;
+            dr_ic = null;
             /*
             DoubleAnimation myDoubleAnimation3 = new DoubleAnimation
             {
@@ -1651,7 +1728,6 @@ namespace FoxDock
         {
             if (e.LeftButton == MouseButtonState.Pressed)
                 AbsIconDrag = true;
-            move_lock = true;
         }
         private bool hitTest(UIElement el1, UIElement el2, MouseEventArgs e)
         {
@@ -1745,6 +1821,12 @@ namespace FoxDock
 
             }
             bool lock_cycle = false;
+            if (hitTest(TrashIcon, Draggable_icon, e))
+            {
+                if (dr_ic != null)
+                    RemoveFromDock(dr_ic);
+                MainPanel.Opacity = 1;
+            }
             foreach (DockIcon cur in allElements)
             {
                 if (hitTest(cur, Draggable_icon, e) && !lock_cycle)
@@ -1784,6 +1866,7 @@ namespace FoxDock
                             myDoubleAnimation1.Completed += (a, es) =>
                             {
                                 Draggable_icon.Source = null;
+                                dr_ic = null;
                             };
                             Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
                             lock_cycle = true;
@@ -1946,6 +2029,7 @@ namespace FoxDock
         }
         private bool panelIconsAnimated = false;
         private bool panelIconsAnimating = false;
+        private DockIcon dr_ic = null;
         private void Draggable_icon_MouseMove(object sender, MouseEventArgs e)
         {
             double gl_x = e.GetPosition(DockMain).X;
@@ -1962,6 +2046,7 @@ namespace FoxDock
                     DockIcon dicon = down_icon as DockIcon;
 
                     Draggable_icon.Source = dicon.Source;
+                    dr_ic = dicon;
 
 
 
@@ -1999,6 +2084,7 @@ namespace FoxDock
                     myDoubleAnimation1.Completed += (a, es) =>
                     {
                         Draggable_icon.Source = null;
+                        dr_ic = null;
                         Draggable_icon_an = true;
 
 
@@ -2107,6 +2193,271 @@ namespace FoxDock
             cache.dockLock = !cache.dockLock;
             DockLockUpdateUI();
             CacheOperations.StoreCache(cache);
+        }
+        private ContextMenu GenerateContextMenu(List<object> items)
+        {
+            ContextMenu res = new ContextMenu();
+            res.Margin = MainContextMenu.Margin;
+            res.Style = MainContextMenu.Style;
+            res.ItemTemplate = (DataTemplate)Resources["MenuItemStyle"];
+            res.Background = MainContextMenu.Background;
+            res.Effect = MainContextMenu.Effect;
+            //res.ItemTemplate = MainContextMenu.ItemTemplate;
+            
+            foreach(object item in items)
+            {
+                res.Items.Add(item);
+            }
+            
+            
+            return res;
+        }
+        private MenuItem GenerateMenuItem(string icon, string text, Func<int> func)
+        {
+            MenuItem item = new MenuItem();
+
+            item.Style = CloseSomeAppButton.Style;
+            item.CommandParameter = CloseSomeAppButton.CommandParameter;
+            item.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
+            item.Padding = CloseSomeAppButton.Padding;
+            item.Background = CloseSomeAppButton.Background;
+            item.Foreground = CloseSomeAppButton.Foreground;
+
+            TextBlock ti = new TextBlock();
+            ti.Text = icon;
+            ti.FontFamily = new System.Windows.Media.FontFamily("Segoe MDL2 Assets");
+            ti.FontSize = 14;
+            ti.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+            
+            ti.VerticalAlignment = CloseSomeAppButton.VerticalAlignment;
+            
+            item.Icon = ti;
+
+            
+
+
+            item.Header = text;
+
+            if (func != null)
+            {
+                item.Click += (s, e) =>
+                {
+                    func();
+                };
+            }
+                
+            return item;
+        }
+        private void ExplorerIcon_Click(object sender, RoutedEventArgs e)
+        {
+            
+        }
+
+        private void TrashIcon_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effects = DragDropEffects.Move;
+
+            }
+        }
+
+        private void TrashIcon_DragLeave(object sender, DragEventArgs e)
+        {
+
+        }
+
+        private void TrashIcon_Drop(object sender, DragEventArgs e)
+        {
+
+            consoleLog(string.Join(", ", e.Data.GetFormats()));
+
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                try
+                {
+                    string[] s = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+
+                    foreach (string fn in s)
+                    {
+                        
+                        Shell shell = new Shell();
+                        Folder RecyclingBin = shell.NameSpace(10);
+
+                        RecyclingBin.MoveHere(fn);
+
+                        TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message + " beda #5");
+                }
+            }
+        }
+
+        private void ExplorerIcon_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            DockIcon ic = sender as DockIcon;
+            List<object> items = new List<object>();
+
+            SHDocVw.ShellWindows shellWindows = new SHDocVw.ShellWindows();
+
+            if(e.ChangedButton == MouseButton.Left)
+            {
+                switch (shellWindows.Count)
+                {
+                    case 0:
+                        System.Diagnostics.Process.Start("explorer");
+                        return;
+                    case 1:
+                        foreach (SHDocVw.InternetExplorer ie in shellWindows)
+                        {
+
+                            IntPtr intPtr = new IntPtr(ie.HWND);
+                            if (WindowAPI.IsIconic(intPtr))
+                            {
+                                WindowAPI.SetForegroundWindow(intPtr);
+                                WindowAPI.ShowWindowAsync(intPtr, 9);
+
+                            }
+                            else
+                            {
+
+                                WindowAPI.ShowWindowAsync(intPtr, WindowAPI.SW_MINIMIZE);
+
+                            }
+                        }
+                        return;
+                }
+            }
+            
+
+            string filename;
+
+            Separator separator = new Separator();
+            separator.Height = 2;
+            separator.Background = new SolidColorBrush(Color.FromRgb(45, 45, 45));
+
+            
+            foreach (SHDocVw.InternetExplorer ie in shellWindows)
+            {
+                filename = Path.GetFileNameWithoutExtension(ie.FullName).ToLower();
+
+                
+                if (filename.Equals("explorer"))
+                {
+                    // Save the location off to your application
+                    IntPtr intPtr = new IntPtr(ie.HWND);
+                    items.Add(GenerateMenuItem("\uE8B7", ie.LocationName, () =>
+                    {
+                        WindowAPI.SetForegroundWindow(intPtr);
+                        WindowAPI.ShowWindowAsync(intPtr, 9);
+                        return 1;
+                    }));
+
+                    // Setup a trigger for when the user navigates
+                    //ie.NavigateComplete2 += new SHDocVw.DWebBrowserEvents2_NavigateComplete2EventHandler(handlerMethod);
+                }
+                
+            }
+            if(shellWindows.Count > 0)
+                items.Add(separator);
+            items.Add(GenerateMenuItem("\uE8A7", "Open new", () =>
+            {
+                System.Diagnostics.Process.Start("explorer");
+                return 1;
+            }));
+
+
+            ContextMenu contextMenu = GenerateContextMenu(items);
+
+
+            contextMenu.PlacementTarget = ic;
+            contextMenu.IsOpen = true;
+            e.Handled = true;
+        }
+        enum RecycleFlag : int
+
+        {
+
+            SHERB_NOCONFIRMATION = 0x00000001, // No confirmation, when emptying
+
+            SHERB_NOPROGRESSUI = 0x00000001, // No progress tracking window during the emptying of the recycle bin
+
+            SHERB_NOSOUND = 0x00000004 // No sound when the emptying of the recycle bin is complete
+
+        }
+        [DllImport("Shell32.dll")]
+        static extern int SHEmptyRecycleBin(IntPtr hwnd, string pszRootPath, RecycleFlag dwFlags);
+        private void TrashIcon_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            DockIcon ic = sender as DockIcon;
+            List<object> items = new List<object>();
+
+
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                SHDocVw.ShellWindows shellWindows = new SHDocVw.ShellWindows();
+                bool rb_matches = false;
+                SHDocVw.InternetExplorer lastIe = null;
+                foreach (SHDocVw.InternetExplorer ie in shellWindows)
+                {
+                    if (ie.LocationName == "Recycle Bin" || ie.LocationName == "Корзина" || ie.LocationName == "Кошик")
+                    {
+                        rb_matches = true;
+                        lastIe = ie;
+                    }
+                }
+                if(rb_matches)
+                {
+                    if(lastIe != null)
+                    {
+                        IntPtr intPtr = new IntPtr(lastIe.HWND);
+                        if (WindowAPI.IsIconic(intPtr))
+                        {
+                            WindowAPI.SetForegroundWindow(intPtr);
+                            WindowAPI.ShowWindowAsync(intPtr, 9);
+
+                        }
+                        else
+                        {
+
+                            WindowAPI.ShowWindowAsync(intPtr, WindowAPI.SW_MINIMIZE);
+
+                        }
+                    }
+                    
+                    
+                } else
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", "shell:RecycleBinFolder");
+                }
+                
+                
+                return;
+            }
+            items.Add(GenerateMenuItem("\uE8A7", "Open Recycle Bin", () =>
+            {
+                System.Diagnostics.Process.Start("explorer.exe", "shell:RecycleBinFolder");
+                return 1;
+            }));
+            items.Add(GenerateMenuItem("\uE74D", "Clear Recycle Bin", () =>
+            {
+                SHEmptyRecycleBin(IntPtr.Zero, null, RecycleFlag.SHERB_NOSOUND);
+                TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                return 1;
+            }));
+
+
+            ContextMenu contextMenu = GenerateContextMenu(items);
+
+
+            contextMenu.PlacementTarget = ic;
+            contextMenu.IsOpen = true;
+            e.Handled = true;
         }
     }
 }
