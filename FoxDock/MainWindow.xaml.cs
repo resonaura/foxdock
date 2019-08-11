@@ -38,108 +38,148 @@ namespace FoxDock
 {
     public partial class MainWindow : Window
     {
-
+        //Подключаем кеш
         public static Cache cache = new Cache();
+
+        //Основные таймеры
         private System.Timers.Timer mainTimer = new System.Timers.Timer();
         private System.Timers.Timer mouseTimer = new System.Timers.Timer();
 
+        //Инициализируем окна
         private Tooltip tooltip = new Tooltip();
-        private Settings settings = new Settings();
+        private Settings settings;
         private Dialog dialog;
 
-
-        public static bool lock_slider = true;
+        //Основные переменные
         public WinStates winStates = new WinStates();
+        public static bool lock_slider = true;
         public bool isInitedAS = false;
         public int taskbar_g = 0;
+        public double dpiY = 1;
+        public static int defsize = 56;
+        public int size = (int)(defsize * cache.scaleFactor);
+        public bool lockSizeChange = false;
+        private string lastTheme = string.Empty;
+        private bool isDown;
+        private UIElement down_icon;
+        private UIElement context_icon;
+        private bool isDrop = false;
+        private bool dockHidden = false;
+        private bool move_lock = false;
+        private bool apprunned = false;
+        private double oldX = 0;
+        private double mouseSpeed = 0;
+        private bool isHovered = false;
+        private bool startup_animation_completed = false;
+        private bool AbsIconDrag = false;
+        private bool Draggable_icon_an = true;
+        private double fe_max_size = 0;
+        private int fe_max_size_el = 0;
+        private bool panelIconsAnimated = false;
+        private bool panelIconsAnimating = false;
+        private DockIcon dr_ic = null;
+        private bool movingToTrash = false;
+
+        //Необходимые константы
+        public const int SPI_SETDESKWALLPAPER = 20;
+        public const int WM_SETTINGCHANGE = 0x001A;
+        public const int WM_SYSCOMMAND = 0x0112;
+        public const int WM_THEMECHANGED = 0x031A;
+        public const int SC_MINIMIZE = 0xF020;
+        public const int WM_WININICHANGE = 0x001A;
+
+        /// <summary>
+        /// Инициализация дока
+        /// </summary>
         public MainWindow()
         {
-            InitializeComponent();
+            InitializeComponent(); //Инициализируем все компоненты
 
-            WindowAPI.window = this;
+            if (settings == null) settings = new Settings(); //Инициализируем окно настроек, если оно не инициализированно
 
-
+            //Для защиты от вылета используем try,catch
             try
             {
+                WindowAPI.window = this;
+
                 Process[] explorer_p = Process.GetProcessesByName("explorer");
                 string explorer_name = explorer_p[0].MainModule.FileVersionInfo.FileDescription;
                 ExplorerIcon.Label = explorer_name;
             }
             catch
             {
-
+                consoleLog("Ошибка получения имени проводника...");
             }
 
+            //Получаем значки Проводника и Корзины и задаём их для соответствующих виджетов на Доке
             string epath = Environment.GetEnvironmentVariable("windir") + "\\explorer.exe";
             consoleLog(epath);
             ExplorerIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetSystemIcon(epath).ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
             TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
 
-            int taskbar = 0;
-            WindowAPI.TaskBarLocation location = WindowAPI.GetTaskBarLocation();
-            if (location == WindowAPI.TaskBarLocation.BOTTOM)
-            {
-                taskbar = Application.Current.Dispatcher.Invoke(() => (int)(WpfScreen.GetScreenFrom(this).DeviceBounds.Bottom - WpfScreen.GetScreenFrom(this).WorkingArea.Bottom));
-            }
+            //Получаем высоту панели задач
+            int taskbar = GetTaskBarH();
             taskbar_g = taskbar;
-
-
-
+            
+            //Обработчик события успешной загрузки дока
             RoutedEventHandler handler = null;
             handler = (s, e) =>
             {
-
-
+                //Получаем DPI
                 PresentationSource source = PresentationSource.FromVisual(this);
-
                 double dpiY = 1;
                 if (source != null)
                 {
                     dpiY = source.CompositionTarget.TransformToDevice.M22;
                 }
-                tooltip.Hide();
 
+                //Прячем окно подсказки
+                tooltip.Hide();
+                
+                //Убираем событие
                 Loaded -= handler;
+
+                //Загружаем кеш
                 cache = CacheOperations.LoadCache(cache);
+
+                //Выполняем необходимые действия в зависимости от кеша
                 if (cache.disableBlur == false)
                     NativeMethods.EnableBlur(this);
                 if (cache.enableStarDust)
                     StarDust.Visibility = Visibility.Visible;
 
+                //Делаем слайдеры настроек активными в зависимости от значений из кеша
                 settings.DisableBlurToggle.IsChecked = cache.disableBlur;
                 settings.StarDustEnableToggle.IsChecked = cache.enableStarDust;
                 settings.EnableTopmostToggle.IsChecked = cache.enableTopmost;
                 settings.AHToggle.IsChecked = cache.dockAutoHide;
                 settings.Trans_bar.Value = cache.bg_trans;
                 settings.ScaleSlider.Value = cache.scaleFactor;
-
-
-                size = (int)(defsize * cache.scaleFactor);
-
-                double new_h = size + size / 2.5;
-                double new_top = System.Windows.SystemParameters.PrimaryScreenHeight - new_h;
-
-                animateHChange(new_top, new_h);
-
-                AutoWallUI(true);
-                DockLockUpdateUI();
-
-                cache = CacheOperations.LoadCache(cache);
-
-                App_full_bg.Opacity = cache.bg_trans;
-
-
                 settings.StartupToggle.IsChecked = cache.runAtStartup;
 
+                //Получаем размер значков в зависимости от масштаба из настроек
+                size = (int)(defsize * cache.scaleFactor);
+
+                //Получаем высоту дока и его положение по вертикали
+                double new_h = size + size / 2.5;
+                this.Height = new_h;
+                double new_top = System.Windows.SystemParameters.PrimaryScreenHeight - new_h;
+                animateHChange(new_top, new_h);
+
+                //Адаптивный фон дока
+                AutoWallUI(true);
+
+                //Применяем логику для кнопки блокировки дока в контекстном меню
+                DockLockUpdateUI();
+
+                //Задаём прозрачность фона в зависимости от значения кеша
+                App_full_bg.Opacity = cache.bg_trans;
+
+                //Задаём Framerate для всех анимаций
                 Timeline.DesiredFrameRateProperty.OverrideMetadata(typeof(Timeline), new FrameworkPropertyMetadata { DefaultValue = 60 });
 
-                cache = CacheOperations.LoadCache(cache);
-                size = (int)(defsize * cache.scaleFactor);
-                //consoleLog(size + " !!! " + cache.scaleFactor);
-
-
-                this.Height = new_h;
-
+                
+                //Выполняем стартовую анимацию появления дока
                 double top = System.Windows.SystemParameters.PrimaryScreenHeight - this.Height - taskbar_g;
                 DoubleAnimation myDoubleAnimation = new DoubleAnimation
                 {
@@ -150,47 +190,50 @@ namespace FoxDock
 
                 };
                 Timeline.SetDesiredFrameRate(myDoubleAnimation, 60);
-                myDoubleAnimation.Completed += MyDoubleAnimation_Completed;
+                myDoubleAnimation.Completed += StartUpAnimation_Completed;
                 this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
                 this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(0, 1));
             };
             Loaded += handler;
 
+            //Не помню, что эта фигня делает, но она вроде очень нужна
             WindowAPI.MakeWin();
 
+            //Адаптивный фон дока
             AutoWallUI();
 
+            //Событие изменения свойства WindowState
             this.StateChanged += MainWindow_StateChanged;
 
+            //Даём доступ к основному окну в окне Настроек
             settings.window = this;
 
+            //Логика в случае того, если док запущен второй раз
             var exists = System.Diagnostics.Process.GetProcessesByName(System.IO.Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetEntryAssembly().Location)).Count() > 1;
             if (exists)
             {
-                WindowAPI.ShowDesktop();
-                Close();
-                tooltip.Close();
-                settings.Close();
+                WindowAPI.ShowDesktop(); //Переводим пользователя на Рабочий Стол
+                Close(); //Закрываем текущую копию Дока
+                tooltip.Close(); //Закрываем окно Подсказки
+                settings.Close(); //Закрываем окно настроек
 
-                Environment.Exit(0);
+                Environment.Exit(0); //Убиваем процесс
             }
 
-
-            GraphicsPath gp = new GraphicsPath();
-
-
+            //Запускаем основной таймер
             mainTimer.Interval = 2000;
             mainTimer.Elapsed += MainTimer_Tick;
             mainTimer.Start();
 
+            //Запускаем таймер для автоматического появления/скрытия Дока в режиме Поверх Всех Окон
             mouseTimer.Interval = 2000;
             mouseTimer.Elapsed += MouseTimer_Elapsed;
             mouseTimer.Start();
 
-
-            SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
-            SystemEvents.UserPreferenceChanging += SystemEvents_UserPreferenceChanging;
+            //Загружаем кеш
             cache = CacheOperations.LoadCache(cache);
+
+            //Выполняем логику размера значков
             if (!isInitedAS)
             {
                 size = (int)(defsize * cache.scaleFactor);
@@ -198,6 +241,7 @@ namespace FoxDock
                 isInitedAS = true;
             }
 
+            //Добавляем значки из кеша на Док
             if (cache.dock_apps_path != null)
             {
                 foreach (string path in cache.dock_apps_path)
@@ -205,12 +249,30 @@ namespace FoxDock
                     addIconToPanel(path);
                 }
             }
+
+            //Разблокируем слайдер
             lock_slider = false;
-
-
-
-
         }
+
+        /// <summary>
+        /// Функция получения высоты Панели Задач, если она расположена снизу
+        /// </summary>
+        /// <returns>Высота</returns>
+        public int GetTaskBarH()
+        {
+            WindowAPI.TaskBarLocation location = WindowAPI.GetTaskBarLocation(); //Получаем положение Панели Задач
+            if (location == WindowAPI.TaskBarLocation.BOTTOM) //Если она снизу
+            {
+                return Application.Current.Dispatcher.Invoke(() => (int)(WpfScreen.GetScreenFrom(this).DeviceBounds.Bottom - WpfScreen.GetScreenFrom(this).WorkingArea.Bottom));  //Возвращаем высоту Панели Задач
+            } else
+            {
+                return 0; //Возращаем 0 (да-да, я кеп)
+            }
+        }
+
+        /// <summary>
+        /// Отобразить кнопку блокировки дока в контекстном меню в зависимости от значения кеша
+        /// </summary>
         public void DockLockUpdateUI()
         {
             if (cache.dockLock)
@@ -224,75 +286,64 @@ namespace FoxDock
                 LockDockIcon.Text = "\uE72E";
             }
         }
-        public double dpiY = 1;
+        
+        /// <summary>
+        /// Логика таймера положения мыши в режиме Поверх Всех Окон (Topmost)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MouseTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
 
-            double y = WindowAPI.GetMousePosition().Y / dpiY;
-            //consoleLog(dpiY);
+            double y = WindowAPI.GetMousePosition().Y / dpiY; //Получаем положение мыши по Y
+
+            //Если режим Topmost активен
             if (cache.enableTopmost)
             {
-
+                //Получаем положение дока по вертикале относительно экрана
                 double top = System.Windows.SystemParameters.PrimaryScreenHeight - (size + size / 2.5) - taskbar_g;
 
+                //Если курсор находится в триггер-зоне экрана
                 if (y >= System.Windows.SystemParameters.PrimaryScreenHeight - 20)
                 {
 
                     if (dockHidden)
-                        SafeInvoke(() => ShowDock());
+                        SafeInvoke(() => ShowDock()); //Отображаем Док
                 }
-                else
+                else //Если курсор находится вне триггер-зоны
                 {
                     if (y < System.Windows.SystemParameters.PrimaryScreenHeight - (System.Windows.SystemParameters.PrimaryScreenHeight - top))
                     {
+                        //Если пользователь находится на Рабочем Столе
                         if (WindowAPI.IsOnDesktop())
                         {
                             if (dockHidden)
-                                SafeInvoke(() => ShowDock());
+                                SafeInvoke(() => ShowDock()); //Отображаем док
                         }
-                        else
+                        else //В обратном случае
                         {
                             if (!dockHidden && cache.dockAutoHide)
                             {
-                                SafeInvoke(() => HideDock());
-                                hide_trigger = false;
+                                SafeInvoke(() => HideDock()); //Скрываем док
                             }
-
                         }
                     }
-
                 }
             }
-
-
         }
-
+        /// <summary>
+        /// Обработчик события изменения параметра WindowState главного окна
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MainWindow_StateChanged(object sender, EventArgs e)
         {
-            if (!cache.enableTopmost)
-                WindowAPI.SendToBack(this);
+            if (!cache.enableTopmost) //Если не включен режим Поверх Всех Окон
+                WindowAPI.SendToBack(this); //Отправляем Док на задний план
         }
+        
 
-        private void SystemEvents_UserPreferenceChanging(object sender, UserPreferenceChangingEventArgs e)
-        {
-            //Debug.WriteLine(2);
-        }
-
-        private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
-        {
-            //Debug.WriteLine(1);
-            //AutoWallUI();
-        }
-
-        // required constants.
-        public const int SPI_SETDESKWALLPAPER = 20;
-        public const int WM_SETTINGCHANGE = 0x001A;
-        public const int WM_SYSCOMMAND = 0x0112;
-        public const int WM_THEMECHANGED = 0x031A;
-        public const int SC_MINIMIZE = 0xF020;
-        public const int WM_WININICHANGE = 0x001A;
-
-        // let's override WndProc...
+        //Логика обработки событий изменения Настроек (тут твориться какая-то неведомая херня, которую я стырил с StackOverflow, но вроде оно работает как надо)
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
@@ -302,44 +353,46 @@ namespace FoxDock
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            // if it's WM_SETTINGCHANGE
+            //Короче. Если типо происходит какое-то событие в системе и это событие - изменение настроек системы, то выполняем логику адаптивного фона
+            //Это нужно для того, чтобы если юзверь сменит тему в системе Док подстроился под эту тему.
+            //От така фігня, малята
+
             if (msg == WM_SETTINGCHANGE)
             {
                 AutoWallUI();
             }
 
-
-
             return IntPtr.Zero;
         }
-
-        private void WallTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            AutoWallUI();
-        }
-
+        /// <summary>
+        /// Логика добавления значка в Док
+        /// </summary>
+        /// <param name="path">Путь к файлу</param>
         private void addIconToPanel(string path)
         {
+            //Создаём иконку
             object icn = new object();
             Icon icon = icn as Icon;
 
+            //Пробуем получить значок этого файла или папки (вообще похер)
             try
             {
-                icon = GetSystemIcon(path);
+                icon = GetSystemIcon(path); //Получаем значок
             }
-            catch (Exception ex)
+            catch (Exception ex) //Если словили ошибку
             {
-                icon = null;
-                Debug.WriteLine(ex.Message + " - ошибка получения значка приложения");
+                icon = null; //Убиваем значок самым жестоким способом...
+                Debug.WriteLine(ex.Message + " - ошибка получения значка приложения"); //Выводим в консоль сообщение об ошибке
             }
 
+            //Если значок ещё живой (а вдруг?)
             if (icon != null)
             {
-                Bitmap bitmap = icon.ToBitmap();
+                Bitmap bitmap = icon.ToBitmap(); //Переводим его в битмап
 
 
+                //Создаём новый DockIcon и присваиваем ему все события
                 DockIcon dockIcon = new DockIcon();
-
                 dockIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
                 dockIcon.MouseDown += Img_MouseDown;
                 dockIcon.MouseEnter += Img_MouseEnter;
@@ -347,63 +400,63 @@ namespace FoxDock
                 dockIcon.MouseMove += Img_MouseMove;
                 dockIcon.MouseUp += Img_MouseUp;
 
+                //Получаем свободный индекс для добавления нового элемента
                 int index = MainPanel.Children.Count;
                 MainPanel.Children.Insert(index, dockIcon);
 
+                //В новом потоке спустя 300 мс. обновляем ширину дока
                 Task.Factory.StartNew(() =>
                 {
                     System.Threading.Thread.Sleep(300);
-                    SafeInvoke(() => UpdateWidthAndHighlight());
+                    SafeInvoke(() => UpdateDockWidth());
                 });
 
 
             }
         }
+        /// <summary>
+        /// Выполнение логики передвиженыя мыши по иконке
+        /// </summary>
+        /// <param name="sender"></param>
         private void Img_MouseMoveDo(object sender)
         {
-            DockIcon image = sender as DockIcon;
+            DockIcon image = sender as DockIcon; //Получаем значок из сендера
 
-            Label label = tooltip.app_hint;
+            Label label = tooltip.app_hint; //Делаем особый клон текущей подсказки 
 
-
+            //Подстраиваем ширину клона в зависимости от содержания
             label.Measure(new System.Windows.Size(Double.PositiveInfinity, Double.PositiveInfinity));
-
             label.Arrange(new Rect(label.DesiredSize));
-
-
-            //SizeF size = tooltip.app_hint.CreateGraphics().MeasureString(myLabel.Text, myLabel.Font);
+            
+            //Получаем ширину клона
             double real_hint_width = label.ActualWidth;
 
+            //Получаем смещение
             DockIcon uIElement = image;
-
             var element_Visual_Relative = uIElement.TransformToVisual((Visual)Content);
-
             System.Windows.Point offset = element_Visual_Relative.Transform(new System.Windows.Point(0, 0));
             var offsetX = offset.X;
+            
+            //Высчитываем смещение подсказки по левому краю
+            double left = offsetX + (image.Size) / 2 - (real_hint_width / 2) + 30 + 5;
 
-
-            //consoleLog(offsetX);
-            int addt = 0;
-            string direction = getMouseDirection();
-            if (direction == "left")
-            {
-                addt = 0;
-            }
-            double left = offsetX + (image.Size) / 2 - (real_hint_width / 2) + addt + 30 + 5;
-            //if (left < 5) left = 5;
-            double width = hint_width;
-
-            animateHint(left, width, 0, 0, 1, 0);
+            //Изменяем позицию и размер подсказки
+            animateHint(left, 0, 0);
         }
+        /// <summary>
+        /// Обработчик события перемещения мыши по иконке
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Img_MouseMove(object sender, MouseEventArgs e)
         {
             Img_MouseMoveDo(sender);
         }
-        private bool breakHintMove = false;
-        private string lastTheme = string.Empty;
-        private System.Drawing.Color ldominant = new System.Drawing.Color();
-
-
+        
+        /// <summary>
+        /// Функция на случай того если определённая программа запущена
+        /// </summary>
+        /// <param name="image">Значок программы</param>
         private void ifAppRunned(DockIcon image)
         {
             if (!move_lock)
@@ -412,6 +465,10 @@ namespace FoxDock
             }
 
         }
+        /// <summary>
+        /// Функция на случай того если определённая программа не запущена
+        /// </summary>
+        /// <param name="image">Значок программы</param>
         private void ifNotAppRunned(DockIcon image)
         {
             if (!move_lock)
@@ -419,48 +476,36 @@ namespace FoxDock
                 image.Highlight = false;
             }
         }
+
+        /// <summary>
+        /// Функция поиска подстроки в строке
+        /// </summary>
+        /// <param name="substr">Подстрока</param>
+        /// <param name="str">Строка</param>
+        /// <returns></returns>
         private bool substrInStr(string substr, string str)
         {
             return str.IndexOf(substr) > -1;
         }
+        /// <summary>
+        /// Функция получения названия исполняемого файла из пути
+        /// </summary>
+        /// <param name="path">Путь</param>
+        /// <returns>Название исполняемого файла</returns>
         private string appFromPath(string path)
         {
-            string app_name = System.IO.Path.GetFileNameWithoutExtension(path);
+            string app_name = System.IO.Path.GetFileNameWithoutExtension(path); //Получаем файлнейм
 
-            if (substrInStr("Microsoft Edge", app_name))
-                app_name = "msedge";
-            if (substrInStr("Explorer", app_name))
-                app_name = "explorer";
-            if (substrInStr("Проводник", app_name))
-                app_name = "explorer";
-            if (substrInStr("Chrome", app_name))
-                app_name = "chrome";
-            if (substrInStr("FL Studio", app_name))
-                app_name = "fl";
-            if (substrInStr("Visual Studio Code", app_name))
-                app_name = "vscode";
-            if (substrInStr("Visual Studio", app_name) && substrInStr("Blend", app_name))
-                app_name = "Blend";
-            if (substrInStr("Visual Studio", app_name))
-                app_name = "devenv";
-            if (substrInStr("DAEMON Tools", app_name))
-                app_name = "dtlite";
-            if (substrInStr("Word", app_name))
-                app_name = "winword";
-            if (substrInStr("REAPER", app_name))
-                app_name = "reaper";
-            if (app_name == "Paint")
-                app_name = "mspaint";
-            if (substrInStr("Advanced SystemCare", app_name))
-                app_name = "asc";
-            if (app_name == "Start Zoom")
-                app_name = "zoom";
-            if (substrInStr("OBS Studio", app_name))
-                app_name = "obs64";
+            
 
-
+            //Возвращаем правильный файлнейм
             return app_name;
         }
+        /// <summary>
+        /// Проверка того запущено ли приложение
+        /// </summary>
+        /// <param name="path">Путь</param>
+        /// <returns>Результат</returns>
         private bool CheckIfAppRunned(string path)
         {
             string app_path = getRealAppPath(path);
@@ -468,6 +513,10 @@ namespace FoxDock
 
             return System.Diagnostics.Process.GetProcessesByName(app_name).Length >= 1;
         }
+        /// <summary>
+        /// Функция уничтожения процесса
+        /// </summary>
+        /// <param name="path">Путь</param>
         private void killProcess(string path)
         {
             string app_path = getRealAppPath(path);
@@ -475,7 +524,9 @@ namespace FoxDock
 
             System.Diagnostics.Process.GetProcessesByName(app_name)[0].Kill();
         }
-        private bool dockHidden = false;
+        /// <summary>
+        /// Логика проверки активности приложений из Дока
+        /// </summary>
         private void AppsActiveLogic()
         {
             try
@@ -512,10 +563,12 @@ namespace FoxDock
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.Message + " beda #2");
+                Debug.WriteLine(ex.ToString() + " beda #2");
             }
         }
-
+        /// <summary>
+        /// Функция отображения Док бара
+        /// </summary>
         public void ShowDock()
         {
 
@@ -536,9 +589,10 @@ namespace FoxDock
             Timeline.SetDesiredFrameRate(myDoubleAnimation, 60);
             this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
             this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(this.Opacity, 1));
-
-
         }
+        /// <summary>
+        /// Функция скрытия Док бара
+        /// </summary>
         public void HideDock()
         {
             dockHidden = true;
@@ -555,6 +609,10 @@ namespace FoxDock
             this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
             this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(this.Opacity, 0));
         }
+        /// <summary>
+        /// Фунция безопасного инвока
+        /// </summary>
+        /// <param name="act"></param>
         private void SafeInvoke(Action act)
         {
             try
@@ -566,13 +624,17 @@ namespace FoxDock
                 consoleLog("Invoke error");
             }
         }
-       
+        
+        /// <summary>
+        /// Логика основного таймера
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MainTimer_Tick(object sender, EventArgs e)
         {
-            SHDocVw.ShellWindows shellWindows = new SHDocVw.ShellWindows();
+            SHDocVw.ShellWindows shellWindows = new SHDocVw.ShellWindows(); //Получаем все окна проводника
 
-            string filename;
-
+            //В зависимости от кол-ва окон проводника отображаем или скрываем хайлайт под виджетом проводника
             if(shellWindows.Count > 0)
             {
                 SafeInvoke(() => ExplorerIcon.Highlight = true);
@@ -580,59 +642,65 @@ namespace FoxDock
             {
                 SafeInvoke(() => ExplorerIcon.Highlight = false);
             }
+
+            //Переменная для того, чтобы обозначить существования корзины среди окон проводника
             bool rb_matches = false;
+
+            //Проходимся по всем окнам проводника
             foreach (SHDocVw.InternetExplorer ie in shellWindows)
             {
+                //Если есть в кармане пачка... Ой, не то пальто... Кхм. Если текущее окно - окно корзины задаём значение переменной на положительное
                 if(ie.LocationName == "Recycle Bin" || ie.LocationName == "Корзина" || ie.LocationName == "Кошик")
                 {
                     rb_matches = true;
                 }
             }
+
+            //Если есть корзина
             if(rb_matches)
             {
-                SafeInvoke(() => TrashIcon.Highlight = true);
-            } else
+                SafeInvoke(() => TrashIcon.Highlight = true); //Делаем хайлайт активным
+            } else //Иначе
             {
-                SafeInvoke(() => TrashIcon.Highlight = false);
+                SafeInvoke(() => TrashIcon.Highlight = false); //Делаем хайлайт неактивным
             }
+
+            //Пытаемся получить и задать значок Корзины
             try
             {
                 Application.Current.Dispatcher.Invoke(() => TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions()));
             }
             catch
             {
+                consoleLog("Ошибка получения и задания значка Корзины");
+            }
 
-            }
-            
-            int taskbar = 0;
-            WindowAPI.TaskBarLocation location = WindowAPI.GetTaskBarLocation();
-            if (location == WindowAPI.TaskBarLocation.BOTTOM)
-            {
-                taskbar = Application.Current.Dispatcher.Invoke(() => (int)(WpfScreen.GetScreenFrom(this).DeviceBounds.Bottom - WpfScreen.GetScreenFrom(this).WorkingArea.Bottom));
-            }
+            //Получаем высоту Панели Задач в случае того, если она расположена снизу
+            int taskbar = GetTaskBarH();
             taskbar_g = taskbar;
+
+            //Если нету блокировки движений
             if (!move_lock)
             {
-
+                //Выполняем логику активности приложений в новом потоке
                 Task.Factory.StartNew(() =>
                 {
                     AppsActiveLogic();
                 });
 
+                //Пробуем анимировать положение Дока по вертикали
                 try
                 {
                     SafeInvoke(() => animateHChange(System.Windows.SystemParameters.PrimaryScreenHeight - this.Height, this.Height));
                 }
                 catch (Exception ex)
                 {
+                    //В случае ошибки - выводим её в консоль
                     Debug.WriteLine(ex.Message + " beda #3");
                 }
             }
-
-
-
-
-
+            
+            //Если стартовая анимация выполнена и не заблокировано изменение размера, то выполняем логику автоматической позиции Дока и подсказки
             try
             {
                 if (startup_animation_completed && !lockSizeChange)
@@ -640,18 +708,22 @@ namespace FoxDock
             }
             catch
             {
-                consoleLog("AAAAAA BLET");
+                consoleLog("Ошибка расчёта автоматической позиции Дока и подсказки");
             }
 
         }
-
+        /// <summary>
+        /// Функция автоматической позиции Дока и подсказки
+        /// </summary>
         public void AutoTooltipAndDockPosition()
         {
-            if (!startup_animation_completed) return;
+            if (!startup_animation_completed) return; //Если стартовая анимация не выполнена - останавливаем выполнение функции
+
+            //Высчитываем положение подсказки
             double top = System.Windows.SystemParameters.PrimaryScreenHeight - this.Height - taskbar_g;
-            //consoleLog(taskbar_g);
             tooltip.Top = top - tooltip.Height;
 
+            //Меняем текущее положение окна по вертикали
             DoubleAnimation fastda = new DoubleAnimation
             {
                 From = this.Top,
@@ -661,16 +733,24 @@ namespace FoxDock
             if (!dockHidden)
                 this.BeginAnimation(TopProperty, fastda);
         }
+        /// <summary>
+        /// Функция адаптивного фона
+        /// </summary>
+        /// <param name="upd"></param>
         public void AutoWallUI(bool upd = false)
         {
             Task.Factory.StartNew(() =>
             {
+                //Получаем из реестра тему
                 var wpReg = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", false);
                 var theme = wpReg.GetValue("SystemUsesLightTheme").ToString();
+
+                //Закрываем работу с реестра
                 wpReg.Close();
 
                 SafeInvoke(() =>
                 {
+                    //Комбинируем основные значки с виджетами
                     List<DockIcon> combined = new List<DockIcon>();
                     foreach (DockIcon di in MainPanel.Children)
                     {
@@ -680,18 +760,30 @@ namespace FoxDock
                     {
                         combined.Add(di);
                     }
+
+                    //Выполняем стандартную анимацию анимации темы
                     Animations.ThemeAnimate(theme, App_bg, tooltip, WhiteOverlay, BlackOverlay, combined);
                 });
             });
         }
 
-
+        /// <summary>
+        /// Функция логирования в консоль
+        /// </summary>
+        /// <param name="cdd">Объект</param>
         public void consoleLog(object cdd)
         {
             Debug.WriteLine(cdd);
         }
+
+        /// <summary>
+        /// Функция получения значка Корзины
+        /// </summary>
+        /// <returns>Значок</returns>
         private static Icon GetTrashIcon()
         {
+            //Снова неведомая херня с взаимодействием с Win32 API. Писал в состоянии алкогольного опьянения...
+            //На всякий случай, чтобы не еб#нуло ошибку всю логику помещаем в try, catch
             try
             {
                 Win32E.SHFILEINFO psfi = new Win32E.SHFILEINFO();
@@ -719,12 +811,19 @@ namespace FoxDock
             }
             catch (Exception ex)
             {
+                //Если таки ошибка - выводим её в консоль
                 Debug.WriteLine(ex.Message + " beda #4");
             }
             return (Icon)null;
         }
+        /// <summary>
+        /// Функция получения значка по пути
+        /// </summary>
+        /// <param name="path">Путь к файлу/папке</param>
+        /// <returns></returns>
         private static Icon GetSystemIcon(string path)
         {
+            //Тут всё почти так же, как и в предыдущей функции. Мне лень описывать)
             try
             {
                 Win32E.SHFILEINFO psfi = new Win32E.SHFILEINFO();
@@ -749,28 +848,35 @@ namespace FoxDock
             }
             return (Icon)null;
         }
-        private bool move_lock = false;
-
+        
+        /// <summary>
+        /// Функция обработки успешного перетаскивания на Док
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Main_Drop(object sender, DragEventArgs e)
         {
-            if (cache.dockLock) return;
-            isDrop = false;
-
+            if (cache.dockLock || movingToTrash) return; //Если не включена блокировка значков или идёт перемещение в корзину
+            isDrop = false; //Задаём отрицательное значение переменной, которая сигнализирует о том, что происходит перетаскивание
             
-            consoleLog(string.Join(", ", e.Data.GetFormats()));
-
+            //Если на Док перетащили файлы/папки, а не какую-то иную фигню
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 try
                 {
+                    //Получаем файлы/папки
                     string[] s = (string[])e.Data.GetData(DataFormats.FileDrop);
                     
-
+                    //Проходимся по всем объектам
                     foreach (string fn in s)
                     {
+                        //Получаем название объекта
                         string lname = System.IO.Path.GetFileNameWithoutExtension(fn);
+
+                        //Если такого объекта уже нету в Доке
                         if (cache.dock_apps_path.IndexOf(fn) == -1)
                         {
+                            //Добавляем в кеш и на панель
                             cache.dock_apps.Add(lname);
                             cache.dock_apps_path.Add(fn);
                             CacheOperations.StoreCache(cache);
@@ -782,56 +888,64 @@ namespace FoxDock
                 }
                 catch (Exception ex)
                 {
+                    //Выводим сообщение об ошибке
                     Debug.WriteLine(ex.Message + " beda #5");
                 }
             }
         }
 
-
-        private bool apprunned = false;
         /// <summary>
-        /// Returns whether the given path/file is a link
+        /// Проверка файла на то, является ли он ярлыком
         /// </summary>
-        /// <param name="shortcutFilename"></param>
+        /// <param name="path">Путь к ярлыку</param>
         /// <returns></returns>
-        public static bool IsLink(string path)
+        public bool IsLink(string path)
         {
-            /*
-            try
+
+            string pathOnly = System.IO.Path.GetDirectoryName(path);
+            string filenameOnly = System.IO.Path.GetFileName(path);
+
+            
+            Type shellAppType = Type.GetTypeFromProgID("Shell.Application");
+
+            Object shell = Activator.CreateInstance(shellAppType);
+            Folder folder = (Shell32.Folder)shellAppType.InvokeMember("NameSpace",
+            System.Reflection.BindingFlags.InvokeMethod, null, shell, new object[] { pathOnly });
+
+            FolderItem folderItem = folder.ParseName(filenameOnly);
+
+            if (folderItem != null)
             {
-                string directory = System.IO.Path.GetDirectoryName(path);
-                string file = System.IO.Path.GetFileName(path);
-
-                Shell32.Shell shell = new Shell32.Shell();
-                Shell32.Folder folder = shell.NameSpace(directory);
-                Shell32.FolderItem folderItem = folder.ParseName(file);
-
-                if (folderItem != null)
-                {
-                    return folderItem.IsLink;
-                }
-
-                return false;
-
-
+                return folderItem.IsLink;
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message + " beda #6" + ex.TargetSite);
-            }
-            */
-
             return false; // not found
         }
-
+        /// <summary>
+        /// Получение исходного пути ярлыка
+        /// </summary>
+        /// <param name="shortcutFilename">Путь к ярлыку</param>
+        /// <returns></returns>
         public static string GetShortcutTarget(string shortcutFilename)
         {
-            /*
+            
             string pathOnly = System.IO.Path.GetDirectoryName(shortcutFilename);
             string filenameOnly = System.IO.Path.GetFileName(shortcutFilename);
 
-            Shell32.Shell shell = new Shell32.Shell();
-            Shell32.Folder folder = shell.NameSpace(pathOnly);
+            if(File.Exists(Path.GetTempPath() + "\\" + filenameOnly))
+            {
+                pathOnly = Path.GetTempPath();
+            } else
+            {
+                File.Copy(shortcutFilename, Path.GetTempPath() + "\\" + filenameOnly);
+                pathOnly = Path.GetTempPath();
+            }
+
+            Type shellAppType = Type.GetTypeFromProgID("Shell.Application");
+
+            Object shell = Activator.CreateInstance(shellAppType);
+            Folder folder = (Shell32.Folder)shellAppType.InvokeMember("NameSpace",
+            System.Reflection.BindingFlags.InvokeMethod, null, shell, new object[] { pathOnly });
+
             Shell32.FolderItem folderItem = folder.ParseName(filenameOnly);
             if (folderItem != null)
             {
@@ -851,137 +965,146 @@ namespace FoxDock
                 return shortcutFilename;
             }
             return string.Empty;  // not found
-            */
-            return shortcutFilename;
+            
+            
         }
+        /// <summary>
+        /// Получение пути к приложению
+        /// </summary>
+        /// <param name="path">Путь</param>
+        /// <returns>Путь</returns>
         public string getRealAppPath(string path)
         {
-            if (IsLink(path))
+            if (IsLink(path)) //Если путь - ярлык
             {
-                return GetShortcutTarget(path);
+                return GetShortcutTarget(path); //Получаем путь из ярлыка
             }
             else
             {
-                return path;
+                return path; //В противном случае - возвращаем - путь который был
             }
 
         }
+        /// <summary>
+        /// Обработка события Mouse_Up значка дока
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Img_MouseUp(object sender, MouseButtonEventArgs e)
         {
+            DockIcon img = sender as DockIcon; //Получаем текущий значок
 
+            int current_index = MainPanel.Children.IndexOf(img); //Получаем его индекс
 
-            DockIcon img = sender as DockIcon;
-
-            int current_index = MainPanel.Children.IndexOf(img);
-
-            if (down_icon != null && isDown && !isDrop)
+            if (down_icon != null && isDown && !isDrop) //Если нету перетаскивания на Док и до этого левая кнопка мыши была зажата
             {
-
+                //Если зажатый значок был тем же, что и текущий
                 if (down_icon == img)
                 {
-                    Process[] processes = Process.GetProcesses();
-
+                    //Проучаем путь к приложению
                     string app_path = getRealAppPath(cache.dock_apps_path[current_index]);
                     string app_name = appFromPath(app_path);
 
-
+                    //Проверяем запущено ли оно
                     var already_runned = System.Diagnostics.Process.GetProcessesByName(app_name).Count() >= 1;
+
+                    //Переводим прозрачность основной панели в нормальное состояние
                     MainPanel.Opacity = 1;
                     apprunned = true;
+
+                    //Для защиты от вылета затачиваем весь следующий код в try, catch
                     try
                     {
-
+                        //Если приложение запущено
                         if (already_runned)
                         {
-
-
+                            //Получаем связанные процессы
                             Process[] process = System.Diagnostics.Process.GetProcessesByName(app_name);
 
+                            //Получаем их количество
                             int proc_c = process.Length;
 
+                            //Переменная для хранения кол-ва реальных окон
                             int real_windows = 0;
-
-                            var allChildWindows = WindowAPI.EnumerateProcessWindowHandles(process.First().Id);
-
+                            
+                            //Проходимся по всем связанным процессам
                             for (int i = 0; i < proc_c; i++)
                             {
+                                //Получаем текущий
                                 Process proc = process[i];
 
-
-
+                                //Если основного окна не существует либо приложение - проводник
                                 if (proc.MainWindowHandle == IntPtr.Zero || app_name == "explorer")
                                 {
+                                    //Если процесс последний и кол-во окон - 0 или приложение - проводник
                                     if (i == proc_c - 1 && real_windows == 0 || app_name == "explorer")
+                                        //Запускаем приложение по-новой
                                         System.Diagnostics.Process.Start(cache.dock_apps_path[current_index]);
                                 }
-                                else
+                                else //В противном случае
                                 {
+                                    //+1 к реальным окнам
                                     real_windows++;
 
+                                    //Если окно скрыто
                                     if (WindowAPI.IsIconic(proc.MainWindowHandle))
                                     {
+                                        //Показываем и делаем его активным
                                         WindowAPI.SetForegroundWindow(proc.MainWindowHandle);
                                         WindowAPI.ShowWindowAsync(proc.MainWindowHandle, 9);
 
                                     }
-                                    else
+                                    else //Если окно открыто
                                     {
-
+                                        //Скрываем его
                                         WindowAPI.ShowWindowAsync(proc.MainWindowHandle, WindowAPI.SW_MINIMIZE);
 
                                     }
                                 }
-                                // consoleLog(real_windows);
-
-
                             }
-
-
-
-
                         }
-                        else
+                        else //Если приложение не запущено
                         {
+                            //Запускаем его
                             System.Diagnostics.Process.Start(cache.dock_apps_path[current_index]);
                         }
 
                     }
                     catch (Exception ex)
                     {
+                        //Если совсем пипец - выводим сообщение об этом в консоль
                         Debug.WriteLine(ex.Message + " beda #8");
                     }
                 }
-                else
-                {
-
-
-                }
             }
+            //Переводим переменную активности нажатия в отрицательное состояние
             isDown = false;
 
-            DoubleAnimation myDoubleAnimation = new DoubleAnimation
-            {
-                From = img.Opacity,
-                To = 1,
-                Duration = TimeSpan.FromSeconds(0.2),
-                EasingFunction = new SineEase(),
+            //Выполняем анимацию прозрачности, чтобы вернуть её в нормальное состояние для значка
+            img.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(img.Opacity, 1, 0.2));
 
-            };
-            Timeline.SetDesiredFrameRate(myDoubleAnimation, 30);
-            img.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation);
         }
+        /// <summary>
+        /// Функция задания активного значка для контекстного меню
+        /// </summary>
+        /// <param name="img">Значок</param>
         public void SetContextIcon(DockIcon img)
         {
+            //Отображаем пункт контекстного меню, отвечающий за удаление значка из Дока
             RemoveFromDockButton.Opacity = 1;
             RemoveFromDockButton.IsEnabled = true;
 
+            //Получаем имя и путь текущего значка
             string current_name = cache.dock_apps[MainPanel.Children.IndexOf(img)];
             string current_path = cache.dock_apps_path[MainPanel.Children.IndexOf(img)];
 
+            //Задаём кнопке закрытия проги в контекстном меню нужное имя
             CloseSomeAppButton.Header = "Close " + current_name;
 
+            //Проверяем запущено ли приложение
             bool apprunned = CheckIfAppRunned(current_path);
 
+            //В зависимости от результата делаем активной/неактивной кнопку закрытия приложения
             if (apprunned)
             {
                 CloseSomeAppButton.IsEnabled = true;
@@ -990,83 +1113,54 @@ namespace FoxDock
             {
                 CloseSomeAppButton.IsEnabled = false;
             }
+
+            //Задаём текущий значок как контекстный
             context_icon = img;
         }
-        public class WinStates
-        {
-            public List<string> names = new List<string>();
-            public List<int> states = new List<int>();
-
-            public void Set(string name, int state)
-            {
-                if (!names.Contains(name))
-                {
-                    names.Add(name);
-                    states.Add(state);
-
-                }
-                else
-                {
-                    states[names.IndexOf(name)] = state;
-                }
-            }
-            public int Get(string name)
-            {
-                int index = names.IndexOf(name);
-                if (index != -1)
-                {
-                    return states[index];
-                }
-                else
-                {
-                    return 1;
-                }
-            }
-        }
-
-        private bool isDown;
-        private UIElement down_icon;
-        private UIElement context_icon;
+        
+        /// <summary>
+        /// Обработчик события нажатия на значок Дока
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Img_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            apprunned = false;
+            apprunned = false; //Приводим индикацию запущенности приложения в исходное состояние
+
+            //Если нажатие было левой клавишей мыши
             if (e.LeftButton == MouseButtonState.Pressed)
-                isDown = true;
+                isDown = true; //Обозначаем нажатие
 
-
+            //Получаем значок из сендера
             DockIcon img = sender as DockIcon;
 
+            //Если была нажата правая клавиша
             if (e.RightButton == MouseButtonState.Pressed)
             {
+                //Делаем значок контекстным
                 SetContextIcon(img);
             }
 
-
+            //Обозначаем, что именно наш значок был зажат
             down_icon = img;
-
-            DoubleAnimation myDoubleAnimation = new DoubleAnimation
-            {
-                From = img.Opacity,
-                To = 0.5,
-                Duration = TimeSpan.FromSeconds(0.2),
-                EasingFunction = new SineEase()
-            };
-            Timeline.SetDesiredFrameRate(myDoubleAnimation, 30);
-            img.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation);
-
-
-
+            
+            //Делаем значок полупрозрачным
+            img.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(img.Opacity, 0.5, 0.2));
         }
-        public static int defsize = 56;
-
-        public int size = (int)(defsize * cache.scaleFactor);
-
-
+        
+        /// <summary>
+        /// Логика обработки события выхода курсора за рамки иконки
+        /// </summary>
+        /// <param name="sender"></param>
         private void Img_MouseLeaveDo(object sender)
         {
-            breakHintMove = true;
-            isHovered = false;
+            isHovered = false; //Обозначаем, что ни один значок не наведён
         }
+        /// <summary>
+        /// Обработка события выхода курсора за рамки иконки
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Img_MouseLeave(object sender, MouseEventArgs e)
         {
             Task.Factory.StartNew(() =>
@@ -1074,25 +1168,23 @@ namespace FoxDock
                 SafeInvoke(() => Img_MouseLeaveDo(sender));
             });
         }
+        /// <summary>
+        /// Применяем изменение размера
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="e"></param>
+        /// <param name="dur"></param>
         private void animateSizeChange(int start, int end, DockIcon e, double dur = 0.1)
         {
-            /*
-            DoubleAnimation myDoubleAnimation = new DoubleAnimation
-            {
-                From = start,
-                To = end,
-                Duration = TimeSpan.FromSeconds(dur),
-                EasingFunction = new QuadraticEase {EasingMode = EasingMode.EaseInOut }
-            };
-            */
-
-            //Timeline.SetDesiredFrameRate(myDoubleAnimation, 60);
-            //e.BeginAnimation(DockIcon.WidthProperty, myDoubleAnimation, HandoffBehavior.Compose);
-            //.BeginAnimation(DockIcon.HeightProperty, myDoubleAnimation, HandoffBehavior.Compose);
-
             e.Size = end;
         }
-        public bool lockSizeChange = false;
+        /// <summary>
+        /// Анимация изменения ширины
+        /// </summary>
+        /// <param name="start">Бывшее значение</param>
+        /// <param name="end">Новое значение</param>
+        /// <param name="e">Окно</param>
         public void animateWChange(int start, int end, Window e)
         {
             if (lockSizeChange) return;
@@ -1104,6 +1196,11 @@ namespace FoxDock
             };
             e.BeginAnimation(Window.WidthProperty, myDoubleAnimation);
         }
+        /// <summary>
+        /// Анимация изменения высоты и смещения относительно верха экрана
+        /// </summary>
+        /// <param name="top">Смещение</param>
+        /// <param name="height">Высота</param>
         public void animateHChange(double top, double height)
         {
             if (lockSizeChange) return;
@@ -1127,18 +1224,14 @@ namespace FoxDock
             this.BeginAnimation(Window.HeightProperty, myDoubleAnimation2);
 
         }
-        private double hint_width = 0;
-        private void animateHint(double left_pos, double width, int index, double top_pos, int opacity, double dur = 0.1, bool breakdis = false)
+        /// <summary>
+        /// Коплексная нимация подсказки
+        /// </summary>
+        /// <param name="left_pos">Позиция по левому краю</param>
+        /// <param name="top_pos">Позиция по верху</param>
+        /// <param name="dur">Длительность анимации</param>
+        private void animateHint(double left_pos, double top_pos, double dur = 0.1)
         {
-
-            DoubleAnimation myDoubleAnimation2 = new DoubleAnimation
-            {
-                From = tooltip.app_hint.Opacity,
-                To = opacity,
-                Duration = TimeSpan.FromSeconds(dur),
-                EasingFunction = new SineEase()
-            };
-            Timeline.SetDesiredFrameRate(myDoubleAnimation2, 100);
             ThicknessAnimation thicknessAnimation = new ThicknessAnimation
             {
                 From = tooltip.app_hint.Margin,
@@ -1147,21 +1240,14 @@ namespace FoxDock
                 EasingFunction = new SineEase()
             };
 
-            thicknessAnimation.Completed += (x, y) =>
-            {
-                if (breakdis)
-                {
-                    breakHintMove = false;
-                }
-            };
             Timeline.SetDesiredFrameRate(thicknessAnimation, 100);
 
             tooltip.app_hint.BeginAnimation(Window.MarginProperty, thicknessAnimation);
-            //tooltip.app_hint.BeginAnimation(Window.OpacityProperty, myDoubleAnimation2);
-
         }
-        private double oldX = 0;
-        private double mouseSpeed = 0;
+        /// <summary>
+        /// Получения направления мыши
+        /// </summary>
+        /// <returns></returns>
         private string getMouseDirection()
         {
             string xDirection = string.Empty;
@@ -1179,160 +1265,77 @@ namespace FoxDock
             oldX = System.Windows.Forms.Cursor.Position.X - this.Left;
             return xDirection;
         }
-        private bool isHovered = false;
+        /// <summary>
+        /// Логика обработки события наведения на значок
+        /// </summary>
+        /// <param name="sender"></param>
         private void Img_MouseEnterDo(object sender)
         {
-            /*
-            DoubleAnimation myDoubleAnimation = new DoubleAnimation
-            {
-                From = Icons_highlights.Opacity,
-                To = 0,
-                Duration = TimeSpan.FromSeconds(0.1),
-                EasingFunction = new SineEase()
-            };
-            Timeline.SetDesiredFrameRate(myDoubleAnimation, 30);
-            Icons_highlights.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation);
-            */
             if (!move_lock)
             {
-
-
+                //Получаем текущий значок
                 DockIcon img = sender as DockIcon;
 
-                IEnumerator enumerator = MainPanel.Children.GetEnumerator();
-                enumerator.Reset();
-
-
-
+                //Получаем текущий индекс
                 int current_index = MainPanel.Children.IndexOf(img);
 
-                string current_label = string.Empty;
+                string current_label = string.Empty; //Переменная для текущей подсказки
 
-                if (current_index != -1)
+                if (current_index != -1) //Если индекс определён
                 {
-                    current_label = cache.dock_apps[current_index];
+                    current_label = cache.dock_apps[current_index]; //Получаем текущую подсказку
                 }
                 else
                 {
-                    current_label = img.Label;
+                    current_label = img.Label; //В противном случае берём подсказку из свойства объекта
                 }
 
-
+                //Если объекте подсказки текст не сходится с текстом подсказки из значка
                 if ((string)tooltip.app_hint.Content != current_label)
                 {
-                    int speed = 0;
-                    speed = System.Windows.Forms.SystemInformation.MouseSpeed;
-
-                    bool break_an = false;
-                    if (mouseSpeed > 13) break_an = true;
-                    //Debug.WriteLine(mouseSpeed);
-
+                    //Обновляем текст в объекте подсказки
                     tooltip.app_hint.Content = current_label;
-                    DoubleAnimation opacityAnimation = new DoubleAnimation
-                    {
-                        From = 0,
-                        To = 1,
-                        Duration = TimeSpan.FromMilliseconds(100),
-                        EasingFunction = new SineEase()
-                    };
-                    if (!break_an)
-                        tooltip.app_hint.BeginAnimation(OpacityProperty, opacityAnimation);
 
-                    DoubleAnimation scaleAnimation = new DoubleAnimation
-                    {
-                        From = 0.6,
-                        To = 1,
-                        Duration = TimeSpan.FromMilliseconds(200),
-                        EasingFunction = new SineEase()
-                    };
-                    //if (!break_an)
-                    //    tooltip.hintScale.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
-                    //if (!break_an)
-                    //    tooltip.hintScale.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
-
-                    DoubleAnimation transYAnimation = new DoubleAnimation
-                    {
-                        From = 20,
-                        To = 0,
-                        Duration = TimeSpan.FromMilliseconds(200),
-                        EasingFunction = new SineEase()
-                    };
-                    //if (!break_an)
-                    //    tooltip.hintTrans.BeginAnimation(TranslateTransform.YProperty, transYAnimation);
-
-
+                    //Запускаем анимацию прозрачности подсказки
+                    tooltip.app_hint.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(0, 1, 0.2));
                 }
-
+                //Отображаем подсказку
                 tooltip.app_hint.Visibility = Visibility.Visible;
 
+                //Если индекс существует
                 if (current_index != -1)
                 {
+                    //Задаем текущий значок как контекстный
                     context_icon = img;
                 }
-                //tooltip.app_hint.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(100, 40, 40, 40));
-
-
-                int single_icons_count = current_index - 2;
-                if (single_icons_count < 0) single_icons_count = 0;
-                int single_icons_size = single_icons_count * size;
-
-                int low_icons_count = 0;
-                if (current_index - 2 > 0)
-                {
-                    low_icons_count = 1;
-                }
-                double low_icons_size = low_icons_count * (size * 1.05);
-
-                int mid_icons_count = 0;
-                if (current_index - 2 >= 0)
-                {
-                    mid_icons_count = 1;
-                }
-                double mid_icons_size = mid_icons_count * (size * 1.1);
-
-                double big_icon_size = size * 1.2;
-                double l_size = single_icons_size + low_icons_size + mid_icons_size + big_icon_size;
-
-                //consoleLog(single_icons_count + "-" + low_icons_count + "-" + mid_icons_count + "-" + 1);
-
+                
+                //Создаём клон подсказки
                 Label label = tooltip.app_hint;
 
-
+                //Подстраиваем ширину клона под содержание
                 label.Measure(new System.Windows.Size(Double.PositiveInfinity, Double.PositiveInfinity));
-
                 label.Arrange(new Rect(label.DesiredSize));
 
-
-                //SizeF size = tooltip.app_hint.CreateGraphics().MeasureString(myLabel.Text, myLabel.Font);
+                //Получаем ширину из клона
                 double real_hint_width = label.ActualWidth;
 
+                //Получаем смещение
                 DockIcon uIElement = img;
-
                 var element_Visual_Relative = uIElement.TransformToVisual((Visual)Content);
-
                 System.Windows.Point offset = element_Visual_Relative.Transform(new System.Windows.Point(0, 0));
                 var offsetX = offset.X;
-
-
-                //consoleLog(offsetX);
-                int addt = 0;
-                string direction = getMouseDirection();
-                if (direction == "left")
-                {
-                    addt = 0;
-                }
-                double left = offsetX + (img.Size) / 2 - (real_hint_width / 2) + addt + 30 + 5;
-                //if (left < 5) left = 5;
-                double width = hint_width;
-
-                //consoleLog(real_hint_width);
-
-                //if (left > (this.Width - real_hint_width - 5)) left = this.Width - real_hint_width - 5;
-                breakHintMove = false;
-                animateHint(left, width, 0, 0, 1, 0);
-
+                
+                //Получаем смещение по левому краю для подсказки
+                double left = offsetX + (img.Size) / 2 - (real_hint_width / 2) + 30 + 5;
+                
+                animateHint(left, 0, 0);
             }
         }
+        /// <summary>
+        /// Обработка события наведения на значок
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Img_MouseEnter(object sender, MouseEventArgs e)
         {
             Task.Factory.StartNew(() =>
@@ -1340,30 +1343,45 @@ namespace FoxDock
                 isHovered = true;
                 SafeInvoke(() => Img_MouseEnterDo(sender));
             });
-
         }
-        private bool isDrop = false;
+        /// <summary>
+        /// Обработка появления перетаскивания на Док
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Main_Drop_Enter(object sender, DragEventArgs e)
         {
+            //Если есть данные нужного формата (а не фигня всякая)
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
+                //Если значки дока не заблокированы
                 if(!cache.dockLock)
                 {
                     e.Effects = DragDropEffects.Copy;
                     isDrop = true;
-                } else
+                } else //В противном случае
                 {
                     e.Effects = DragDropEffects.None;
                 }
                 
             }
         }
+        /// <summary>
+        /// Функция логики закрытия Дока
+        /// </summary>
         private void ExitDock()
         {
+            //Останавливаем таймеры
             mainTimer.Stop();
             mouseTimer.Stop();
+
+            //Блокируем док
             move_lock = true;
+
+            //Делаем окно неактивным
             this.IsEnabled = false;
+
+            //Создаём анимацию закрытия Дока
             DoubleAnimation myDoubleAnimation = new DoubleAnimation
             {
                 From = this.Top,
@@ -1373,66 +1391,58 @@ namespace FoxDock
 
             };
             Timeline.SetDesiredFrameRate(myDoubleAnimation, 60);
-            myDoubleAnimation.Completed += MyDoubleAnimation_Completed1;
-            myDoubleAnimation.RemoveRequested += MyDoubleAnimation_Completed1;
+            myDoubleAnimation.Completed += CloseAnimation_Completed;
+            myDoubleAnimation.RemoveRequested += CloseAnimation_Completed;
+
+            //Закрытие окон подсказки и настроек
             tooltip.Close();
             settings.Close();
+
+            //Блокируем изменение размера
             lockSizeChange = true;
+
+            //Анимируем закрытие Дока
             this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
             this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(this.Opacity, 0));
         }
+        /// <summary>
+        /// Обработка события нажатия кнопки закрытия Дока
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
             ExitDock();
         }
-
-        private void MyDoubleAnimation_Completed1(object sender, EventArgs e)
+        /// <summary>
+        /// Обработка события завершения анимации перед закрытием
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CloseAnimation_Completed(object sender, EventArgs e)
         {
             Close();
             Environment.Exit(0);
         }
 
-        private bool dactive = false;
-        private System.Timers.Timer hide_timer;
-        private bool hide_trigger = false;
+        /// <summary>
+        /// Обработка события закрытия окна
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Window_MouseLeave(object sender, MouseEventArgs e)
         {
-            if (hide_timer == null)
-            {
-                hide_timer = new System.Timers.Timer();
-                hide_timer.Interval = 3000;
-                hide_timer.Elapsed += (xx, yx) =>
-                {
-                    hide_timer.Stop();
-                    hide_trigger = true;
-                    hide_timer = null;
-                };
-                hide_timer.Start();
-            }
+            //Обозначаем то, что значки панели не анимированны
             panelIconsAnimated = false;
 
+            //Очищяем значок переноса
             Draggable_icon.Source = null;
             dr_ic = null;
-            /*
-            DoubleAnimation myDoubleAnimation3 = new DoubleAnimation
-            {
-                From = Icons_highlights.Opacity,
-                To = 1,
-                Duration = TimeSpan.FromSeconds(0.1),
-                EasingFunction = new SineEase()
-            };
-            Timeline.SetDesiredFrameRate(myDoubleAnimation3, 30);
-            Icons_highlights.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation3);
-            */
 
-            dactive = true;
+            //Если нету блокировки движения значков Дока
             if (!move_lock)
             {
-
-
-
-
-
+                //Комбинируем пользовательские значки с виджетами
                 List<DockIcon> combined = new List<DockIcon>();
                 foreach (DockIcon di in MainPanel.Children)
                 {
@@ -1442,23 +1452,15 @@ namespace FoxDock
                 {
                     combined.Add(di);
                 }
-
-
-
+                
+                //Проходимся по всем значкам из комбинированных
                 foreach (DockIcon img_cur in combined)
                 {
-
+                    //Если текущий значок существует
                     if (img_cur != null)
                     {
-                        DoubleAnimation myDoubleAnimation = new DoubleAnimation
-                        {
-                            From = img_cur.Opacity,
-                            To = 1,
-                            Duration = TimeSpan.FromSeconds(0.2),
-                            EasingFunction = new SineEase()
-                        };
-                        Timeline.SetDesiredFrameRate(myDoubleAnimation, 30);
-                        img_cur.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation);
+                        //Анимируем его в нормальное состояние и размер
+                        img_cur.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(img_cur.Opacity, 1, 0.2));
                         DoubleAnimation doubleAnimation = new DoubleAnimation
                         {
                             From = img_cur.Size,
@@ -1472,174 +1474,158 @@ namespace FoxDock
                         };
                         img_cur.BeginAnimation(DockIcon.SizeProperty, doubleAnimation);
                     }
-
-
-
                 }
             }
+            //Если есть зажатая иконка
             if (down_icon != null && isDown && !apprunned && !cache.dockLock)
             {
+                //Запрашиваем её удаление
                 DockIcon dimg = down_icon as DockIcon;
                 RemoveFromDock(dimg);
+                MainPanel.Opacity = 1;
             }
+            //Очищаем подсказку
             tooltip.app_hint.Content = string.Empty;
-
-
-            //tooltip.app_hint.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0, 25, 25, 25));
-            animateHint(tooltip.app_hint.Margin.Left - 100, tooltip.app_hint.Width, -1, 0, 0);
+            
+            //Анимируем подсказку
+            animateHint(tooltip.app_hint.Margin.Left - 100, -1, 0);
             tooltip.app_hint.Visibility = Visibility.Hidden;
 
-
-            IEnumerator enumerator = MainPanel.Children.GetEnumerator();
-            enumerator.Reset();
-            for (int i = 0; i < MainPanel.Children.Count; i++)
+            foreach (DockIcon img_cur in MainPanel.Children)
             {
-
-                enumerator.MoveNext();
-                DockIcon img_cur = enumerator.Current as DockIcon;
-
-
+                //Если текущий значок существует - восстанавливаем его оригинальный размер
                 if (img_cur != null)
                 {
                     animateSizeChange((int)img_cur.Size, (int)(size), img_cur);
                 }
-
             }
-
-
         }
-        public void UpdateWidthAndHighlight()
+        public void UpdateDockWidth()
         {
+            //Получаем суммарное количество значков
             int summary_icons_count = (MainPanel.Children.Count + AIcons.Children.Count);
 
+            //Считаем необходимые значения для получения ширины дока
             double summary_icons_width = summary_icons_count * size;
             double summary_icons_margin = summary_icons_count * 10;
             double separator_size_and_margin = 2 + 20;
             double free_space = size / 2;
 
+            //Дополнительная логика для особых вариантов размера
             double addt = 0;
-
             if (size < 56) addt = size / 2;
             if (size < 53) addt = size;
 
-            consoleLog(size);
-
+            //Считаем ширину Дока
             double new_width = summary_icons_width + summary_icons_margin + separator_size_and_margin + free_space + addt;
-            //consoleLog(new_width);
             if (new_width < 100) new_width = 100;
+
+            //Задаём ширину Дока
             this.Width = new_width;
         }
+        /// <summary>
+        /// Функция запроса удаления значка из дока
+        /// </summary>
+        /// <param name="image">Значок</param>
         private void RemoveFromDock(DockIcon image)
         {
-            if (dialog == null) dialog = new Dialog("Are you sure you want to delete this item?");
+            //Создаём диалог
+            if (dialog == null) dialog = new Dialog("Are you sure you want to remove this item from Dock?");
+
+            //Если диалог существует
             if (dialog != null)
             {
-                DoubleAnimation opacityAnimation = new DoubleAnimation
-                {
-                    From = image.Opacity,
-                    To = 0.2,
-                    Duration = TimeSpan.FromSeconds(0.3),
-                    EasingFunction = new BackEase()
-                };
-                MainPanel.Opacity = 1;
-                Timeline.SetDesiredFrameRate(opacityAnimation, 30);
-                image.BeginAnimation(StackPanel.OpacityProperty, opacityAnimation);
+                //Делаем значок полупрозрачным
+                image.BeginAnimation(StackPanel.OpacityProperty, Animations.OpacityAnimation(image.Opacity, 0.2, 0.3));
 
+                //Для безопасности выполняем код в конструкции try, catch
                 try
                 {
-                    dialog.Show();
-                    dialog.onResult += () =>
+                    dialog.Show(); //Отображаем диалог
+                    dialog.onResult += () => //Если есть результат диалога
                     {
+                        //Если диалог всё ещё существует
                         if (dialog != null)
                         {
+                            //Если пользователь согласился
                             if (dialog.result == true)
                             {
+                                //Получаем индекс текущего значка
                                 int dindex = MainPanel.Children.IndexOf(image);
 
-                                try
-                                {
-                                    if (dindex < cache.dock_apps.Count)
-                                        cache.dock_apps.RemoveAt(dindex);
-                                    if (dindex < cache.dock_apps_path.Count)
-                                        cache.dock_apps_path.RemoveAt(dindex);
+                                //Если индекс находится в рамках массива значков
+                                if (dindex < cache.dock_apps.Count)
+                                    cache.dock_apps.RemoveAt(dindex);
+                                if (dindex < cache.dock_apps_path.Count)
+                                    cache.dock_apps_path.RemoveAt(dindex);
 
-                                    CacheOperations.StoreCache(cache);
+                                //Сохраняем кеш
+                                CacheOperations.StoreCache(cache);
 
-                                    MainPanel.Children.Remove(image);
-                                    /*
-                                    Icons_highlights.Children.RemoveAt(dindex);
-                                    */
+                                //Удаляем текущий значок
+                                MainPanel.Children.Remove(image);
 
-
-
-
-                                }
-                                catch (Exception ex)
-                                {
-                                    Debug.WriteLine(ex.Message + " beda #13");
-                                }
-
+                                //Спустя 300 мс. обновляем ширину Дока
                                 Task.Factory.StartNew(() =>
                                 {
                                     System.Threading.Thread.Sleep(300);
-                                    SafeInvoke(() => UpdateWidthAndHighlight());
+                                    SafeInvoke(() => UpdateDockWidth());
                                 });
 
                             }
-                            else
+                            else //Если пользователь отказался
                             {
-                                DoubleAnimation opacityAnimation2 = new DoubleAnimation
-                                {
-                                    From = image.Opacity,
-                                    To = 1,
-                                    Duration = TimeSpan.FromSeconds(0.3),
-                                    EasingFunction = new BackEase()
-                                };
-                                Timeline.SetDesiredFrameRate(opacityAnimation2, 30);
-                                image.BeginAnimation(StackPanel.OpacityProperty, opacityAnimation2);
+                                //Делаем всё как было
+                                image.BeginAnimation(StackPanel.OpacityProperty, Animations.OpacityAnimation(image.Opacity, 1, 0.3));
                             }
-                            isDown = false;
+                            isDown = false; //Отменяем нажатие
                         }
+                        //Если диалог всё ещё существует
                         if (dialog != null)
                         {
+                            //Закрываем диалог
                             dialog.CloseDialog();
                         }
-
+                        //Убиваем диалог
                         dialog = null;
                     };
                 }
                 catch
                 {
-                    Debug.WriteLine("Пздц");
+                    Debug.WriteLine("Ошибка удаления значка");
                 }
 
             }
-
         }
+        /// <summary>
+        /// Обработка события отмены перетаскивания на Док
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Window_DragLeave(object sender, DragEventArgs e)
         {
             isDrop = false;
         }
-
-
-
-
-
-        private void Window_MouseEnter(object sender, MouseEventArgs e)
-        {
-
-        }
-        private bool startup_animation_completed = false;
+        /// <summary>
+        /// Обработка события изменения размера окна
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            consoleLog(1);
+            //Расчёт смещения Дока по левому краю и задание его Доку
             double left = SystemParameters.PrimaryScreenWidth / 2 - e.NewSize.Width / 2;
             this.Left = left;
+
+            //Задаём смещение и ширину окну Подсказки
             tooltip.Left = left - 30;
             tooltip.Width = e.NewSize.Width + 60;
 
+            //Считаем положение по верхнему краю для Дока
             double new_h = size + size / 2.5;
             double top = System.Windows.SystemParameters.PrimaryScreenHeight - new_h - taskbar_g;
+
+            //Если стартовая анимация была выполнена
             if (startup_animation_completed)
             {
                 DoubleAnimation fastda = new DoubleAnimation
@@ -1655,68 +1641,82 @@ namespace FoxDock
 
         }
 
-        private void MyDoubleAnimation_Completed(object sender, EventArgs e)
+        private void StartUpAnimation_Completed(object sender, EventArgs e)
         {
             startup_animation_completed = true;
         }
-
+        /// <summary>
+        /// Обработка события нажатия на кнопку Настроек
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
+            //Если есть уже окно настроек
             try
             {
+                //Отображаем окно настроек
                 settings.Show();
                 settings.Activate();
-                cache = CacheOperations.LoadCache(cache);
-                settings.StartupToggle.IsChecked = cache.runAtStartup;
-                settings.DisableBlurToggle.IsChecked = cache.disableBlur;
-                settings.StarDustEnableToggle.IsChecked = cache.enableStarDust;
-                settings.EnableTopmostToggle.IsChecked = cache.enableTopmost;
-                settings.AHToggle.IsChecked = cache.dockAutoHide;
-                settings.Trans_bar.Value = cache.bg_trans;
-                settings.ScaleSlider.Value = cache.scaleFactor;
-
-                settings.Toggle_Loaded_Do(settings.StartupToggle);
-                settings.Toggle_Loaded_Do(settings.DisableBlurToggle);
-                settings.Toggle_Loaded_Do(settings.StarDustEnableToggle);
             }
-            catch
+            catch //Если его нету
             {
+                //Создаём новый экземпляр и отображаем
                 settings = new Settings();
                 settings.Show();
                 settings.Activate();
-                cache = CacheOperations.LoadCache(cache);
-                settings.window = this;
-                settings.StartupToggle.IsChecked = cache.runAtStartup;
-                settings.DisableBlurToggle.IsChecked = cache.disableBlur;
-                settings.StarDustEnableToggle.IsChecked = cache.enableStarDust;
-                settings.EnableTopmostToggle.IsChecked = cache.enableTopmost;
-                settings.AHToggle.IsChecked = cache.dockAutoHide;
-                settings.Trans_bar.Value = cache.bg_trans;
-                settings.ScaleSlider.Value = cache.scaleFactor;
-
-                settings.Toggle_Loaded_Do(settings.StartupToggle);
-                settings.Toggle_Loaded_Do(settings.DisableBlurToggle);
-                settings.Toggle_Loaded_Do(settings.StarDustEnableToggle);
             }
+            //Задаём значение всем параметрам настроек
+            cache = CacheOperations.LoadCache(cache);
+            settings.StartupToggle.IsChecked = cache.runAtStartup;
+            settings.DisableBlurToggle.IsChecked = cache.disableBlur;
+            settings.StarDustEnableToggle.IsChecked = cache.enableStarDust;
+            settings.EnableTopmostToggle.IsChecked = cache.enableTopmost;
+            settings.AHToggle.IsChecked = cache.dockAutoHide;
+            settings.Trans_bar.Value = cache.bg_trans;
+            settings.ScaleSlider.Value = cache.scaleFactor;
+
+            //Выполняем логику для слайдеров настроек
+            settings.Toggle_Loaded_Do(settings.StartupToggle);
+            settings.Toggle_Loaded_Do(settings.DisableBlurToggle);
+            settings.Toggle_Loaded_Do(settings.StarDustEnableToggle);
 
         }
-
+        /// <summary>
+        /// Логика нажатия кнопки удаления значка в контекстном меню
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void RemoveFromDockButton_Click(object sender, RoutedEventArgs e)
         {
+            //Получаем контекстный значок
             DockIcon context_img = context_icon as DockIcon;
 
+            //Если он существует
             if (context_img != null)
             {
+                //Запрашиваем удаление
                 RemoveFromDock(context_img);
             }
         }
-
+        /// <summary>
+        /// Логика нажатия кнопки перезапуска Дока в меню
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void RestartButton_Click(object sender, RoutedEventArgs e)
         {
+            //Останавливаем все таймеры
             mainTimer.Stop();
             mouseTimer.Stop();
+
+            //Блокируем Док
             move_lock = true;
+
+            //Делаем Док не активным
             this.IsEnabled = false;
+
+            //Инициализируем анимацию закрытия Дока
             DoubleAnimation myDoubleAnimation = new DoubleAnimation
             {
                 From = this.Top,
@@ -1737,21 +1737,30 @@ namespace FoxDock
                 System.Windows.Application.Current.Shutdown();
             };
 
+            //Закрываем все 
             tooltip.Close();
             settings.Close();
+
+            //Анимируем
             this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
             this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(this.Opacity, 0));
-
         }
-
-        private bool AbsIconDrag = false;
+        /// <summary>
+        /// Логика нажатия мыши на переносной значок
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Draggable_icon_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            //Активизируем переменную перетаскивания
             if (e.LeftButton == MouseButtonState.Pressed)
                 AbsIconDrag = true;
         }
+        //Функция проверки соприкосновения двух элементов
         private bool hitTest(UIElement el1, UIElement el2, MouseEventArgs e)
         {
+            //Мне лень всё это переводить
+
             // Retrieve the coordinate of the mouse position.
             System.Windows.Point pt = e.GetPosition(el1);
 
@@ -1767,37 +1776,65 @@ namespace FoxDock
                 return false;
             }
         }
+        /// <summary>
+        /// Логика перемещения значков в доке
+        /// </summary>
+        /// <param name="item_index">Исходный элемент (индекс)</param>
+        /// <param name="ditem_index">Конечный элемент (индекс)</param>
+        /// <param name="images">Все значки</param>
+        /// <returns>Новые значки</returns>
         private List<DockIcon> MoveImg(int item_index, int ditem_index, List<DockIcon> images)
         {
+            //Создаём два массива слева и справа значка
             List<DockIcon> left = new List<DockIcon>();
             List<DockIcon> right = new List<DockIcon>();
 
+            //Создаём переменную для счётчика в foreach
             int i = 0;
+
+            //Добавляем элемент с перемещаемым значков в массив правого
             right.Add(images[item_index]);
+
+            //Удаляем перемещаемый значок из всех элеменов
             images.Remove(images[item_index]);
 
+            //Прохидимся по всем значкам
             foreach (DockIcon img in images)
             {
+                //Если текущий индекс больше или равен индексу замещаемого значка
                 if (i >= ditem_index)
                 {
+                    //Добавляем в правый массив
                     right.Add(img);
                 }
-                else
+                else //Иначе
                 {
+                    //Добавляем в левый массив
                     left.Add(img);
                 }
-                i++;
+                i++; //+1 к индексу
             }
 
+            //Очищаем все значки массива
             images.Clear();
+
+            //Добавляем левые и правые значки в массив
             images.AddRange(left);
             images.AddRange(right);
 
-            return images;
+            return images; //Вовращаем конечный массив
         }
 
+        /// <summary>
+        /// Логика перемещения строки в массиве (работает так же как перемещение значков)
+        /// </summary>
+        /// <param name="item_index">Исходный элемент (индекс)</param>
+        /// <param name="ditem_index">Конечный элемент (индекс)</param>
+        /// <param name="elements"></param>
+        /// <returns></returns>
         private List<string> MoveString(int item_index, int ditem_index, List<string> elements)
         {
+            //Не вижу смысла комментировать, так как всё это описано в другой функции
             List<string> left = new List<string>();
             List<string> right = new List<string>();
 
@@ -1824,86 +1861,120 @@ namespace FoxDock
 
             return elements;
         }
+        /// <summary>
+        /// Событие MouseUp переносной иконки
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Draggable_icon_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            AbsIconDrag = false;
-            isDown = false;
+            AbsIconDrag = false; //Отменяем активность перетаскивания
+            isDown = false; //Отменяем нажатость значка
 
+            //Подготавливаемся к перемещению
             List<DockIcon> allElements = new List<DockIcon>();
             List<DockIcon> oAllElements = new List<DockIcon>();
+
+            //Проходимся по всем элементам Дока
             foreach (UIElement cur in MainPanel.Children)
             {
+                //Получаем текущий элемент дока и представляем его как значок
                 DockIcon ci = cur as DockIcon;
+
+                //Если текущий значок существует
                 if (ci != null)
                 {
+                    //Добавляем в оба рабочих массива
                     allElements.Add(ci);
                     oAllElements.Add(ci);
                 }
 
             }
+            //Подготавливаем переменную для блокировки цикла
             bool lock_cycle = false;
+
+            //Если элемент был перетащён в Корзину
             if (hitTest(TrashIcon, Draggable_icon, e))
             {
+                //Запрашиваем удаление
                 if (dr_ic != null)
                     RemoveFromDock(dr_ic);
                 MainPanel.Opacity = 1;
             }
+            //Проходимся по всем значкам из первого массива
             foreach (DockIcon cur in allElements)
             {
+                //Если есть касание переносной иконки с текущей и цикл не заблокирован
                 if (hitTest(cur, Draggable_icon, e) && !lock_cycle)
                 {
+                    //Получаем индексы обоих значков
                     int cur_index = MainPanel.Children.IndexOf(cur);
                     int down_index = MainPanel.Children.IndexOf(down_icon);
 
-                    if (cur_index != lastMindex)
+                    //Если текущий индекс не равен -1
+                    if (cur_index != -1)
                     {
+                        //Перетаскиваем значок
+                        oAllElements = MoveImg(down_index, cur_index, oAllElements);
 
-                        if (cur_index != -1)
+                        //Перетаскиваем строки в кеше
+                        cache.dock_apps = MoveString(down_index, cur_index, cache.dock_apps);
+                        cache.dock_apps_path = MoveString(down_index, cur_index, cache.dock_apps_path);
+
+                        //Сохраняем кеш
+                        CacheOperations.StoreCache(cache);
+
+                        MainPanel.Opacity = 1;
+
+                        //Удаляем старые значки
+                        foreach (DockIcon img in allElements)
                         {
-                            oAllElements = MoveImg(down_index, cur_index, oAllElements);
-                            cache.dock_apps = MoveString(down_index, cur_index, cache.dock_apps);
-                            cache.dock_apps_path = MoveString(down_index, cur_index, cache.dock_apps_path);
-                            CacheOperations.StoreCache(cache);
-
-                            MainPanel.Opacity = 1;
-
-                            foreach (DockIcon img in allElements)
-                            {
-                                MainPanel.Children.Remove(img);
-                            }
-
-                            foreach (DockIcon img in oAllElements)
-                            {
-                                MainPanel.Children.Add(img);
-                            }
-                            DoubleAnimation myDoubleAnimation1 = new DoubleAnimation
-                            {
-                                From = Draggable_icon.Opacity,
-                                To = 0,
-                                Duration = TimeSpan.FromSeconds(0.3),
-                                EasingFunction = new SineEase()
-                            };
-                            Timeline.SetDesiredFrameRate(myDoubleAnimation1, 30);
-                            myDoubleAnimation1.Completed += (a, es) =>
-                            {
-                                Draggable_icon.Source = null;
-                                dr_ic = null;
-                            };
-                            Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
-                            lock_cycle = true;
-                            Task.Factory.StartNew(() =>
-                            {
-                                System.Threading.Thread.Sleep(100);
-                                move_lock = false;
-                            });
-
+                            MainPanel.Children.Remove(img);
                         }
+
+                        //Добавляем новый
+                        foreach (DockIcon img in oAllElements)
+                        {
+                            MainPanel.Children.Add(img);
+                        }
+
+                        //Анимация исчезновения значка перетаскивания
+                        DoubleAnimation myDoubleAnimation1 = new DoubleAnimation
+                        {
+                            From = Draggable_icon.Opacity,
+                            To = 0,
+                            Duration = TimeSpan.FromSeconds(0.3),
+                            EasingFunction = new SineEase()
+                        };
+                        Timeline.SetDesiredFrameRate(myDoubleAnimation1, 30);
+                        myDoubleAnimation1.Completed += (a, es) =>
+                        {
+                            Draggable_icon.Source = null;
+                            dr_ic = null;
+                        };
+                        Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
+
+                        //Блокируем цикл
+                        lock_cycle = true;
+
+                        //Спустя 100 мс. разблокируем перемещение Дока
+                        Task.Factory.StartNew(() =>
+                        {
+                            System.Threading.Thread.Sleep(100);
+                            move_lock = false;
+                        });
+
                     }
                 }
             }
 
         }
-        private int lastMindex = -1;
+
+        /// <summary>
+        /// Функция клонирования значка
+        /// </summary>
+        /// <param name="source">Исходный значок</param>
+        /// <returns>Конечный значок</returns>
         private DockIcon CloneIcon(DockIcon source)
         {
             DockIcon cloneimg = new DockIcon();
@@ -1918,12 +1989,13 @@ namespace FoxDock
 
             return cloneimg;
         }
-        private bool Draggable_icon_an = true;
-
-        private double fe_max_size = 0;
-        private int fe_max_size_el = 0;
+        /// <summary>
+        /// Локика рыбьего глаза для значков
+        /// </summary>
+        /// <param name="x">Смещение</param>
         private void fishEyeForIcons(double x)
         {
+            //Комбинируем пользовательские значки и виджеты
             List<DockIcon> combined = new List<DockIcon>();
             foreach (DockIcon di in MainPanel.Children)
             {
@@ -1933,11 +2005,15 @@ namespace FoxDock
             {
                 combined.Add(di);
             }
+
+            //Считаем ширину мнимой линии
             double width = (combined.Count) * 80;
             if (width < 300) width = 300;
+
+            //Создаём большой массив с точкой мнимой линии
             double[] big_array = new double[(int)width];
 
-
+            //Дальше немного эльфийской магии (или мне просто лень комментировать)
             int end = 300;
             for (int i = 0; i < end; i++)
             {
@@ -1981,7 +2057,7 @@ namespace FoxDock
 
                         if (!isHovered && fe_max_size_el != i)
                         {
-                            Img_MouseEnterDo(combined[i]);
+                            //Img_MouseEnterDo(combined[i]);
                             if (i < MainPanel.Children.Count)
                             {
                                 SetContextIcon((DockIcon)MainPanel.Children[i]);
@@ -1995,7 +2071,7 @@ namespace FoxDock
                         {
                             if (!isHovered)
                             {
-                                Img_MouseMoveDo(combined[fe_max_size_el]);
+                                //Img_MouseMoveDo(combined[fe_max_size_el]);
                                 if (i < MainPanel.Children.Count)
                                 {
                                     context_icon = MainPanel.Children[fe_max_size_el];
@@ -2045,56 +2121,55 @@ namespace FoxDock
 
 
             }
-
-            //consoleLog(String.Join(", ", single_array));
         }
-        private bool panelIconsAnimated = false;
-        private bool panelIconsAnimating = false;
-        private DockIcon dr_ic = null;
-        private void Draggable_icon_MouseMove(object sender, MouseEventArgs e)
+        /// <summary>
+        /// Логика перемещения мыши по окну
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Window_MouseMove(object sender, MouseEventArgs e)
         {
+            //Получаем относительные координаты мыши и вызываем рыбьий глаз (магггииииияяяя)
             double gl_x = e.GetPosition(DockMain).X;
             double x = gl_x - Draggable_icon.Width / 2;
             double y = e.GetPosition(DockMain).Y - Draggable_icon.Height / 2;
             fishEyeForIcons(gl_x / DockMain.Width);
-
-
+            
+            //Если был зажат какой-либо значок
             if ((isDown || AbsIconDrag))
             {
-
+                //Если нету блокировки значков дока
                 if (!cache.dockLock)
                 {
+                    //Получаем зажатый значок
                     DockIcon dicon = down_icon as DockIcon;
 
+                    //Инициализируем перемещение
                     Draggable_icon.Source = dicon.Source;
                     dr_ic = dicon;
 
-
-
-
+                    //Смещаем зажатую иконку
                     Draggable_icon.Margin = new Thickness(x, y, 0, 0);
 
+                    //Задаём прозрачность основной панели
                     MainPanel.Opacity = .8;
+
+                    //Если
                     if (Draggable_icon_an)
                     {
-                        DoubleAnimation myDoubleAnimation1 = new DoubleAnimation
-                        {
-                            From = Draggable_icon.Opacity,
-                            To = 1,
-                            Duration = TimeSpan.FromSeconds(0.1),
-                            EasingFunction = new SineEase()
-                        };
                         Draggable_icon_an = false;
-                        Timeline.SetDesiredFrameRate(myDoubleAnimation1, 30);
-                        Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
+
+                        //Вызываем анимацию перетаскиваемой иконки
+                        Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(Draggable_icon.Opacity, 1, 0.1));
                     }
                 }
 
             }
-            else
+            else //Если нету зажатия
             {
                 if (!cache.dockLock)
                 {
+                    //Скрываем значок перетаскивания
                     DoubleAnimation myDoubleAnimation1 = new DoubleAnimation
                     {
                         From = Draggable_icon.Opacity,
@@ -2107,17 +2182,14 @@ namespace FoxDock
                         Draggable_icon.Source = null;
                         dr_ic = null;
                         Draggable_icon_an = true;
-
-
-
                     };
                     Timeline.SetDesiredFrameRate(myDoubleAnimation1, 30);
                     Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
                 }
-
             }
             try
             {
+                //Отображаем подсказку
                 if (!lockSizeChange)
                     tooltip.Show();
             }
@@ -2125,22 +2197,31 @@ namespace FoxDock
             {
                 consoleLog("Tooltip show error");
             }
-
-
         }
-
+        /// <summary>
+        /// Обработка события нажатия мыши на окне
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            //Если зажата правая клавиша мыши
             if (e.RightButton == MouseButtonState.Pressed)
             {
+                //Если контекстного значка нету
                 if (context_icon == null)
                 {
+                    //Скрываем кнопку удаления значка из контекстного меню
                     RemoveFromDockButton.Opacity = .5;
                     RemoveFromDockButton.IsEnabled = false;
                 }
             }
         }
-
+        /// <summary>
+        /// Логика открытия новой копии приложения
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OpenNewButton_Click(object sender, RoutedEventArgs e)
         {
             DockIcon context_img = context_icon as DockIcon;
@@ -2151,33 +2232,44 @@ namespace FoxDock
                 Process.Start(cache.dock_apps_path[current_index]);
             }
         }
-
+        /// <summary>
+        /// Логика нажатия кнопки закрытия приложения
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CloseSomeAppButton_Click(object sender, RoutedEventArgs e)
         {
+            //Получаем имя приложения
             string current_name = cache.dock_apps[MainPanel.Children.IndexOf(context_icon)];
+
+            //Создам диалог
             if (dialog == null) dialog = new Dialog("Are you sure you want to close " + current_name + "?");
             if (dialog != null)
             {
                 try
                 {
+                    //Отображаем его
                     dialog.Show();
                     dialog.onResult += () =>
                     {
                         if (dialog != null)
                         {
-                            if (dialog.result == true)
+                            if (dialog.result == true) //Если юзверь согласился закрыть прогу
                             {
+                                //Получаем путь приложения
                                 string current_path = cache.dock_apps_path[MainPanel.Children.IndexOf(context_icon)];
 
-
+                                //Узнаём запущено ли оно
                                 bool apprunned = CheckIfAppRunned(current_path);
 
+                                //Если запущено
                                 if (apprunned)
                                 {
+                                    //Закрываем прогу
                                     killProcess(current_path);
                                 }
                             }
-                            dialog.CloseDialog();
+                            dialog.CloseDialog(); //Закрываем диалог
                         }
 
                         dialog = null;
@@ -2185,29 +2277,26 @@ namespace FoxDock
                 }
                 catch
                 {
-
+                    consoleLog("Где-то что-то пошло не так...");
                 }
             }
         }
-
-        private void DockIcon_Click(object sender, RoutedEventArgs e)
-        {
-            DockIcon icon = sender as DockIcon;
-
-
-        }
-
+        /// <summary>
+        /// Логика события активации основной части дока
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DockMain_Activated(object sender, EventArgs e)
         {
+            //Если не включен режим Поверх Всех Окон, то отправляем Док на задний план
             if (!cache.enableTopmost)
                 WindowAPI.SendToBack(this);
         }
-
-        private void MenuItem_Click_1(object sender, RoutedEventArgs e)
-        {
-
-        }
-
+        /// <summary>
+        /// Логика нажатия кнопки блокировки Дока
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void LockDockButton_Click(object sender, RoutedEventArgs e)
         {
             cache = CacheOperations.LoadCache(cache);
@@ -2215,6 +2304,11 @@ namespace FoxDock
             DockLockUpdateUI();
             CacheOperations.StoreCache(cache);
         }
+        /// <summary>
+        /// Логика генерации контекстного меню
+        /// </summary>
+        /// <param name="items">Элементы</param>
+        /// <returns></returns>
         private ContextMenu GenerateContextMenu(List<object> items)
         {
             ContextMenu res = new ContextMenu();
@@ -2233,6 +2327,13 @@ namespace FoxDock
             
             return res;
         }
+        /// <summary>
+        /// Генерируем элемент меню
+        /// </summary>
+        /// <param name="icon">Значок</param>
+        /// <param name="text">Заголовок</param>
+        /// <param name="func">Результат</param>
+        /// <returns></returns>
         private MenuItem GenerateMenuItem(string icon, string text, Func<int> func)
         {
             MenuItem item = new MenuItem();
@@ -2253,10 +2354,6 @@ namespace FoxDock
             ti.VerticalAlignment = CloseSomeAppButton.VerticalAlignment;
             
             item.Icon = ti;
-
-            
-
-
             item.Header = text;
 
             if (func != null)
@@ -2269,30 +2366,29 @@ namespace FoxDock
                 
             return item;
         }
-        private void ExplorerIcon_Click(object sender, RoutedEventArgs e)
-        {
-            
-        }
-
+        
+        /// <summary>
+        /// События появления переноса в Корзину вне Дока
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TrashIcon_DragEnter(object sender, DragEventArgs e)
         {
+            movingToTrash = true;
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 e.Effects = DragDropEffects.Move;
 
             }
         }
-
-        private void TrashIcon_DragLeave(object sender, DragEventArgs e)
-        {
-
-        }
-
+        /// <summary>
+        /// События завершения переноса в Корзину вне Дока
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TrashIcon_Drop(object sender, DragEventArgs e)
         {
-
-            consoleLog(string.Join(", ", e.Data.GetFormats()));
-
+            
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 try
@@ -2310,6 +2406,11 @@ namespace FoxDock
 
                         TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
 
+                        Task.Factory.StartNew(() =>
+                        {
+                            Thread.Sleep(300);
+                            movingToTrash = false;
+                        });
                     }
                 }
                 catch (Exception ex)
@@ -2318,6 +2419,10 @@ namespace FoxDock
                 }
             }
         }
+        /// <summary>
+        /// Функция генерации разделителя
+        /// </summary>
+        /// <returns></returns>
         private Separator GenerateSeparator()
         {
             Separator separator = new Separator();
@@ -2326,6 +2431,11 @@ namespace FoxDock
 
             return separator;
         }
+        /// <summary>
+        /// Функция клонирования элемента контекстного меню
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
         private MenuItem CloneMenuItem(MenuItem source)
         {
             MenuItem result = new MenuItem();
@@ -2383,6 +2493,11 @@ namespace FoxDock
 
             return result;
         }
+        /// <summary>
+        /// Логика нажатия на кнопку Проводника
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ExplorerIcon_MouseUp(object sender, MouseButtonEventArgs e)
         {
             DockIcon ic = sender as DockIcon;
@@ -2484,19 +2599,11 @@ namespace FoxDock
             contextMenu.IsOpen = true;
             e.Handled = true;
         }
-        enum RecycleFlag : int
-
-        {
-
-            SHERB_NOCONFIRMATION = 0x00000001, // No confirmation, when emptying
-
-            SHERB_NOPROGRESSUI = 0x00000001, // No progress tracking window during the emptying of the recycle bin
-
-            SHERB_NOSOUND = 0x00000004 // No sound when the emptying of the recycle bin is complete
-
-        }
-        [DllImport("Shell32.dll")]
-        static extern int SHEmptyRecycleBin(IntPtr hwnd, string pszRootPath, RecycleFlag dwFlags);
+        /// <summary>
+        /// Логика нажатия на Корзину
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TrashIcon_MouseUp(object sender, MouseButtonEventArgs e)
         {
             DockIcon ic = sender as DockIcon;
@@ -2561,7 +2668,7 @@ namespace FoxDock
             }));
             items.Add(GenerateMenuItem("\uE74D", "Clear Recycle Bin", () =>
             {
-                SHEmptyRecycleBin(IntPtr.Zero, null, RecycleFlag.SHERB_NOSOUND);
+                WindowAPI.SHEmptyRecycleBin(IntPtr.Zero, null, WindowAPI.RecycleFlag.SHERB_NOSOUND);
                 TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
                 return 1;
             }));
@@ -2580,7 +2687,11 @@ namespace FoxDock
             contextMenu.IsOpen = true;
             e.Handled = true;
         }
-
+        /// <summary>
+        /// Логика старта зажатия виджета Проводника/Корзины
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ExplorerIcon_MouseDown(object sender, MouseButtonEventArgs e)
         {
             DockIcon ic = sender as DockIcon;

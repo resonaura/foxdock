@@ -8,10 +8,12 @@
             <ResourceDictionary.MergedDictionaries>
                 <!--  FluentWPF Controls  -->
                 <ResourceDictionary Source="pack://application:,,,/FluentWPF;component/Styles/Controls.xaml" />
+
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.DeepPurple.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Accent/MaterialDesignColor.Lime.xaml" />
+                
                 
             </ResourceDictionary.MergedDictionaries>
             <SolidColorBrush x:Key="PrimaryHueLightBrush" Color="White"/>
@@ -21,6 +23,8 @@
             <SolidColorBrush x:Key="PrimaryHueDarkBrush" Color="White"/>
             <SolidColorBrush x:Key="PrimaryHueDarkForegroundBrush" Color="#222"/>
             <SolidColorBrush x:Key="MaterialDesignCheckBoxOff" Color="White" Opacity=".2"></SolidColorBrush>
+            <SolidColorBrush x:Key="SystemBaseHighColorBrush" Color="#ddd" />
+            <SolidColorBrush x:Key="SystemAltHighColorBrush" Color="#ddd" />
         </ResourceDictionary>
         
     </Application.Resources>

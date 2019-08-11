@@ -30,101 +30,18 @@ namespace FoxDock
             handler = (s, e) =>
             {
                 Loaded -= handler;
-
-                ShowSets();
             };
             Loaded += handler;
             Activated += Settings_Activated;
             InitializeComponent();
 
-
-            SettingsClose.Click += SettingsClose_Click;
-            SettingsMin.Click += SettingsMin_Click;
-
         }
 
         private void Settings_Activated(object sender, EventArgs e)
         {
-            if(MainGrid.Opacity != 1)
-                ShowSets();
         }
         
-        public void ShowSets()
-        {
-            if (!MainWindow.cache.disableBlur)
-                NativeMethods.DisableBlur(this);
-            DoubleAnimation scaleAnimation = new DoubleAnimation
-            {
-                From = 0.8,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(300),
-                EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseInOut }
-            };
-            Timeline.SetDesiredFrameRate(scaleAnimation, 30);
-            DoubleAnimation opacityAnimation = new DoubleAnimation
-            {
-                From = 0,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(300),
-                EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseInOut }
-            };
-            Timeline.SetDesiredFrameRate(opacityAnimation, 30);
-            opacityAnimation.Completed += (x, y) =>
-            {
-                if (!MainWindow.cache.disableBlur)
-                    NativeMethods.EnableBlur(this);
-            };
-
-            SetsTrans.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
-            SetsTrans.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
-            MainGrid.BeginAnimation(OpacityProperty, opacityAnimation);
-        }
-        public void HideSets(int cmd = 0)
-        {
-            if (!MainWindow.cache.disableBlur)
-                NativeMethods.DisableBlur(this);
-            DoubleAnimation scaleAnimation = new DoubleAnimation
-            {
-                From = 1,
-                To = 0.8,
-                Duration = TimeSpan.FromMilliseconds(300),
-                EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseInOut }
-            };
-            Timeline.SetDesiredFrameRate(scaleAnimation, 30);
-            DoubleAnimation opacityAnimation = new DoubleAnimation
-            {
-                From = 1,
-                To = 0,
-                Duration = TimeSpan.FromMilliseconds(300),
-                EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseInOut }
-            };
-            Timeline.SetDesiredFrameRate(opacityAnimation, 30);
-            opacityAnimation.Completed += (x, y) =>
-            {
-                switch(cmd)
-                {
-                    case 1:
-                        SystemCommands.MinimizeWindow(this);
-                        break;
-                    case 2:
-                        this.Close();
-                        break;
-                }
-            };
-
-            SetsTrans.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
-            SetsTrans.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
-            MainGrid.BeginAnimation(OpacityProperty, opacityAnimation);
-        }
-        private void SettingsMin_Click(object sender, RoutedEventArgs e)
-        {
-            HideSets(1);
-        }
-
-        private void SettingsClose_Click(object sender, RoutedEventArgs e)
-        {
-            HideSets(2);            
-        }
+        
 
         private void MoveWindow(object sender, MouseEventArgs e)
         {
@@ -279,7 +196,7 @@ namespace FoxDock
 
         private void DisableBlur_Checked(object sender, RoutedEventArgs e)
         {
-            NativeMethods.DisableBlur(this);
+            //NativeMethods.DisableBlur(this);
 
             if (window != null)
             {
@@ -295,7 +212,7 @@ namespace FoxDock
 
         private void DisableBlur_Unchecked(object sender, RoutedEventArgs e)
         {
-            NativeMethods.EnableBlur(this);
+            //NativeMethods.EnableBlur(this);
 
             if (window != null)
             {
@@ -370,7 +287,15 @@ namespace FoxDock
                 To = result_brush,
                 Duration = TimeSpan.FromMilliseconds(300)
             };
-            target.BeginAnimation(CheckBox.BackgroundProperty, brushAnimation);
+            try
+            {
+                target.BeginAnimation(CheckBox.BackgroundProperty, brushAnimation);
+            }
+            catch
+            {
+
+            }
+            
         }
         public void Toggle_Loaded(object sender, RoutedEventArgs e)
         {
@@ -472,7 +397,7 @@ namespace FoxDock
                         double new_h = window.size + window.size / 2.5;
                         double new_top = System.Windows.SystemParameters.PrimaryScreenHeight - new_h;
 
-                        window.UpdateWidthAndHighlight();
+                        window.UpdateDockWidth();
                         window.animateHChange(new_top, new_h);
                     }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
 
@@ -494,6 +419,11 @@ namespace FoxDock
         {
             MainWindow.cache.dockAutoHide = false;
             CacheOperations.StoreCache(MainWindow.cache);
+        }
+
+        private void Grid_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            this.MoveWindow(sender, e);
         }
     }
 }

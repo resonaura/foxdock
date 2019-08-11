@@ -233,12 +233,20 @@ namespace FoxDock
                 ),
                 IntPtr.Zero, "SysListView32", "FolderView"
             );
-            if (window != null)
+            try
             {
-                IntPtr Handle = new WindowInteropHelper(window).Handle;
+                if (window != null)
+                {
+                    IntPtr Handle = new WindowInteropHelper(window).Handle;
 
-                SetWindowLong(Handle, GWL_HWNDPARENT, hprog);
+                    SetWindowLong(Handle, GWL_HWNDPARENT, hprog);
+                }
             }
+            catch
+            {
+
+            }
+            
 
         }
         [DllImport("user32.dll")]
@@ -421,6 +429,20 @@ namespace FoxDock
 
             return true;
         }
+
+        public enum RecycleFlag : int
+
+        {
+
+            SHERB_NOCONFIRMATION = 0x00000001, // No confirmation, when emptying
+
+            SHERB_NOPROGRESSUI = 0x00000001, // No progress tracking window during the emptying of the recycle bin
+
+            SHERB_NOSOUND = 0x00000004 // No sound when the emptying of the recycle bin is complete
+
+        }
+        [DllImport("Shell32.dll")]
+        public static extern int SHEmptyRecycleBin(IntPtr hwnd, string pszRootPath, RecycleFlag dwFlags);
     }
 
 
