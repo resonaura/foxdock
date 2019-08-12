@@ -120,6 +120,7 @@
     <Compile Include="DockIcon.xaml.cs">
       <DependentUpon>DockIcon.xaml</DependentUpon>
     </Compile>
+    <Compile Include="AppLanguage.cs" />
     <Compile Include="Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
     </Compile>

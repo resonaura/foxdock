@@ -59,6 +59,7 @@ namespace FoxDock
         public static int defsize = 56;
         public int size = (int)(defsize * cache.scaleFactor);
         public bool lockSizeChange = false;
+        public static AppLanguage.Locale locale = AppLanguage.GetSystemLocale();
         private string lastTheme = string.Empty;
         private bool isDown;
         private UIElement down_icon;
@@ -80,6 +81,7 @@ namespace FoxDock
         private DockIcon dr_ic = null;
         private bool movingToTrash = false;
 
+
         //Необходимые константы
         public const int SPI_SETDESKWALLPAPER = 20;
         public const int WM_SETTINGCHANGE = 0x001A;
@@ -95,25 +97,33 @@ namespace FoxDock
         {
             InitializeComponent(); //Инициализируем все компоненты
 
+
+            //Применяем локализацию для кнопок меню
+            ExitButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ExitDock, locale);
+            RestartButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.RestartDock, locale);
+            SettingsButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettings, locale);
+            LockDockButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.LockDock, locale);
+            RemoveFromDockButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.RemoveFromDock, locale);
+            OpenNewButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenNew, locale);
+
+            //Применяем локализацию для виджетов
+            ExplorerIcon.Label = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.Explorer, locale);
+            TrashIcon.Label = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.RecycleBin, locale);
+
             if (settings == null) settings = new Settings(); //Инициализируем окно настроек, если оно не инициализированно
 
             //Для защиты от вылета используем try,catch
             try
             {
                 WindowAPI.window = this;
-
-                Process[] explorer_p = Process.GetProcessesByName("explorer");
-                string explorer_name = explorer_p[0].MainModule.FileVersionInfo.FileDescription;
-                ExplorerIcon.Label = explorer_name;
             }
             catch
             {
-                consoleLog("Ошибка получения имени проводника...");
+                consoleLog("Ошибка задания основного окна для WindowAPI");
             }
 
             //Получаем значки Проводника и Корзины и задаём их для соответствующих виджетов на Доке
             string epath = Environment.GetEnvironmentVariable("windir") + "\\explorer.exe";
-            consoleLog(epath);
             ExplorerIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetSystemIcon(epath).ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
             TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
 
@@ -277,12 +287,12 @@ namespace FoxDock
         {
             if (cache.dockLock)
             {
-                LockDockButton.Header = "Unlock Dock";
+                LockDockButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.UnlockDock, locale);
                 LockDockIcon.Text = "\uE785";
             }
             else
             {
-                LockDockButton.Header = "Lock Dock";
+                LockDockButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.LockDock, locale);
                 LockDockIcon.Text = "\uE72E";
             }
         }
@@ -1099,7 +1109,7 @@ namespace FoxDock
             string current_path = cache.dock_apps_path[MainPanel.Children.IndexOf(img)];
 
             //Задаём кнопке закрытия проги в контекстном меню нужное имя
-            CloseSomeAppButton.Header = "Close " + current_name;
+            CloseSomeAppButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.CloseSomeApp, locale) + " " + current_name;
 
             //Проверяем запущено ли приложение
             bool apprunned = CheckIfAppRunned(current_path);
@@ -1225,24 +1235,14 @@ namespace FoxDock
 
         }
         /// <summary>
-        /// Коплексная нимация подсказки
+        /// Коплексная анимация подсказки
         /// </summary>
         /// <param name="left_pos">Позиция по левому краю</param>
         /// <param name="top_pos">Позиция по верху</param>
         /// <param name="dur">Длительность анимации</param>
         private void animateHint(double left_pos, double top_pos, double dur = 0.1)
         {
-            ThicknessAnimation thicknessAnimation = new ThicknessAnimation
-            {
-                From = tooltip.app_hint.Margin,
-                To = new Thickness(left_pos, top_pos, 0, 0),
-                Duration = TimeSpan.FromSeconds(dur),
-                EasingFunction = new SineEase()
-            };
-
-            Timeline.SetDesiredFrameRate(thicknessAnimation, 100);
-
-            tooltip.app_hint.BeginAnimation(Window.MarginProperty, thicknessAnimation);
+            tooltip.app_hint.Margin = new Thickness(left_pos, top_pos, 0, 0);
         }
         /// <summary>
         /// Получения направления мыши
@@ -1273,6 +1273,23 @@ namespace FoxDock
         {
             if (!move_lock)
             {
+                if(tooltip.app_hint.Opacity == 0)
+                {
+                    try
+                    {
+                        //Отображаем подсказку
+                        if (!lockSizeChange)
+                        {
+                            tooltip.Show();
+                            Animations.Break(tooltip.app_hint);
+                            tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.OpacityAnimation(0, 1, .2));
+                        }
+                    }
+                    catch
+                    {
+                        consoleLog("Tooltip show error");
+                    }
+                }
                 //Получаем текущий значок
                 DockIcon img = sender as DockIcon;
 
@@ -1297,10 +1314,8 @@ namespace FoxDock
                     tooltip.app_hint.Content = current_label;
 
                     //Запускаем анимацию прозрачности подсказки
-                    tooltip.app_hint.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(0, 1, 0.2));
+                    tooltip.app_hint.Opacity = 1;
                 }
-                //Отображаем подсказку
-                tooltip.app_hint.Visibility = Visibility.Visible;
 
                 //Если индекс существует
                 if (current_index != -1)
@@ -1472,6 +1487,7 @@ namespace FoxDock
                         {
                             tooltip.Hide();
                         };
+                        tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.OpacityAnimation(1, 0, .2));
                         img_cur.BeginAnimation(DockIcon.SizeProperty, doubleAnimation);
                     }
                 }
@@ -1484,12 +1500,7 @@ namespace FoxDock
                 RemoveFromDock(dimg);
                 MainPanel.Opacity = 1;
             }
-            //Очищаем подсказку
-            tooltip.app_hint.Content = string.Empty;
             
-            //Анимируем подсказку
-            animateHint(tooltip.app_hint.Margin.Left - 100, -1, 0);
-            tooltip.app_hint.Visibility = Visibility.Hidden;
 
             foreach (DockIcon img_cur in MainPanel.Children)
             {
@@ -1530,7 +1541,7 @@ namespace FoxDock
         private void RemoveFromDock(DockIcon image)
         {
             //Создаём диалог
-            if (dialog == null) dialog = new Dialog("Are you sure you want to remove this item from Dock?");
+            if (dialog == null) dialog = new Dialog(AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ConfRemove, locale));
 
             //Если диалог существует
             if (dialog != null)
@@ -1658,6 +1669,7 @@ namespace FoxDock
                 //Отображаем окно настроек
                 settings.Show();
                 settings.Activate();
+                settings.window = this;
             }
             catch //Если его нету
             {
@@ -1665,7 +1677,9 @@ namespace FoxDock
                 settings = new Settings();
                 settings.Show();
                 settings.Activate();
+                settings.window = this;
             }
+
             //Задаём значение всем параметрам настроек
             cache = CacheOperations.LoadCache(cache);
             settings.StartupToggle.IsChecked = cache.runAtStartup;
@@ -1680,7 +1694,6 @@ namespace FoxDock
             settings.Toggle_Loaded_Do(settings.StartupToggle);
             settings.Toggle_Loaded_Do(settings.DisableBlurToggle);
             settings.Toggle_Loaded_Do(settings.StarDustEnableToggle);
-
         }
         /// <summary>
         /// Логика нажатия кнопки удаления значка в контекстном меню
@@ -2129,6 +2142,7 @@ namespace FoxDock
         /// <param name="e"></param>
         private void Window_MouseMove(object sender, MouseEventArgs e)
         {
+            
             //Получаем относительные координаты мыши и вызываем рыбьий глаз (магггииииияяяя)
             double gl_x = e.GetPosition(DockMain).X;
             double x = gl_x - Draggable_icon.Width / 2;
@@ -2187,16 +2201,6 @@ namespace FoxDock
                     Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
                 }
             }
-            try
-            {
-                //Отображаем подсказку
-                if (!lockSizeChange)
-                    tooltip.Show();
-            }
-            catch
-            {
-                consoleLog("Tooltip show error");
-            }
         }
         /// <summary>
         /// Обработка события нажатия мыши на окне
@@ -2243,7 +2247,7 @@ namespace FoxDock
             string current_name = cache.dock_apps[MainPanel.Children.IndexOf(context_icon)];
 
             //Создам диалог
-            if (dialog == null) dialog = new Dialog("Are you sure you want to close " + current_name + "?");
+            if (dialog == null) dialog = new Dialog(AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ConfAppClose, locale) + current_name + "?");
             if (dialog != null)
             {
                 try
@@ -2571,12 +2575,12 @@ namespace FoxDock
             }
             if(shellWindows.Count > 0)
                 items.Add(GenerateSeparator());
-            items.Add(GenerateMenuItem("\uE8A7", "Open new", () =>
+            items.Add(GenerateMenuItem("\uE8A7", AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenNew, locale), () =>
             {
                 System.Diagnostics.Process.Start("explorer");
                 return 1;
             }));
-            items.Add(GenerateMenuItem("\uE8BB", "Close all", () =>
+            items.Add(GenerateMenuItem("\uE8BB", AppLanguage.GetDialogByLocale(AppLanguage.Dialog.CloseAll, locale), () =>
             {
                 foreach (SHDocVw.InternetExplorer ie in shellWindows)
                 {
@@ -2661,12 +2665,28 @@ namespace FoxDock
                 
                 return;
             }
-            items.Add(GenerateMenuItem("\uE8A7", "Open Recycle Bin", () =>
+            items.Add(GenerateMenuItem("\uE8A7", AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenRecycleBin, locale), () =>
             {
                 System.Diagnostics.Process.Start("explorer.exe", "shell:RecycleBinFolder");
                 return 1;
             }));
-            items.Add(GenerateMenuItem("\uE74D", "Clear Recycle Bin", () =>
+            items.Add(GenerateMenuItem("\uE8BB", AppLanguage.GetDialogByLocale(AppLanguage.Dialog.CloseRecycleBin, locale), () =>
+            {
+                //Получаем окна проводника
+                SHDocVw.ShellWindows shellWindows = new SHDocVw.ShellWindows();
+
+                //Проходимся по всем окнам проводника
+                foreach (SHDocVw.InternetExplorer ie in shellWindows)
+                {
+                    //Закрываем окно если оно - Корзина
+                    if (ie.LocationName == "Recycle Bin" || ie.LocationName == "Корзина" || ie.LocationName == "Кошик")
+                    {
+                        ie.Quit();
+                    }
+                }
+                return 1;
+            }));
+            items.Add(GenerateMenuItem("\uE74D", AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ClearRecycleBin, locale), () =>
             {
                 WindowAPI.SHEmptyRecycleBin(IntPtr.Zero, null, WindowAPI.RecycleFlag.SHERB_NOSOUND);
                 TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
@@ -2705,6 +2725,15 @@ namespace FoxDock
             };
             Timeline.SetDesiredFrameRate(myDoubleAnimation, 30);
             ic.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation);
+        }
+        /// <summary>
+        /// Обработка события наведения мыши на окно
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DockMain_MouseEnter(object sender, MouseEventArgs e)
+        {
+            
         }
     }
 }

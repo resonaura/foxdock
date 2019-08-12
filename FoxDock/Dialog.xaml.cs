@@ -20,9 +20,13 @@ namespace FoxDock
     /// </summary>
     public partial class Dialog : Window
     {
+        public static AppLanguage.Locale locale = AppLanguage.GetSystemLocale();
         public Dialog(string text)
         {
             InitializeComponent();
+
+            NoButton.Content = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ConfNo, locale);
+            YesButton.Content = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ConfYes, locale);
 
             DialogLabel.Content = text;
             MainGrid.Opacity = 0;

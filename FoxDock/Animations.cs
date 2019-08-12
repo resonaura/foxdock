@@ -137,6 +137,19 @@ namespace FoxDock
         }
 
         public string theme = String.Empty;
+        public static void Break(UIElement element)
+        {
+            DoubleAnimation myAnimation = new DoubleAnimation();
+            // Initialize animation
+            
+
+            // To start
+            element.BeginAnimation(Window.OpacityProperty, myAnimation);
+
+            // To stop and keep the current value of the animated property
+            myAnimation.BeginTime = null;
+            element.BeginAnimation(Window.OpacityProperty, myAnimation);
+        }
         public static void ThemeAnimate(string theme, Border App_bg, Tooltip tooltip, Border WhiteOverlay, Border BlackOverlay, List<DockIcon> combined)
         {
             double black_opacity = 0;

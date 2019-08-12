@@ -400,7 +400,7 @@
                 <ColumnDefinition Width="*"></ColumnDefinition>
                 <ColumnDefinition Width="200"></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            <Label Content="Settings" VerticalAlignment="Center" Padding="10,0,0,0" Foreground="White"></Label>
+            <TextBlock Name="SettingsHeader" Text="Settings" VerticalAlignment="Center" Padding="10,0,0,0" Foreground="White"></TextBlock>
             <StackPanel HorizontalAlignment="Right" Grid.Column="1" Orientation="Horizontal">
                 <Button Background="Transparent" BorderThickness="0" Width="50" Height="30" Command="{x:Static SystemCommands.MinimizeWindowCommand}" Style="{DynamicResource MinButtonStyle}" Cursor="Hand">
                     <Path Width="10" Height="10" Data="M0,4 L10,4 L10,5 L0,5 z"
@@ -461,65 +461,57 @@
                 <Rectangle Fill="#0d0d0d" Opacity=".7"></Rectangle>
                 <TabControl Name="SettingsTabs" Background="Transparent" BorderThickness="0" Style="{DynamicResource SettingsTabControl}">
                     <TabItem Name="HomeTab" VerticalContentAlignment="Top" VerticalAlignment="Top">
-                        <StackPanel Margin="20">
-                            <StackPanel VerticalAlignment="Top" Height="30" Orientation="Horizontal">
-                                <Label VerticalAlignment="Center" Foreground="White" Width="190">Run FoxDock at Windows startup:</Label>
-                                <CheckBox Background="Transparent" Loaded="Toggle_Loaded" Cursor="Hand" Name="StartupToggle" Checked="StartupToggle_Checked" Unchecked="StartupToggle_Unchecked" VerticalAlignment="Center" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}">
-                                </CheckBox>
-                            </StackPanel>
-                            <!--
-                            <StackPanel VerticalAlignment="Top" Height="30" Orientation="Horizontal">
-                                <Label VerticalAlignment="Center" Foreground="White" Width="190">Other stuff:</Label>
-                                <CheckBox VerticalAlignment="Center" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
-                            </StackPanel>
-                            -->
-                        </StackPanel>
+                        <Grid Margin="20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"  Margin="5"  VerticalAlignment="Center" Foreground="White" Name="DockSettingsStartupLabel">Run FoxDock at Windows startup:</TextBlock>
+                            <CheckBox Width="70" Grid.Column="1" Background="Transparent" Loaded="Toggle_Loaded" Cursor="Hand" Name="StartupToggle" Checked="StartupToggle_Checked" Unchecked="StartupToggle_Unchecked" VerticalAlignment="Center" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}">
+                            </CheckBox>
+                        </Grid>
 
 
                     </TabItem>
                     <TabItem Name="PerfomanceTab">
-                        <StackPanel Margin="20">
-                            <StackPanel VerticalAlignment="Top" Height="30" Orientation="Horizontal">
-                                <Label VerticalAlignment="Center" Foreground="White" Width="190">Disable blur:</Label>
-                                <CheckBox Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Name="DisableBlurToggle" Checked="DisableBlur_Checked" Unchecked="DisableBlur_Unchecked" VerticalAlignment="Center" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
-                            </StackPanel>
-                            <StackPanel VerticalAlignment="Top" Height="30" Orientation="Horizontal">
-                                <Label VerticalAlignment="Center" Foreground="White" Width="190">Enable StarDust:</Label>
-                                <CheckBox Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Name="StarDustEnableToggle" Checked="StarDustEnable_Checked" Unchecked="StarDustEnable_Unchecked" VerticalAlignment="Center" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
-                            </StackPanel>
-                            <!--
-                            <StackPanel VerticalAlignment="Top" Height="30" Orientation="Horizontal">
-                                <Label VerticalAlignment="Center" Foreground="White" Width="190">Other stuff:</Label>
-                                <CheckBox VerticalAlignment="Center" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
-                            </StackPanel>
-                            -->
-                        </StackPanel>
+                        <Grid Margin="20">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="0" Grid.Column="0" Foreground="White" Name="DockSettingsDisableBlurLabel">Disable blur:</TextBlock>
+                            <CheckBox Width="70" Grid.Row="0" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Name="DisableBlurToggle" Checked="DisableBlur_Checked" Unchecked="DisableBlur_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+                            <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="1" Grid.Column="0" Foreground="White" Name="DockSettingsEnableStarDustLabel">Enable StarDust:</TextBlock>
+                            <CheckBox Width="70" Grid.Row="1" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Name="StarDustEnableToggle" Checked="StarDustEnable_Checked" Unchecked="StarDustEnable_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+                        </Grid>
                     </TabItem>
                     <TabItem Name="CustomizeTab">
-                        <StackPanel Margin="20">
+                        <Grid Margin="20">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
 
-                            <StackPanel VerticalAlignment="Top" Orientation="Horizontal" Height="30">
-                                <Label VerticalAlignment="Center" Foreground="White" Width="160">Panel scale:</Label>
-
-                                <Slider Name="ScaleSlider" ValueChanged="ScaleSlider_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal" VerticalAlignment="Center"  Minimum="0.9" Maximum="1.1" Width="150" />
-
-                            </StackPanel>
-                            <StackPanel VerticalAlignment="Top" Orientation="Horizontal" Height="30">
-                                <Label VerticalAlignment="Center" Foreground="White" Width="160">Background opacity:</Label>
-
-                                <Slider Name="Trans_bar" ValueChanged="Slider_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal" VerticalAlignment="Center"  Minimum="0.05" Maximum="1" Width="150" />
-
-                            </StackPanel>
-                            <StackPanel VerticalAlignment="Top" Height="30" Orientation="Horizontal">
-                                <Label VerticalAlignment="Center" Foreground="White" Width="160">Display Dock on top:</Label>
-                                <CheckBox Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Checked="EnableTopmostToggle_Checked" Unchecked="EnableTopmostToggle_Unchecked" Name="EnableTopmostToggle" VerticalAlignment="Center" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
-                            </StackPanel>
-                            <StackPanel VerticalAlignment="Top" Height="30" Orientation="Horizontal">
-                                <Label VerticalAlignment="Center" Foreground="White" Width="160">Auto hide Dock if it's on top:</Label>
-                                <CheckBox Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Name="AHToggle" Checked="AHToggle_Checked" Unchecked="AHToggle_Unchecked" VerticalAlignment="Center" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
-                            </StackPanel>
-                        </StackPanel>
-
+                            <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="0" Grid.Column="0" Name="DockSettingsPanelScaleLabel" Foreground="White">Panel scale:</TextBlock>
+                            <Slider Width="130" Grid.Row="0" Grid.Column="1" Name="ScaleSlider" ValueChanged="ScaleSlider_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal" Minimum="0.9" Maximum="1.1" />
+                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="1" Grid.Column="0" Name="DockSettingsBackgroundOpacityLabel" Foreground="White">Background opacity:</TextBlock>
+                            <Slider Width="130" Grid.Row="1" Grid.Column="1" Name="Trans_bar" ValueChanged="Slider_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal"  Minimum="0.05" Maximum="1" />
+                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="2" Grid.Column="0" Name="DockSettingsDisplayDockOnTopLabel" Foreground="White">Display Dock on top:</TextBlock>
+                            <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="2" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Checked="EnableTopmostToggle_Checked" Unchecked="EnableTopmostToggle_Unchecked" Name="EnableTopmostToggle" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="3" Grid.Column="0" Name="DockSettingsAutoHideLabel" Foreground="White">Auto hide Dock if it's on top:</TextBlock>
+                            <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="3" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Name="AHToggle" Checked="AHToggle_Checked" Unchecked="AHToggle_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+                        </Grid>
                     </TabItem>
                 </TabControl>
             </Grid>

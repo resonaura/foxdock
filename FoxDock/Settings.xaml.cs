@@ -24,6 +24,8 @@ namespace FoxDock
     /// </summary>
     public partial class Settings : Window
     {
+        public static AppLanguage.Locale locale = AppLanguage.GetSystemLocale();
+
         public Settings()
         {
             RoutedEventHandler handler = null;
@@ -35,6 +37,23 @@ namespace FoxDock
             Activated += Settings_Activated;
             InitializeComponent();
 
+            //Локализация заголовка Настроек
+            SettingsHeader.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsShort, locale);
+            this.Title = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsShort, locale);
+
+            //Локализация вкладок Настроек
+            t_1_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsHomeTab, locale);
+            t_2_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsPerfomanceTab, locale);
+            t_3_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsCustomizeTab, locale);
+
+            //Локализация подписей Настроек
+            DockSettingsStartupLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsStartupLabel, locale);
+            DockSettingsDisableBlurLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsDisableBlurLabel, locale);
+            DockSettingsEnableStarDustLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsEnableStarDustLabel, locale);
+            DockSettingsPanelScaleLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsPanelScaleLabel, locale);
+            DockSettingsBackgroundOpacityLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsBackgroundOpacityLabel, locale);
+            DockSettingsDisplayDockOnTopLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsDisplayDockOnTopLabel, locale);
+            DockSettingsAutoHideLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsAutoHideLabel, locale);
         }
 
         private void Settings_Activated(object sender, EventArgs e)
