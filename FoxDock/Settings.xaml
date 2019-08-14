@@ -459,7 +459,7 @@
             </Grid>
             <Grid Grid.Column="1">
                 <Rectangle Fill="#0d0d0d" Opacity=".7"></Rectangle>
-                <TabControl Name="SettingsTabs" Background="Transparent" BorderThickness="0" Style="{DynamicResource SettingsTabControl}">
+                <TabControl Name="SettingsTabs" Background="Transparent" BorderThickness="0" Style="{DynamicResource SettingsTabControl}" SelectionChanged="SettingsTabs_SelectionChanged">
                     <TabItem Name="HomeTab" VerticalContentAlignment="Top" VerticalAlignment="Top">
                         <Grid Margin="20">
                             <Grid.ColumnDefinitions>
@@ -491,27 +491,53 @@
                         </Grid>
                     </TabItem>
                     <TabItem Name="CustomizeTab">
-                        <Grid Margin="20">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"></RowDefinition>
-                                <RowDefinition Height="Auto"></RowDefinition>
-                                <RowDefinition Height="Auto"></RowDefinition>
-                                <RowDefinition Height="Auto"></RowDefinition>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                            </Grid.ColumnDefinitions>
+                        <StackPanel Margin="20">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"></RowDefinition>
+                                    <RowDefinition Height="Auto"></RowDefinition>
+                                    <RowDefinition Height="Auto"></RowDefinition>
+                                    <RowDefinition Height="Auto"></RowDefinition>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
 
-                            <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="0" Grid.Column="0" Name="DockSettingsPanelScaleLabel" Foreground="White">Panel scale:</TextBlock>
-                            <Slider Width="130" Grid.Row="0" Grid.Column="1" Name="ScaleSlider" ValueChanged="ScaleSlider_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal" Minimum="0.9" Maximum="1.1" />
-                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="1" Grid.Column="0" Name="DockSettingsBackgroundOpacityLabel" Foreground="White">Background opacity:</TextBlock>
-                            <Slider Width="130" Grid.Row="1" Grid.Column="1" Name="Trans_bar" ValueChanged="Slider_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal"  Minimum="0.05" Maximum="1" />
-                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="2" Grid.Column="0" Name="DockSettingsDisplayDockOnTopLabel" Foreground="White">Display Dock on top:</TextBlock>
-                            <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="2" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Checked="EnableTopmostToggle_Checked" Unchecked="EnableTopmostToggle_Unchecked" Name="EnableTopmostToggle" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
-                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="3" Grid.Column="0" Name="DockSettingsAutoHideLabel" Foreground="White">Auto hide Dock if it's on top:</TextBlock>
-                            <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="3" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Name="AHToggle" Checked="AHToggle_Checked" Unchecked="AHToggle_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
-                        </Grid>
+                                <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="0" Grid.Column="0" Name="DockSettingsPanelScaleLabel" Foreground="White">Panel scale:</TextBlock>
+                                <Slider Width="130" Grid.Row="0" Grid.Column="1" Name="ScaleSlider" ValueChanged="ScaleSlider_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal" Minimum="0.9" Maximum="1.1" />
+                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="1" Grid.Column="0" Name="DockSettingsBackgroundOpacityLabel" Foreground="White">Background opacity:</TextBlock>
+                                <Slider Width="130" Grid.Row="1" Grid.Column="1" Name="Trans_bar" ValueChanged="Slider_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal"  Minimum="0.05" Maximum="1" />
+                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="2" Grid.Column="0" Name="DockSettingsDisplayDockOnTopLabel" Foreground="White">Display Dock on top:</TextBlock>
+                                <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="2" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Checked="EnableTopmostToggle_Checked" Unchecked="EnableTopmostToggle_Unchecked" Name="EnableTopmostToggle" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="3" Grid.Column="0" Name="DockSettingsAutoHideLabel" Foreground="White">Auto hide Dock if it's on top:</TextBlock>
+                                <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="3" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Name="AHToggle" Checked="AHToggle_Checked" Unchecked="AHToggle_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+
+                            </Grid>
+                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGMColorLabel" Foreground="White">Background color:</TextBlock>
+                            <StackPanel Orientation="Horizontal" Name="BGM_Colors">
+                                <Border Cursor="Hand" MouseUp="BGMAuto_MouseUp"  Name="BGMAuto" Background="#000" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5">
+                                    <Label HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Foreground="#fff" FontFamily="Segoe MDL2 Assets">&#xF08C;</Label>
+                                </Border>
+                                <Border Cursor="Hand" MouseUp="BGMBlack_MouseUp" Name="BGMBlack" Background="#000" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGMGray_MouseUp" Name="BGMGray" Background="#222" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGMWhite_MouseUp" Name="BGMWhite" Background="#eee" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGMAccent_MouseUp"  Name="BGMAccent" Background="{x:Static fw:AccentColors.ImmersiveSystemAccentDark1Brush}" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                            </StackPanel>
+                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGHColorLabel" Foreground="White">Hint color:</TextBlock>
+                            <StackPanel Orientation="Horizontal" Name="BGH_Colors">
+                                <Border Cursor="Hand" MouseUp="BGHAuto_MouseUp"  Name="BGHAuto" Background="#000" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5">
+                                    <Label HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Foreground="#fff" FontFamily="Segoe MDL2 Assets">&#xF08C;</Label>
+                                </Border>
+                                <Border Cursor="Hand" MouseUp="BGHBlack_MouseUp"  Name="BGHBlack" Background="#000" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGHGray_MouseUp" Name="BGHGray" Background="#222" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGHWhite_MouseUp"  Name="BGHWhite" Background="#eee" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGHAccent_MouseUp"  Name="BGHAccent" Background="{x:Static fw:AccentColors.ImmersiveSystemAccentBrush}" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                            </StackPanel>
+
+                        </StackPanel>
+                        
+                        
                     </TabItem>
                 </TabControl>
             </Grid>

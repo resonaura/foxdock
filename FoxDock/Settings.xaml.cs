@@ -2,20 +2,13 @@
 using SourceChord.FluentWPF;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace FoxDock
 {
@@ -54,13 +47,59 @@ namespace FoxDock
             DockSettingsBackgroundOpacityLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsBackgroundOpacityLabel, locale);
             DockSettingsDisplayDockOnTopLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsDisplayDockOnTopLabel, locale);
             DockSettingsAutoHideLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsAutoHideLabel, locale);
+            DockSettingsBGMColorLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsBGMColorLabel, locale);
+            DockSettingsBGHColorLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsBGHColorLabel, locale);
+
+            //Грузим кеш и делаем активным нужный цвет фона
+            MainWindow.cache = CacheOperations.LoadCache(MainWindow.cache);
+            object sender = new object();
+
+            switch (MainWindow.cache.background)
+            {
+                case DockBackground.Auto:
+                    sender = BGMAuto;
+                    break;
+                case DockBackground.Black:
+                    sender = BGMBlack;
+                    break;
+                case DockBackground.Gray:
+                    sender = BGMGray;
+                    break;
+                case DockBackground.White:
+                    sender = BGMWhite;
+                    break;
+                case DockBackground.Accent:
+                    sender = BGMAccent;
+                    break;
+            }
+            BGActiveAnimation(sender, BGM_Colors.Children);
+            switch (MainWindow.cache.hintBackground)
+            {
+                case HintBackground.Auto:
+                    sender = BGHAuto;
+                    break;
+                case HintBackground.Black:
+                    sender = BGHBlack;
+                    break;
+                case HintBackground.Gray:
+                    sender = BGHGray;
+                    break;
+                case HintBackground.White:
+                    sender = BGHWhite;
+                    break;
+                case HintBackground.Accent:
+                    sender = BGHAccent;
+                    break;
+            }
+            BGActiveAnimation(sender, BGH_Colors.Children);
+
         }
 
         private void Settings_Activated(object sender, EventArgs e)
         {
         }
-        
-        
+
+
 
         private void MoveWindow(object sender, MouseEventArgs e)
         {
@@ -109,12 +148,12 @@ namespace FoxDock
 
             SolidColorBrush accent = AccentColors.ImmersiveSystemAccentBrush as SolidColorBrush;
 
-            if(accent != null)
+            if (accent != null)
             {
                 cur.Background = accent;
             }
 
-            
+
 
             if (cur != null)
             {
@@ -203,7 +242,7 @@ namespace FoxDock
         private void StartupToggle_Unchecked(object sender, RoutedEventArgs e)
         {
             MainWindow.cache.runAtStartup = false;
-           CacheOperations.StoreCache(MainWindow.cache);
+            CacheOperations.StoreCache(MainWindow.cache);
             //Debug.WriteLine(MainWindow.cache.runAtStartup);
             RemoveApplicationFromStartup();
         }
@@ -226,7 +265,7 @@ namespace FoxDock
             }
 
             MainWindow.cache.disableBlur = true;
-           CacheOperations.StoreCache(MainWindow.cache);
+            CacheOperations.StoreCache(MainWindow.cache);
         }
 
         private void DisableBlur_Unchecked(object sender, RoutedEventArgs e)
@@ -242,7 +281,7 @@ namespace FoxDock
             }
 
             MainWindow.cache.disableBlur = false;
-           CacheOperations.StoreCache(MainWindow.cache);
+            CacheOperations.StoreCache(MainWindow.cache);
         }
 
         private void StarDustEnable_Checked(object sender, RoutedEventArgs e)
@@ -256,7 +295,7 @@ namespace FoxDock
             }
 
             MainWindow.cache.enableStarDust = true;
-           CacheOperations.StoreCache(MainWindow.cache);
+            CacheOperations.StoreCache(MainWindow.cache);
         }
 
         private void StarDustEnable_Unchecked(object sender, RoutedEventArgs e)
@@ -270,7 +309,7 @@ namespace FoxDock
             }
 
             MainWindow.cache.enableStarDust = false;
-           CacheOperations.StoreCache(MainWindow.cache);
+            CacheOperations.StoreCache(MainWindow.cache);
         }
 
         private void MButton_MouseEnter(object sender, MouseEventArgs e)
@@ -314,7 +353,7 @@ namespace FoxDock
             {
 
             }
-            
+
         }
         public void Toggle_Loaded(object sender, RoutedEventArgs e)
         {
@@ -336,7 +375,7 @@ namespace FoxDock
                 });
             }
             MainWindow.cache.enableTopmost = true;
-           CacheOperations.StoreCache(MainWindow.cache);
+            CacheOperations.StoreCache(MainWindow.cache);
         }
 
         private void EnableTopmostToggle_Unchecked(object sender, RoutedEventArgs e)
@@ -358,26 +397,27 @@ namespace FoxDock
         public bool ds = false;
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if(!MainWindow.lock_slider)
+            if (!MainWindow.lock_slider)
             {
-                if(window != null)
+                if (window != null)
                 {
                     Dispatcher.BeginInvoke((Action)(() =>
                     {
                         window.App_full_bg.Opacity = e.NewValue;
                     }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
                 }
-                if(!ds)
+                if (!ds)
                 {
                     ds = true;
-                } else
+                }
+                else
                 {
                     MainWindow.cache.bg_trans = e.NewValue;
                     CacheOperations.StoreCache(MainWindow.cache);
                 }
-               
+
             }
-            
+
         }
 
         private void ScaleSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -389,7 +429,19 @@ namespace FoxDock
                     Dispatcher.BeginInvoke((Action)(() =>
                     {
                         window.size = (int)(MainWindow.defsize * e.NewValue);
-                        foreach (DockIcon img in window.MainPanel.Children)
+
+                        //Комбинируем основные значки с виджетами
+                        List<DockIcon> combined = new List<DockIcon>();
+                        foreach (DockIcon di in window.MainPanel.Children)
+                        {
+                            combined.Add(di);
+                        }
+                        foreach (DockIcon di in window.AIcons.Children)
+                        {
+                            combined.Add(di);
+                        }
+
+                        foreach (DockIcon img in combined)
                         {
                             DoubleAnimation da = new DoubleAnimation
                             {
@@ -398,20 +450,10 @@ namespace FoxDock
                                 Duration = TimeSpan.FromMilliseconds(100),
                                 EasingFunction = new SineEase()
                             };
-                            
+
                             img.BeginAnimation(DockIcon.SizeProperty, da);
                         }
                         int i = 0;
-                        /*
-                        foreach(Border highlight in window.Icons_highlights.Children)
-                        {
-                            int addt = 0;
-                            if (i == 0) addt = 10;
-                            highlight.Margin = new Thickness(window.size - addt, 0, 5, 0);
-
-                            i++;
-                        }
-                        */
 
                         double new_h = window.size + window.size / 2.5;
                         double new_top = System.Windows.SystemParameters.PrimaryScreenHeight - new_h;
@@ -421,13 +463,60 @@ namespace FoxDock
                     }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
 
                     MainWindow.cache.scaleFactor = e.NewValue;
-                   CacheOperations.StoreCache(MainWindow.cache);
+                    CacheOperations.StoreCache(MainWindow.cache);
                 }
 
-                
+
             }
         }
+        private void UpdateDockBG()
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                window.AutoWallUI();
+            }));
+        }
+        private void BGActiveAnimation(object sender, UIElementCollection borders)
+        {
+            ThicknessAnimation activeAnimation = new ThicknessAnimation
+            {
+                From = new Thickness(2, 2, 2, 2),
+                To = new Thickness(5, 5, 5, 5),
+                Duration = TimeSpan.FromMilliseconds(150),
+                EasingFunction = new SineEase()
+            };
+            ThicknessAnimation inactiveAnimation = new ThicknessAnimation
+            {
+                From = new Thickness(2, 2, 2, 2),
+                To = new Thickness(2, 2, 2, 2),
+                Duration = TimeSpan.FromMilliseconds(0),
+                EasingFunction = new SineEase()
+            };
 
+            BrushAnimation activeColorAnimation = new BrushAnimation
+            {
+                From = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255)),
+                To = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255)),
+                Duration = TimeSpan.FromMilliseconds(150)
+            };
+            BrushAnimation inactiveColorAnimation = new BrushAnimation
+            {
+                From = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255)),
+                To = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255)),
+                Duration = TimeSpan.FromMilliseconds(0),
+            };
+
+
+            foreach (Border border in borders)
+            {
+                border.BeginAnimation(BorderThicknessProperty, inactiveAnimation);
+                border.BeginAnimation(BorderBrushProperty, inactiveColorAnimation);
+                border.Opacity = .5;
+            }
+            (sender as Border).BeginAnimation(BorderThicknessProperty, activeAnimation);
+            (sender as Border).BeginAnimation(BorderBrushProperty, activeColorAnimation);
+            (sender as Border).Opacity = 1;
+        }
         private void AHToggle_Checked(object sender, RoutedEventArgs e)
         {
             MainWindow.cache.dockAutoHide = true;
@@ -444,5 +533,90 @@ namespace FoxDock
         {
             this.MoveWindow(sender, e);
         }
+
+        private void BGMAuto_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.background = DockBackground.Auto;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGM_Colors.Children);
+        }
+
+        private void BGMBlack_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.background = DockBackground.Black;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGM_Colors.Children);
+        }
+
+        private void BGMGray_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.background = DockBackground.Gray;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGM_Colors.Children);
+        }
+
+        private void BGMWhite_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.background = DockBackground.White;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGM_Colors.Children);
+        }
+
+        private void SettingsTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void BGMAccent_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.background = DockBackground.Accent;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGM_Colors.Children);
+        }
+
+        private void BGHAuto_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.hintBackground = HintBackground.Auto;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGH_Colors.Children);
+        }
+        private void BGHBlack_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.hintBackground = HintBackground.Black;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGH_Colors.Children);
+        }
+        private void BGHGray_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.hintBackground = HintBackground.Gray;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGH_Colors.Children);
+        }
+
+        private void BGHWhite_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.hintBackground = HintBackground.White;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGH_Colors.Children);
+        }
+
+        private void BGHAccent_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.hintBackground = HintBackground.Accent;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGH_Colors.Children);
+        }
+
+        
     }
 }

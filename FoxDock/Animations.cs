@@ -111,8 +111,8 @@ namespace FoxDock
 
                 double white_per = 1 - black_per;
 
-                double black_opacity = 0.7 * white_per;
-                double white_opacity = 0.7 * black_per;
+                double black_opacity = 1 * white_per;
+                double white_opacity = 1 * black_per;
 
                 /*var uiSettings = new System.Windows.UI.ViewManagement.UISettings();
                 var color = uiSettings.getColorValue(
@@ -150,41 +150,145 @@ namespace FoxDock
             myAnimation.BeginTime = null;
             element.BeginAnimation(Window.OpacityProperty, myAnimation);
         }
-        public static void ThemeAnimate(string theme, Border App_bg, Tooltip tooltip, Border WhiteOverlay, Border BlackOverlay, List<DockIcon> combined)
+        public static void ThemeAnimate(string theme, Border App_bg, Tooltip tooltip, Border WhiteOverlay, Border BlackOverlay, List<DockIcon> combined, DockBackground dockBackground, HintBackground hintBackground, ContextMenu MainContextMenu, ResourceDictionary Resources)
         {
             double black_opacity = 0;
             double white_opacity = 0;
+            double accent_opacity = 0;
 
-            if(theme == "0")
+            switch(dockBackground)
             {
-                black_opacity = 0.5;
-                white_opacity = 0;
-                tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(24, 24, 24));
-                tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                case DockBackground.Auto:
+                    if (theme == "0")
+                    {
+                        black_opacity = 1;
+                    }
+                    if (theme == "1")
+                    {
+                        white_opacity = 1;
+                    }
+                    foreach (DockIcon ic in combined)
+                    {
+                        if (theme == "0")
+                        {
+                            ic.Theme = "Dark";
+                        }
+                        if (theme == "1")
+                        {
+                            ic.Theme = "Light";
+                        }
+                    }
+                    break;
+                case DockBackground.Black:
+                    black_opacity = 1;
+                    break;
+                case DockBackground.White:
+                    white_opacity = 1;
+                    break;
+                case DockBackground.Gray:
+                    black_opacity = 0.7;
+                    white_opacity = 0.3;
+                    break;
+                case DockBackground.Accent:
+                    accent_opacity = 1;
+                    break;
+
             }
-            if(theme == "1")
+            switch(hintBackground)
             {
-                black_opacity = 0;
-                white_opacity = 0.5;
-                tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
-                tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                case HintBackground.Auto:
+                    if (theme == "0")
+                    {
+                        tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                        tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                        MainContextMenu.Background = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                        MainContextMenu.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+
+                        foreach(UIElement item in MainContextMenu.Items)
+                        {
+                            MenuItem mi = item as MenuItem;
+                            if (mi != null)
+                                mi.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
+                        }
+                    }
+                    if (theme == "1")
+                    {
+                        tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                        tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                        MainContextMenu.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                        MainContextMenu.Foreground = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+
+                        foreach (UIElement item in MainContextMenu.Items)
+                        {
+                            MenuItem mi = item as MenuItem;
+                            if (mi != null)
+                                mi.Template = (ControlTemplate)Resources["WhiteCoolMenuItem"];
+                        }
+                    }
+                    break;
+                case HintBackground.Black:
+                    tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                    tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                    MainContextMenu.Background = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                    MainContextMenu.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+
+                    foreach (UIElement item in MainContextMenu.Items)
+                    {
+                        MenuItem mi = item as MenuItem;
+                        if (mi != null)
+                            mi.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
+                    }
+                    break;
+                case HintBackground.Gray:
+                    tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(48, 48, 48));
+                    tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                    MainContextMenu.Background = new SolidColorBrush(Color.FromRgb(48, 48, 48));
+                    MainContextMenu.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+
+                    foreach (UIElement item in MainContextMenu.Items)
+                    {
+                        MenuItem mi = item as MenuItem;
+                        if (mi != null)
+                            mi.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
+                    }
+                    break;
+                case HintBackground.White:
+                    tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                    tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                    MainContextMenu.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                    MainContextMenu.Foreground = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+
+                    foreach (UIElement item in MainContextMenu.Items)
+                    {
+                        MenuItem mi = item as MenuItem;
+                        if(mi != null)
+                            mi.Template = (ControlTemplate)Resources["WhiteCoolMenuItem"];
+                    }
+                    break;
+                case HintBackground.Accent:
+                    tooltip.app_hint.Background = SystemParameters.WindowGlassBrush;
+                    tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                    MainContextMenu.Background = SystemParameters.WindowGlassBrush;
+                    MainContextMenu.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+
+                    foreach (UIElement item in MainContextMenu.Items)
+                    {
+                        MenuItem mi = item as MenuItem;
+                        if (mi != null)
+                            mi.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
+                    }
+                    break;
+
             }
-            foreach(DockIcon ic in combined)
-            {
-                if (theme == "0")
-                {
-                    ic.Theme = "Dark";
-                }
-                if(theme == "1")
-                {
-                    ic.Theme = "Light";
-                }
-            }
+            
             DoubleAnimation op1 = Animations.OpacityAnimation(BlackOverlay.Opacity, black_opacity);
             BlackOverlay.BeginAnimation(System.Windows.Controls.Image.OpacityProperty, op1);
 
             DoubleAnimation op2 = Animations.OpacityAnimation(WhiteOverlay.Opacity, white_opacity);
             WhiteOverlay.BeginAnimation(System.Windows.Controls.Image.OpacityProperty, op2);
+
+            DoubleAnimation op3 = Animations.OpacityAnimation(App_bg.Opacity, accent_opacity);
+            App_bg.BeginAnimation(System.Windows.Controls.Image.OpacityProperty, op3);
         }
         public static DoubleAnimation OpacityAnimation(double from, double to, double duration = 0.5)
         {

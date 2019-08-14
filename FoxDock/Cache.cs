@@ -6,6 +6,22 @@ using System.Threading.Tasks;
 
 namespace FoxDock
 {
+    public enum DockBackground
+    {
+        Auto,
+        Black,
+        Gray,
+        White,
+        Accent
+    }
+    public enum HintBackground
+    {
+        Auto,
+        Black,
+        Gray,
+        White,
+        Accent
+    }
     public class Cache
     {
         public List<string> dock_apps = new List<string>();
@@ -15,8 +31,10 @@ namespace FoxDock
         public bool enableStarDust = false;
         public bool enableTopmost = false;
         public double scaleFactor = 1;
-        public double bg_trans = 1;
+        public double bg_trans = 0.5;
         public bool dockAutoHide = true;
         public bool dockLock = false;
+        public DockBackground background = DockBackground.Auto;
+        public HintBackground hintBackground = HintBackground.Auto;
     }
 }

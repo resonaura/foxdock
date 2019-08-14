@@ -60,6 +60,7 @@ namespace FoxDock
         public int size = (int)(defsize * cache.scaleFactor);
         public bool lockSizeChange = false;
         public static AppLanguage.Locale locale = AppLanguage.GetSystemLocale();
+        public SolidColorBrush MenuBackground = new SolidColorBrush(Color.FromRgb(100,100,100));
         private string lastTheme = string.Empty;
         private bool isDown;
         private UIElement down_icon;
@@ -80,6 +81,7 @@ namespace FoxDock
         private bool panelIconsAnimating = false;
         private DockIcon dr_ic = null;
         private bool movingToTrash = false;
+        
 
 
         //Необходимые константы
@@ -772,7 +774,7 @@ namespace FoxDock
                     }
 
                     //Выполняем стандартную анимацию анимации темы
-                    Animations.ThemeAnimate(theme, App_bg, tooltip, WhiteOverlay, BlackOverlay, combined);
+                    Animations.ThemeAnimate(theme, App_bg, tooltip, WhiteOverlay, BlackOverlay, combined, cache.background, cache.hintBackground, MainContextMenu, Resources);
                 });
             });
         }
@@ -2344,7 +2346,7 @@ namespace FoxDock
 
             item.Style = CloseSomeAppButton.Style;
             item.CommandParameter = CloseSomeAppButton.CommandParameter;
-            item.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
+            item.Template = CloseSomeAppButton.Template;
             item.Padding = CloseSomeAppButton.Padding;
             item.Background = CloseSomeAppButton.Background;
             item.Foreground = CloseSomeAppButton.Foreground;
@@ -2353,7 +2355,7 @@ namespace FoxDock
             ti.Text = icon;
             ti.FontFamily = new System.Windows.Media.FontFamily("Segoe MDL2 Assets");
             ti.FontSize = 14;
-            ti.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+            ti.Foreground = CloseSomeAppButton.Foreground;
             
             ti.VerticalAlignment = CloseSomeAppButton.VerticalAlignment;
             
@@ -2431,7 +2433,9 @@ namespace FoxDock
         {
             Separator separator = new Separator();
             separator.Height = 2;
-            separator.Background = new SolidColorBrush(Color.FromRgb(45, 45, 45));
+            separator.Margin = new Thickness(5);
+            separator.Opacity = .2;
+            separator.Background = MainContextMenu.Foreground;
 
             return separator;
         }
@@ -2450,7 +2454,7 @@ namespace FoxDock
 
                 result.Style = source.Style;
                 result.CommandParameter = source.CommandParameter;
-                result.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
+                result.Template = CloseSomeAppButton.Template;
                 result.Padding = source.Padding;
                 result.Background = source.Background;
                 result.Foreground = source.Foreground;
@@ -2459,7 +2463,7 @@ namespace FoxDock
                 ti.Text = (source.Icon as TextBlock).Text;
                 ti.FontFamily = new System.Windows.Media.FontFamily("Segoe MDL2 Assets");
                 ti.FontSize = 14;
-                ti.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                ti.Foreground = CloseSomeAppButton.Foreground;
 
                 ti.VerticalAlignment = CloseSomeAppButton.VerticalAlignment;
 

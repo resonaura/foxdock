@@ -54,7 +54,9 @@ namespace FoxDock
             DockSettingsPanelScaleLabel,
             DockSettingsBackgroundOpacityLabel,
             DockSettingsDisplayDockOnTopLabel,
-            DockSettingsAutoHideLabel
+            DockSettingsAutoHideLabel,
+            DockSettingsBGMColorLabel,
+            DockSettingsBGHColorLabel
         }
 
         //Основные функции
@@ -122,7 +124,9 @@ namespace FoxDock
             [Dialog.DockSettingsPanelScaleLabel] = "Panel scale:",
             [Dialog.DockSettingsBackgroundOpacityLabel] = "Background opacity:",
             [Dialog.DockSettingsDisplayDockOnTopLabel] = "Display Dock on top:",
-            [Dialog.DockSettingsAutoHideLabel] = "Auto hide Dock if it's on top:"
+            [Dialog.DockSettingsAutoHideLabel] = "Auto hide Dock if it's on top:",
+            [Dialog.DockSettingsBGMColorLabel] = "Background color:",
+            [Dialog.DockSettingsBGHColorLabel] = "Hint and menu color: "
         };
         private static Dictionary<Dialog, string> RU_DICT = new Dictionary<Dialog, string>()
         {
@@ -152,9 +156,11 @@ namespace FoxDock
             [Dialog.DockSettingsDisableBlurLabel] = "Отключить размытие",
             [Dialog.DockSettingsEnableStarDustLabel] = "Включить StarDust",
             [Dialog.DockSettingsPanelScaleLabel] = "Размер значков:",
-            [Dialog.DockSettingsBackgroundOpacityLabel] = "Прозрачность фона:",
+            [Dialog.DockSettingsBackgroundOpacityLabel] = "Непрозрачность фона:",
             [Dialog.DockSettingsDisplayDockOnTopLabel] = "Отображать Док-бар поверх всех окон:",
-            [Dialog.DockSettingsAutoHideLabel] = "Автоматически скрывать Док-бар если он поверх всех окон:"
+            [Dialog.DockSettingsAutoHideLabel] = "Автоматически скрывать Док-бар если он поверх всех окон:",
+            [Dialog.DockSettingsBGMColorLabel] = "Цвет фона:",
+            [Dialog.DockSettingsBGHColorLabel] = "Цвет подсказки и меню: "
         };
         private static Dictionary<Dialog, string> UA_DICT = new Dictionary<Dialog, string>()
         {
@@ -184,9 +190,11 @@ namespace FoxDock
             [Dialog.DockSettingsDisableBlurLabel] = "Вимкнути розмиття",
             [Dialog.DockSettingsEnableStarDustLabel] = "Ввімкнути StarDust",
             [Dialog.DockSettingsPanelScaleLabel] = "Розмір значків:",
-            [Dialog.DockSettingsBackgroundOpacityLabel] = "Прозорість фону:",
+            [Dialog.DockSettingsBackgroundOpacityLabel] = "Непрозорість фону:",
             [Dialog.DockSettingsDisplayDockOnTopLabel] = "Відображати Док-бар поверх всіх вікон:",
-            [Dialog.DockSettingsAutoHideLabel] = "Автоматично приховувати Док-бар якщо він поверх всіх вікон:"
+            [Dialog.DockSettingsAutoHideLabel] = "Автоматично приховувати Док-бар якщо він поверх всіх вікон:",
+            [Dialog.DockSettingsBGMColorLabel] = "Колір фону:",
+            [Dialog.DockSettingsBGHColorLabel] = "Колір підсказки та меню: "
         };
 
         //Комбинированный словарь
