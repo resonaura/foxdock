@@ -8,7 +8,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:FoxDock"
         mc:Ignorable="d"
-        Title="Settings" ResizeMode="CanMinimize" fw:Extensions.PlaceholderForegroundBrush="White" fw:Extensions.HeaderForegroundBrush="White" fw:AcrylicWindow.NoiseOpacity="0.02" fw:AcrylicWindow.TintColor="#1a1a1a" fw:AcrylicWindow.TintOpacity=".8" fw:AcrylicWindow.Enabled="True" fw:AcrylicWindow.AcrylicWindowStyle="None"  Loaded="SettingsWindow_Loaded" Name="SettingsWindow" Height="450" Width="800" Background="Transparent">
+        Title="Settings" ResizeMode="CanMinimize" fw:Extensions.PlaceholderForegroundBrush="White" fw:Extensions.HeaderForegroundBrush="White" fw:AcrylicWindow.NoiseOpacity="0.02" fw:AcrylicWindow.TintColor="#1a1a1a" fw:AcrylicWindow.TintOpacity=".8" fw:AcrylicWindow.Enabled="True" fw:AcrylicWindow.AcrylicWindowStyle="None"  Loaded="SettingsWindow_Loaded" Name="SettingsWindow" Height="520" Width="850" Background="Transparent">
     <Window.Resources>
         <Style x:Key="FocusVisual">
             <Setter Property="Control.Template">
@@ -498,6 +498,7 @@
                                     <RowDefinition Height="Auto"></RowDefinition>
                                     <RowDefinition Height="Auto"></RowDefinition>
                                     <RowDefinition Height="Auto"></RowDefinition>
+                                    <RowDefinition Height="Auto"></RowDefinition>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -505,39 +506,76 @@
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="0" Grid.Column="0" Name="DockSettingsPanelScaleLabel" Foreground="White">Panel scale:</TextBlock>
-                                <Slider Width="130" Grid.Row="0" Grid.Column="1" Name="ScaleSlider" ValueChanged="ScaleSlider_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal" Minimum="0.9" Maximum="1.1" />
-                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="1" Grid.Column="0" Name="DockSettingsBackgroundOpacityLabel" Foreground="White">Background opacity:</TextBlock>
+                                <Slider Width="130" Grid.Row="0" Grid.Column="1" Name="ScaleSlider" ValueChanged="ScaleSlider_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal" Minimum="0.92" Maximum="1.4" />
+                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="1" Grid.Column="0" Name="DockSettingsBackgroundOpacityLabel" Foreground="White">Dock background opacity:</TextBlock>
                                 <Slider Width="130" Grid.Row="1" Grid.Column="1" Name="Trans_bar" ValueChanged="Slider_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal"  Minimum="0.05" Maximum="1" />
-                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="2" Grid.Column="0" Name="DockSettingsDisplayDockOnTopLabel" Foreground="White">Display Dock on top:</TextBlock>
-                                <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="2" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Checked="EnableTopmostToggle_Checked" Unchecked="EnableTopmostToggle_Unchecked" Name="EnableTopmostToggle" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
-                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="3" Grid.Column="0" Name="DockSettingsAutoHideLabel" Foreground="White">Auto hide Dock if it's on top:</TextBlock>
-                                <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="3" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Name="AHToggle" Checked="AHToggle_Checked" Unchecked="AHToggle_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+                                <TextBlock VerticalAlignment="Center" Margin="5" Name="DockSettingsHintOpacityLabel" Grid.Row="2" Grid.Column="0" Foreground="White">Hint background opacity:</TextBlock>
+                                <Slider Width="130" Grid.Row="2" Grid.Column="1" Name="Hint_trans_bar" ValueChanged="Hint_trans_bar_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal"  Minimum="0" Maximum="1" />
+                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="3" Grid.Column="0" Name="DockSettingsDisplayDockOnTopLabel" Foreground="White">Display Dock on top:</TextBlock>
+                                <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="3" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Checked="EnableTopmostToggle_Checked" Unchecked="EnableTopmostToggle_Unchecked" Name="EnableTopmostToggle" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsAutoHideLabel" Foreground="White">Auto hide Dock if it's on top:</TextBlock>
+                                <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="5" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Name="AHToggle" Checked="AHToggle_Checked" Unchecked="AHToggle_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
 
                             </Grid>
                             <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGMColorLabel" Foreground="White">Background color:</TextBlock>
                             <StackPanel Orientation="Horizontal" Name="BGM_Colors">
-                                <Border Cursor="Hand" MouseUp="BGMAuto_MouseUp"  Name="BGMAuto" Background="#000" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5">
-                                    <Label HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Foreground="#fff" FontFamily="Segoe MDL2 Assets">&#xF08C;</Label>
+                                <Border Cursor="Hand" MouseUp="BGMAuto_MouseUp"  Name="BGMAuto" Background="#000" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5">
+                                    <Viewbox Width="20">
+                                        <Canvas Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Path Data="M10.85 12.65h2.3L12 9l-1.15 3.65zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM14.3 16l-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9z" Fill="White"></Path>
+                                        </Canvas>
+                                    </Viewbox>
                                 </Border>
-                                <Border Cursor="Hand" MouseUp="BGMBlack_MouseUp" Name="BGMBlack" Background="#000" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
-                                <Border Cursor="Hand" MouseUp="BGMGray_MouseUp" Name="BGMGray" Background="#222" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
-                                <Border Cursor="Hand" MouseUp="BGMWhite_MouseUp" Name="BGMWhite" Background="#eee" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
-                                <Border Cursor="Hand" MouseUp="BGMAccent_MouseUp"  Name="BGMAccent" Background="{x:Static fw:AccentColors.ImmersiveSystemAccentDark1Brush}" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGMBlack_MouseUp" Name="BGMBlack" Background="#000" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGMGray_MouseUp" Name="BGMGray" Background="#222" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGMWhite_MouseUp" Name="BGMWhite" Background="#eee" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGMAccent_MouseUp"  Name="BGMAccent" Background="{x:Static fw:AccentColors.ImmersiveSystemAccentDark1Brush}" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
                             </StackPanel>
                             <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGHColorLabel" Foreground="White">Hint color:</TextBlock>
                             <StackPanel Orientation="Horizontal" Name="BGH_Colors">
-                                <Border Cursor="Hand" MouseUp="BGHAuto_MouseUp"  Name="BGHAuto" Background="#000" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5">
-                                    <Label HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Foreground="#fff" FontFamily="Segoe MDL2 Assets">&#xF08C;</Label>
+                                <Border Cursor="Hand" MouseUp="BGHAuto_MouseUp"  Name="BGHAuto" Background="#000" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5">
+                                    <Viewbox Width="20">
+                                        <Canvas Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Path Data="M10.85 12.65h2.3L12 9l-1.15 3.65zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM14.3 16l-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9z" Fill="White"></Path>
+                                        </Canvas>
+                                    </Viewbox>
                                 </Border>
-                                <Border Cursor="Hand" MouseUp="BGHBlack_MouseUp"  Name="BGHBlack" Background="#000" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
-                                <Border Cursor="Hand" MouseUp="BGHGray_MouseUp" Name="BGHGray" Background="#222" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
-                                <Border Cursor="Hand" MouseUp="BGHWhite_MouseUp"  Name="BGHWhite" Background="#eee" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
-                                <Border Cursor="Hand" MouseUp="BGHAccent_MouseUp"  Name="BGHAccent" Background="{x:Static fw:AccentColors.ImmersiveSystemAccentBrush}" Width="45" Height="45" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGHBlack_MouseUp"  Name="BGHBlack" Background="#000" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGHGray_MouseUp" Name="BGHGray" Background="#222" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGHWhite_MouseUp"  Name="BGHWhite" Background="#eee" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGHAccent_MouseUp"  Name="BGHAccent" Background="{x:Static fw:AccentColors.ImmersiveSystemAccentBrush}" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
                             </StackPanel>
-
+                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGIColorLabel" Foreground="White">Indicator color:</TextBlock>
+                            <StackPanel Orientation="Horizontal" Name="BGI_Colors">
+                                <Border Cursor="Hand" MouseUp="BGIAuto_MouseUp" Name="BGIAuto" Background="#000" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5">
+                                    <Viewbox Width="20">
+                                        <Canvas Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Path Data="M10.85 12.65h2.3L12 9l-1.15 3.65zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM14.3 16l-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9z" Fill="White"></Path>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                                <Border Cursor="Hand" MouseUp="BGIBlack_MouseUp"  Name="BGIBlack" Background="#000" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGIGray_MouseUp"  Name="BGIGray" Background="#222" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGIWhite_MouseUp"  Name="BGIWhite" Background="#eee" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGIAccent_MouseUp"  Name="BGIAccent" Background="{x:Static fw:AccentColors.ImmersiveSystemAccentBrush}" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                            </StackPanel>
+                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGNColorLabel" Foreground="White">Menu color:</TextBlock>
+                            <StackPanel Orientation="Horizontal" Name="BGN_Colors">
+                                <Border Cursor="Hand" MouseUp="BGNAuto_MouseUp"  Name="BGNAuto" Background="#000" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5">
+                                    <Viewbox Width="20">
+                                        <Canvas Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Path Data="M10.85 12.65h2.3L12 9l-1.15 3.65zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM14.3 16l-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9z" Fill="White"></Path>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                                <Border Cursor="Hand" MouseUp="BGNBlack_MouseUp"  Name="BGNBlack" Background="#000" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGNGray_MouseUp"  Name="BGNGray" Background="#222" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGNWhite_MouseUp"  Name="BGNWhite" Background="#eee" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                                <Border Cursor="Hand" MouseUp="BGNAccent_MouseUp"  Name="BGNAccent" Background="{x:Static fw:AccentColors.ImmersiveSystemAccentBrush}" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
+                            </StackPanel>
                         </StackPanel>
-                        
-                        
+
+
                     </TabItem>
                 </TabControl>
             </Grid>

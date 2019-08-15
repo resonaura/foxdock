@@ -150,13 +150,15 @@ namespace FoxDock
             myAnimation.BeginTime = null;
             element.BeginAnimation(Window.OpacityProperty, myAnimation);
         }
-        public static void ThemeAnimate(string theme, Border App_bg, Tooltip tooltip, Border WhiteOverlay, Border BlackOverlay, List<DockIcon> combined, DockBackground dockBackground, HintBackground hintBackground, ContextMenu MainContextMenu, ResourceDictionary Resources)
+        public static void ThemeAnimate(string theme, Border App_bg, Tooltip tooltip, Border WhiteOverlay, Border BlackOverlay, List<DockIcon> combined, DockBackground dockBackground, HintBackground hintBackground, ContextMenu MainContextMenu, ResourceDictionary Resources, Cache cache)
         {
             double black_opacity = 0;
             double white_opacity = 0;
             double accent_opacity = 0;
 
-            switch(dockBackground)
+            int hint_opacity = (int)(cache.hm_trans * 255);
+
+            switch (dockBackground)
             {
                 case DockBackground.Auto:
                     if (theme == "0")
@@ -167,17 +169,7 @@ namespace FoxDock
                     {
                         white_opacity = 1;
                     }
-                    foreach (DockIcon ic in combined)
-                    {
-                        if (theme == "0")
-                        {
-                            ic.Theme = "Dark";
-                        }
-                        if (theme == "1")
-                        {
-                            ic.Theme = "Light";
-                        }
-                    }
+                    
                     break;
                 case DockBackground.Black:
                     black_opacity = 1;
@@ -199,12 +191,73 @@ namespace FoxDock
                 case HintBackground.Auto:
                     if (theme == "0")
                     {
-                        tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                        tooltip.app_hint.Background = new SolidColorBrush(Color.FromArgb((byte)hint_opacity, 24, 24, 24));
                         tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                    }
+                    if (theme == "1")
+                    {
+                        tooltip.app_hint.Background = new SolidColorBrush(Color.FromArgb((byte)hint_opacity, 255, 255, 255));
+                        tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                    }
+                    break;
+                case HintBackground.Black:
+                    tooltip.app_hint.Background = new SolidColorBrush(Color.FromArgb((byte)hint_opacity, 24, 24, 24));
+                    tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                    break;
+                case HintBackground.Gray:
+                    tooltip.app_hint.Background = new SolidColorBrush(Color.FromArgb((byte)hint_opacity, 48, 48, 48));
+                    tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                    break;
+                case HintBackground.White:
+                    tooltip.app_hint.Background = new SolidColorBrush(Color.FromArgb((byte)hint_opacity, 255, 255, 255));
+                    tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                    break;
+                case HintBackground.Accent:
+                    SolidColorBrush accent_brush = new SolidColorBrush(Color.FromArgb((byte)hint_opacity, SystemParameters.WindowGlassColor.R, SystemParameters.WindowGlassColor.G, SystemParameters.WindowGlassColor.B));
+                    tooltip.app_hint.Background = accent_brush;
+                    tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                    break;
+
+            }
+            string hcolor = "White";
+            switch (cache.IndicatorColor)
+            {
+                case IndicatorColor.Auto:
+                    if (theme == "0")
+                    {
+                        hcolor = "White";
+                    }
+                    if (theme == "1")
+                    {
+                        hcolor = "Black";
+                    }
+                break;
+                case IndicatorColor.Black:
+                    hcolor = "Black";
+                    break;
+                case IndicatorColor.Gray:
+                    hcolor = "Gray";
+                    break;
+                case IndicatorColor.White:
+                    hcolor = "White";
+                    break;
+                case IndicatorColor.Accent:
+                    hcolor = "Accent";
+                    break;
+            }
+            foreach (DockIcon ic in combined)
+            {
+                ic.HighlightColor = hcolor;
+            }
+            switch(cache.MenuColor)
+            {
+                case MenuColor.Auto:
+                    if(theme == "0")
+                    {
                         MainContextMenu.Background = new SolidColorBrush(Color.FromRgb(24, 24, 24));
                         MainContextMenu.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
 
-                        foreach(UIElement item in MainContextMenu.Items)
+                        foreach (UIElement item in MainContextMenu.Items)
                         {
                             MenuItem mi = item as MenuItem;
                             if (mi != null)
@@ -213,8 +266,6 @@ namespace FoxDock
                     }
                     if (theme == "1")
                     {
-                        tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
-                        tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(24, 24, 24));
                         MainContextMenu.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
                         MainContextMenu.Foreground = new SolidColorBrush(Color.FromRgb(24, 24, 24));
 
@@ -226,9 +277,7 @@ namespace FoxDock
                         }
                     }
                     break;
-                case HintBackground.Black:
-                    tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(24, 24, 24));
-                    tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                case MenuColor.Black:
                     MainContextMenu.Background = new SolidColorBrush(Color.FromRgb(24, 24, 24));
                     MainContextMenu.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
 
@@ -239,9 +288,7 @@ namespace FoxDock
                             mi.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
                     }
                     break;
-                case HintBackground.Gray:
-                    tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(48, 48, 48));
-                    tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                case MenuColor.Gray:
                     MainContextMenu.Background = new SolidColorBrush(Color.FromRgb(48, 48, 48));
                     MainContextMenu.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
 
@@ -252,22 +299,18 @@ namespace FoxDock
                             mi.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
                     }
                     break;
-                case HintBackground.White:
-                    tooltip.app_hint.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
-                    tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                case MenuColor.White:
                     MainContextMenu.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
                     MainContextMenu.Foreground = new SolidColorBrush(Color.FromRgb(24, 24, 24));
 
                     foreach (UIElement item in MainContextMenu.Items)
                     {
                         MenuItem mi = item as MenuItem;
-                        if(mi != null)
+                        if (mi != null)
                             mi.Template = (ControlTemplate)Resources["WhiteCoolMenuItem"];
                     }
                     break;
-                case HintBackground.Accent:
-                    tooltip.app_hint.Background = SystemParameters.WindowGlassBrush;
-                    tooltip.app_hint.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                case MenuColor.Accent:
                     MainContextMenu.Background = SystemParameters.WindowGlassBrush;
                     MainContextMenu.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
 
@@ -278,8 +321,8 @@ namespace FoxDock
                             mi.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
                     }
                     break;
-
             }
+
             
             DoubleAnimation op1 = Animations.OpacityAnimation(BlackOverlay.Opacity, black_opacity);
             BlackOverlay.BeginAnimation(System.Windows.Controls.Image.OpacityProperty, op1);

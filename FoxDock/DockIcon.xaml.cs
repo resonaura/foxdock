@@ -25,7 +25,7 @@ namespace FoxDock
         public static readonly DependencyProperty HighlightProperty = DependencyProperty.Register("Highlight", typeof(bool), typeof(DockIcon));
         public static readonly DependencyProperty SizeProperty = DependencyProperty.Register("Size", typeof(double), typeof(DockIcon));
         public static readonly DependencyProperty LabelProperty = DependencyProperty.Register("Label", typeof(string), typeof(DockIcon));
-        public static readonly DependencyProperty ThemeProperty = DependencyProperty.Register("Theme", typeof(string), typeof(DockIcon));
+        public static readonly DependencyProperty HighlightColorProperty = DependencyProperty.Register("HighlightColor", typeof(string), typeof(DockIcon));
 
         public static readonly RoutedEvent ClickEvent = EventManager.RegisterRoutedEvent("Click", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(DockIcon));
 
@@ -55,19 +55,27 @@ namespace FoxDock
                 SetValue(SourceProperty, value);
             }
         }
-        public string Theme
+        public string HighlightColor
         {
-            get { return (string)GetValue(ThemeProperty); }
+            get { return (string)GetValue(HighlightColorProperty); }
             set {
-                if(value == "Dark")
+                switch(value)
                 {
-                    HighlightDot.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
-                } else if(value == "Light")
-                {
-                    HighlightDot.Background = new SolidColorBrush(Color.FromRgb(24, 24, 24));
+                    case "White":
+                        HighlightDot.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                        break;
+                    case "Gray":
+                        HighlightDot.Background = new SolidColorBrush(Color.FromRgb(45, 45, 45));
+                        break;
+                    case "Black":
+                        HighlightDot.Background = new SolidColorBrush(Color.FromRgb(0, 0, 0));
+                        break;
+                    case "Accent":
+                        HighlightDot.Background = SystemParameters.WindowGlassBrush;
+                        break;
                 }
                 
-                SetValue(ThemeProperty, value);
+                SetValue(HighlightColorProperty, value);
             }
         }
         public bool Highlight

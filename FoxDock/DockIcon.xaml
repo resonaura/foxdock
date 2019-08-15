@@ -12,7 +12,7 @@
             <StackPanel Height="10"  VerticalAlignment="Center" HorizontalAlignment="Center">
                 <Border VerticalAlignment="Center" x:Name="HighlightDot" Opacity="0" Width="5" Height="5" Background="White" CornerRadius="100">
                     <Border.Effect>
-                        <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="2" Direction="0" Opacity=".5" RenderingBias="Performance"/>
+                        <DropShadowEffect Color="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Background}" ShadowDepth="0" BlurRadius="2" Direction="0" Opacity=".5" RenderingBias="Performance"/>
                     </Border.Effect>
                 </Border>
             </StackPanel>

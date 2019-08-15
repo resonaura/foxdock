@@ -46,7 +46,7 @@ namespace FoxDock
         private System.Timers.Timer mouseTimer = new System.Timers.Timer();
 
         //Инициализируем окна
-        private Tooltip tooltip = new Tooltip();
+        public Tooltip tooltip = new Tooltip();
         private Settings settings;
         private Dialog dialog;
 
@@ -98,7 +98,6 @@ namespace FoxDock
         public MainWindow()
         {
             InitializeComponent(); //Инициализируем все компоненты
-
 
             //Применяем локализацию для кнопок меню
             ExitButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ExitDock, locale);
@@ -159,15 +158,6 @@ namespace FoxDock
                     NativeMethods.EnableBlur(this);
                 if (cache.enableStarDust)
                     StarDust.Visibility = Visibility.Visible;
-
-                //Делаем слайдеры настроек активными в зависимости от значений из кеша
-                settings.DisableBlurToggle.IsChecked = cache.disableBlur;
-                settings.StarDustEnableToggle.IsChecked = cache.enableStarDust;
-                settings.EnableTopmostToggle.IsChecked = cache.enableTopmost;
-                settings.AHToggle.IsChecked = cache.dockAutoHide;
-                settings.Trans_bar.Value = cache.bg_trans;
-                settings.ScaleSlider.Value = cache.scaleFactor;
-                settings.StartupToggle.IsChecked = cache.runAtStartup;
 
                 //Получаем размер значков в зависимости от масштаба из настроек
                 size = (int)(defsize * cache.scaleFactor);
@@ -421,6 +411,7 @@ namespace FoxDock
                 {
                     System.Threading.Thread.Sleep(300);
                     SafeInvoke(() => UpdateDockWidth());
+                    SafeInvoke(() => StabilizeIcons());
                 });
 
 
@@ -774,7 +765,7 @@ namespace FoxDock
                     }
 
                     //Выполняем стандартную анимацию анимации темы
-                    Animations.ThemeAnimate(theme, App_bg, tooltip, WhiteOverlay, BlackOverlay, combined, cache.background, cache.hintBackground, MainContextMenu, Resources);
+                    Animations.ThemeAnimate(theme, App_bg, tooltip, WhiteOverlay, BlackOverlay, combined, cache.background, cache.hintBackground, MainContextMenu, Resources, cache);
                 });
             });
         }
@@ -1441,6 +1432,46 @@ namespace FoxDock
             Close();
             Environment.Exit(0);
         }
+        /// <summary>
+        /// Функция для возвращения значков в норму
+        /// </summary>
+        private void StabilizeIcons()
+        {
+            //Комбинируем пользовательские значки с виджетами
+            List<DockIcon> combined = new List<DockIcon>();
+            foreach (DockIcon di in MainPanel.Children)
+            {
+                combined.Add(di);
+            }
+            foreach (DockIcon di in AIcons.Children)
+            {
+                combined.Add(di);
+            }
+
+            //Проходимся по всем значкам из комбинированных
+            foreach (DockIcon img_cur in combined)
+            {
+                //Если текущий значок существует
+                if (img_cur != null)
+                {
+                    //Анимируем его в нормальное состояние и размер
+                    img_cur.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(img_cur.Opacity, 1, 0.2));
+                    DoubleAnimation doubleAnimation = new DoubleAnimation
+                    {
+                        From = img_cur.Size,
+                        To = size,
+                        Duration = TimeSpan.FromMilliseconds(200),
+                        EasingFunction = new SineEase()
+                    };
+                    doubleAnimation.Completed += (x, y) =>
+                    {
+                        tooltip.Hide();
+                    };
+                    tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.OpacityAnimation(1, 0, .2));
+                    img_cur.BeginAnimation(DockIcon.SizeProperty, doubleAnimation);
+                }
+            }
+        }
 
         /// <summary>
         /// Обработка события закрытия окна
@@ -1459,40 +1490,7 @@ namespace FoxDock
             //Если нету блокировки движения значков Дока
             if (!move_lock)
             {
-                //Комбинируем пользовательские значки с виджетами
-                List<DockIcon> combined = new List<DockIcon>();
-                foreach (DockIcon di in MainPanel.Children)
-                {
-                    combined.Add(di);
-                }
-                foreach (DockIcon di in AIcons.Children)
-                {
-                    combined.Add(di);
-                }
-                
-                //Проходимся по всем значкам из комбинированных
-                foreach (DockIcon img_cur in combined)
-                {
-                    //Если текущий значок существует
-                    if (img_cur != null)
-                    {
-                        //Анимируем его в нормальное состояние и размер
-                        img_cur.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(img_cur.Opacity, 1, 0.2));
-                        DoubleAnimation doubleAnimation = new DoubleAnimation
-                        {
-                            From = img_cur.Size,
-                            To = size,
-                            Duration = TimeSpan.FromMilliseconds(200),
-                            EasingFunction = new SineEase()
-                        };
-                        doubleAnimation.Completed += (x, y) =>
-                        {
-                            tooltip.Hide();
-                        };
-                        tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.OpacityAnimation(1, 0, .2));
-                        img_cur.BeginAnimation(DockIcon.SizeProperty, doubleAnimation);
-                    }
-                }
+                StabilizeIcons();
             }
             //Если есть зажатая иконка
             if (down_icon != null && isDown && !apprunned && !cache.dockLock)
@@ -1681,21 +1679,6 @@ namespace FoxDock
                 settings.Activate();
                 settings.window = this;
             }
-
-            //Задаём значение всем параметрам настроек
-            cache = CacheOperations.LoadCache(cache);
-            settings.StartupToggle.IsChecked = cache.runAtStartup;
-            settings.DisableBlurToggle.IsChecked = cache.disableBlur;
-            settings.StarDustEnableToggle.IsChecked = cache.enableStarDust;
-            settings.EnableTopmostToggle.IsChecked = cache.enableTopmost;
-            settings.AHToggle.IsChecked = cache.dockAutoHide;
-            settings.Trans_bar.Value = cache.bg_trans;
-            settings.ScaleSlider.Value = cache.scaleFactor;
-
-            //Выполняем логику для слайдеров настроек
-            settings.Toggle_Loaded_Do(settings.StartupToggle);
-            settings.Toggle_Loaded_Do(settings.DisableBlurToggle);
-            settings.Toggle_Loaded_Do(settings.StarDustEnableToggle);
         }
         /// <summary>
         /// Логика нажатия кнопки удаления значка в контекстном меню
@@ -2144,7 +2127,6 @@ namespace FoxDock
         /// <param name="e"></param>
         private void Window_MouseMove(object sender, MouseEventArgs e)
         {
-            
             //Получаем относительные координаты мыши и вызываем рыбьий глаз (магггииииияяяя)
             double gl_x = e.GetPosition(DockMain).X;
             double x = gl_x - Draggable_icon.Width / 2;
@@ -2162,6 +2144,9 @@ namespace FoxDock
 
                     //Инициализируем перемещение
                     Draggable_icon.Source = dicon.Source;
+                    Draggable_icon.Width = dicon.Size;
+                    Draggable_icon.Height = dicon.Size;
+
                     dr_ic = dicon;
 
                     //Смещаем зажатую иконку

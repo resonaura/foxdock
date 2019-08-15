@@ -2,6 +2,7 @@
 using SourceChord.FluentWPF;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,7 +14,7 @@ using System.Windows.Media.Effects;
 namespace FoxDock
 {
     /// <summary>
-    /// Логика взаимодействия для Settings.xaml
+    /// Логика взаимодействия для xaml
     /// </summary>
     public partial class Settings : Window
     {
@@ -45,14 +46,32 @@ namespace FoxDock
             DockSettingsEnableStarDustLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsEnableStarDustLabel, locale);
             DockSettingsPanelScaleLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsPanelScaleLabel, locale);
             DockSettingsBackgroundOpacityLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsBackgroundOpacityLabel, locale);
+            DockSettingsHintOpacityLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsHintOpacityLabel, locale);
             DockSettingsDisplayDockOnTopLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsDisplayDockOnTopLabel, locale);
             DockSettingsAutoHideLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsAutoHideLabel, locale);
             DockSettingsBGMColorLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsBGMColorLabel, locale);
             DockSettingsBGHColorLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsBGHColorLabel, locale);
+            DockSettingsBGIColorLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsBGIColorLabel, locale);
+            DockSettingsBGNColorLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsBGNColorLabel, locale);
 
             //Грузим кеш и делаем активным нужный цвет фона
             MainWindow.cache = CacheOperations.LoadCache(MainWindow.cache);
             object sender = new object();
+
+            //Задаём значение всем параметрам настроек
+            StartupToggle.IsChecked = MainWindow.cache.runAtStartup;
+            DisableBlurToggle.IsChecked = MainWindow.cache.disableBlur;
+            StarDustEnableToggle.IsChecked = MainWindow.cache.enableStarDust;
+            EnableTopmostToggle.IsChecked = MainWindow.cache.enableTopmost;
+            AHToggle.IsChecked = MainWindow.cache.dockAutoHide;
+            Trans_bar.Value = MainWindow.cache.bg_trans;
+            Hint_trans_bar.Value = MainWindow.cache.hm_trans;
+            ScaleSlider.Value = MainWindow.cache.scaleFactor;
+
+            //Выполняем логику для слайдеров настроек
+            Toggle_Loaded_Do(StartupToggle);
+            Toggle_Loaded_Do(DisableBlurToggle);
+            Toggle_Loaded_Do(StarDustEnableToggle);
 
             switch (MainWindow.cache.background)
             {
@@ -92,6 +111,46 @@ namespace FoxDock
                     break;
             }
             BGActiveAnimation(sender, BGH_Colors.Children);
+            switch (MainWindow.cache.IndicatorColor)
+            {
+                case IndicatorColor.Auto:
+                    sender = BGIAuto;
+                    break;
+                case IndicatorColor.Black:
+                    sender = BGIBlack;
+                    break;
+                case IndicatorColor.Gray:
+                    sender = BGIGray;
+                    break;
+                case IndicatorColor.White:
+                    sender = BGIWhite;
+                    break;
+                case IndicatorColor.Accent:
+                    sender = BGIAccent;
+                    break;
+            }
+            BGActiveAnimation(sender, BGI_Colors.Children);
+            switch (MainWindow.cache.MenuColor)
+            {
+                case MenuColor.Auto:
+                    sender = BGNAuto;
+                    break;
+                case MenuColor.Black:
+                    sender = BGNBlack;
+                    break;
+                case MenuColor.Gray:
+                    sender = BGNGray;
+                    break;
+                case MenuColor.White:
+                    sender = BGNWhite;
+                    break;
+                case MenuColor.Accent:
+                    sender = BGNAccent;
+                    break;
+            }
+            BGActiveAnimation(sender, BGN_Colors.Children);
+
+
 
         }
 
@@ -617,6 +676,102 @@ namespace FoxDock
             BGActiveAnimation(sender, BGH_Colors.Children);
         }
 
-        
+        private void Hint_trans_bar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!MainWindow.lock_slider)
+            {
+                if (!ds)
+                {
+                    ds = true;
+                }
+                else
+                {
+                    MainWindow.cache.hm_trans = e.NewValue;
+                    CacheOperations.StoreCache(MainWindow.cache);
+                    UpdateDockBG();
+                }
+
+            }
+        }
+
+        private void BGIAuto_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.IndicatorColor = IndicatorColor.Auto;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGI_Colors.Children);
+        }
+
+        private void BGIBlack_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.IndicatorColor = IndicatorColor.Black;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGI_Colors.Children);
+        }
+
+        private void BGIGray_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.IndicatorColor = IndicatorColor.Gray;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGI_Colors.Children);
+        }
+
+        private void BGIWhite_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.IndicatorColor = IndicatorColor.White;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGI_Colors.Children);
+        }
+
+        private void BGIAccent_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.IndicatorColor = IndicatorColor.Accent;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGI_Colors.Children);
+        }
+
+        private void BGNAuto_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.MenuColor = MenuColor.Auto;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGN_Colors.Children);
+        }
+
+        private void BGNBlack_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.MenuColor = MenuColor.Black;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGN_Colors.Children);
+        }
+
+        private void BGNGray_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.MenuColor = MenuColor.Gray;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGN_Colors.Children);
+        }
+
+        private void BGNWhite_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.MenuColor = MenuColor.White;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGN_Colors.Children);
+        }
+
+        private void BGNAccent_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainWindow.cache.MenuColor = MenuColor.Accent;
+            CacheOperations.StoreCache(MainWindow.cache);
+            UpdateDockBG();
+            BGActiveAnimation(sender, BGN_Colors.Children);
+        }
     }
 }
