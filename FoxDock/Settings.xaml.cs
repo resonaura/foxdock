@@ -18,10 +18,50 @@ namespace FoxDock
     /// </summary>
     public partial class Settings : Window
     {
+        
+        public SolidColorBrush UpdateColorInBrush(SolidColorBrush source, Color color)
+        {
+            SolidColorBrush result = new SolidColorBrush();
+            result.Color = color;
+            result.Opacity = source.Opacity;
+
+            return result;
+        }
+
         public static AppLanguage.Locale locale = AppLanguage.GetSystemLocale();
 
         public Settings()
         {
+            InitializeComponent();
+
+            var theme = "0";
+
+            try
+            {
+                //Получаем из реестра тему
+                var wpReg = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", false);
+                theme = wpReg.GetValue("SystemUsesLightTheme").ToString();
+
+                //Закрываем работу с реестра
+                wpReg.Close();
+            }
+            catch
+            {
+                //Some code
+            }
+
+            
+            if(theme == "1")
+            {
+                this.Foreground = new SolidColorBrush(Colors.Black);
+                BgPanel1.Fill = new SolidColorBrush(Color.FromArgb(70, 0, 0, 0));
+                BgPanel2.Fill = new SolidColorBrush(Color.FromArgb(255, 210, 210, 210));
+                AcrylicWindow.SetTintColor(this, Colors.White);
+                AcrylicWindow.SetFallbackColor(this, Color.FromArgb(255, 200, 200, 200));
+                UpdateMenuBySender(HomeTabButton);
+            }
+
+            
             RoutedEventHandler handler = null;
             handler = (s, e) =>
             {
@@ -29,7 +69,9 @@ namespace FoxDock
             };
             Loaded += handler;
             Activated += Settings_Activated;
-            InitializeComponent();
+            
+
+            this.DataContext = this;
 
             //Локализация заголовка Настроек
             SettingsHeader.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsShort, locale);
@@ -198,6 +240,14 @@ namespace FoxDock
             t_2_icon.Effect = noglow;
             t_3_icon.Effect = noglow;
 
+            t_1_text.Foreground = this.Foreground;
+            t_2_text.Foreground = this.Foreground;
+            t_3_text.Foreground = this.Foreground;
+
+            t_1_icon.Foreground = this.Foreground;
+            t_2_icon.Foreground = this.Foreground;
+            t_3_icon.Foreground = this.Foreground;
+
             DropShadowEffect glow = new DropShadowEffect();
             glow.ShadowDepth = 0;
             glow.Color = Color.FromArgb(255, 255, 255, 255);
@@ -210,6 +260,7 @@ namespace FoxDock
             if (accent != null)
             {
                 cur.Background = accent;
+                
             }
 
 
@@ -222,14 +273,20 @@ namespace FoxDock
                     case "HomeTabButton":
                         t_1_icon.Effect = glow;
                         t_1_text.Effect = glow;
+                        t_1_icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                        t_1_text.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
                         break;
                     case "PerfomanceTabButton":
                         t_2_icon.Effect = glow;
                         t_2_text.Effect = glow;
+                        t_2_icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                        t_2_text.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
                         break;
                     case "CustomizeTabButton":
                         t_3_icon.Effect = glow;
                         t_3_text.Effect = glow;
+                        t_3_icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                        t_3_text.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
                         break;
                 }
             }

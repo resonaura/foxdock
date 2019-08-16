@@ -16,15 +16,7 @@
                 
                 
             </ResourceDictionary.MergedDictionaries>
-            <SolidColorBrush x:Key="PrimaryHueLightBrush" Color="White"/>
-            <SolidColorBrush x:Key="PrimaryHueLightForegroundBrush" Color="#222"/>
-            <SolidColorBrush x:Key="PrimaryHueMidBrush" Color="White"/>
-            <SolidColorBrush x:Key="PrimaryHueMidForegroundBrush" Color="#222"/>
-            <SolidColorBrush x:Key="PrimaryHueDarkBrush" Color="White"/>
-            <SolidColorBrush x:Key="PrimaryHueDarkForegroundBrush" Color="#222"/>
-            <SolidColorBrush x:Key="MaterialDesignCheckBoxOff" Color="White" Opacity=".2"></SolidColorBrush>
-            <SolidColorBrush x:Key="SystemBaseHighColorBrush" Color="#ddd" />
-            <SolidColorBrush x:Key="SystemAltHighColorBrush" Color="#ddd" />
+            
         </ResourceDictionary>
         
     </Application.Resources>

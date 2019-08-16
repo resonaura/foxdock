@@ -669,14 +669,19 @@ namespace FoxDock
             }
 
             //Пытаемся получить и задать значок Корзины
-            try
+            
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                Application.Current.Dispatcher.Invoke(() => TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions()));
-            }
-            catch
-            {
-                consoleLog("Ошибка получения и задания значка Корзины");
-            }
+                try
+                {
+                    TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                }
+                catch
+                {
+                    Debug.WriteLine("Ошибка получения и задания значка Корзины");
+                }
+            });
+            
 
             //Получаем высоту Панели Задач в случае того, если она расположена снизу
             int taskbar = GetTaskBarH();

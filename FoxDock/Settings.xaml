@@ -4,12 +4,22 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:fw="clr-namespace:SourceChord.FluentWPF;assembly=FluentWPF"
-        xmlns:util="clr-namespace:SourceChord.FluentWPF.Utility"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:FoxDock"
         mc:Ignorable="d"
-        Title="Settings" ResizeMode="CanMinimize" fw:Extensions.PlaceholderForegroundBrush="White" fw:Extensions.HeaderForegroundBrush="White" fw:AcrylicWindow.NoiseOpacity="0.02" fw:AcrylicWindow.TintColor="#1a1a1a" fw:AcrylicWindow.TintOpacity=".8" fw:AcrylicWindow.Enabled="True" fw:AcrylicWindow.AcrylicWindowStyle="None"  Loaded="SettingsWindow_Loaded" Name="SettingsWindow" Height="520" Width="850" Background="Transparent">
+        Title="Settings" ResizeMode="CanMinimize" fw:AcrylicWindow.NoiseOpacity="0.02" fw:AcrylicWindow.TintColor="#1a1a1a" fw:AcrylicWindow.TintOpacity=".8" fw:AcrylicWindow.Enabled="True" fw:AcrylicWindow.AcrylicWindowStyle="None"  Loaded="SettingsWindow_Loaded" Name="SettingsWindow" Height="520" Width="850" Background="Transparent">
     <Window.Resources>
+        <SolidColorBrush x:Key="PrimaryHueLightBrush" Color="{Binding Foreground.Color, ElementName=SettingsWindow}"/>
+        <SolidColorBrush x:Key="PrimaryHueLightForegroundBrush" Color="#222"/>
+        <SolidColorBrush x:Key="PrimaryHueMidBrush" Color="{Binding Foreground.Color, ElementName=SettingsWindow}"/>
+        <SolidColorBrush x:Key="PrimaryHueMidForegroundBrush" Color="#222"/>
+        <SolidColorBrush x:Key="PrimaryHueDarkBrush" Color="{Binding Foreground.Color, ElementName=SettingsWindow}"/>
+        <SolidColorBrush x:Key="PrimaryHueDarkForegroundBrush" Color="#222"/>
+        <SolidColorBrush x:Key="MaterialDesignCheckBoxOff" Color="{Binding Foreground.Color, ElementName=SettingsWindow}" Opacity=".2"></SolidColorBrush>
+        <SolidColorBrush x:Key="SystemBaseHighColorBrush" Color="#ddd" />
+        <SolidColorBrush x:Key="SystemAltHighColorBrush" Color="#ddd" />
+
+        <SolidColorBrush x:Key="MainForegroundBrush" Color="{Binding Foreground.Color, ElementName=SettingsWindow}"></SolidColorBrush>
         <Style x:Key="FocusVisual">
             <Setter Property="Control.Template">
                 <Setter.Value>
@@ -30,25 +40,36 @@
                                 <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="slider" Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.X)">
                                     <SplineDoubleKeyFrame KeyTime="00:00:00.1000000" Value="32"/>
                                 </DoubleAnimationUsingKeyFrames>
-                                <ThicknessAnimation Duration="0:0:0.1" Storyboard.TargetName="slider_bg" Storyboard.TargetProperty="(Border.BorderThickness)" From="1" To="0"></ThicknessAnimation>
-                                <DoubleAnimation Duration="0:0:0.1" Storyboard.TargetName="slider_bg" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Opacity)" From="1" To="0"></DoubleAnimation>
+                                <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="sliderm" Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.X)">
+                                    <SplineDoubleKeyFrame KeyTime="00:00:00.1000000" Value="32"/>
+                                </DoubleAnimationUsingKeyFrames>
+                                <ThicknessAnimation Duration="0:0:0.1" Storyboard.TargetName="slider_sl" Storyboard.TargetProperty="(Border.BorderThickness)" From="1" To="0"></ThicknessAnimation>
+                                <DoubleAnimation Duration="0:0:0.1" Storyboard.TargetName="slider_sl" Storyboard.TargetProperty="(Border.Opacity)" From="1" To="0"></DoubleAnimation>
                                 <DoubleAnimation Duration="0:0:0.1" Storyboard.TargetName="slider_bg" Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Opacity)" From="0" To="1"></DoubleAnimation>
+                                <DoubleAnimation Duration="0:0:0.1" Storyboard.TargetName="sliderm" Storyboard.TargetProperty="(Border.Opacity)" From="0" To="1"></DoubleAnimation>
                             </Storyboard>
                             <Storyboard x:Key="OnUnchecking">
                                 <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="slider" Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.X)">
                                     <SplineDoubleKeyFrame KeyTime="00:00:00.1000000" Value="0"/>
                                 </DoubleAnimationUsingKeyFrames>
-                                <ThicknessAnimation Duration="0:0:0.1" Storyboard.TargetName="slider_bg" Storyboard.TargetProperty="(Border.BorderThickness)" From="0" To="1"></ThicknessAnimation>
-                                <DoubleAnimation Duration="0:0:0.1" Storyboard.TargetName="slider_bg" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Opacity)" From="0" To="1"></DoubleAnimation>
+                                <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="sliderm" Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.X)">
+                                    <SplineDoubleKeyFrame KeyTime="00:00:00.1000000" Value="0"/>
+                                </DoubleAnimationUsingKeyFrames>
+                                <ThicknessAnimation Duration="0:0:0.1" Storyboard.TargetName="slider_sl" Storyboard.TargetProperty="(Border.BorderThickness)" From="0" To="1"></ThicknessAnimation>
+                                <DoubleAnimation Duration="0:0:0.1" Storyboard.TargetName="slider_sl" Storyboard.TargetProperty="(Border.Opacity)" From="0" To="1"></DoubleAnimation>
                                 <DoubleAnimation Duration="0:0:0.1" Storyboard.TargetName="slider_bg" Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Opacity)" From="1" To="0"></DoubleAnimation>
+                                <DoubleAnimation Duration="0:0:0.1" Storyboard.TargetName="sliderm" Storyboard.TargetProperty="(Border.Opacity)" From="1" To="0"></DoubleAnimation>
                             </Storyboard>
                         </ControlTemplate.Resources>
 
                         <DockPanel Margin="0,2,0,0" x:Name="dockPanel">
                             <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}" ContentTemplate="{TemplateBinding ContentTemplate}" Margin="0,0,20,0" RecognizesAccessKey="True" VerticalAlignment="Center"/>
-                            <Border Background="{TemplateBinding Property=Background}" x:Name="slider_bg" CornerRadius="10" BorderBrush="White" BorderThickness="1" Height="20">
-
-                                <Grid Margin="3,0,3,0" Width="45" Background="Transparent">
+                            <Border Background="{TemplateBinding Property=Background}" x:Name="slider_bg" CornerRadius="10" Height="20">
+                                <Grid>
+                                    <Border CornerRadius="10" BorderThickness="1" Height="20" x:Name="slider_sl" BorderBrush="{DynamicResource MainForegroundBrush}">
+                                    </Border>
+                                    <Grid Margin="3,0,3,0" Width="45" Background="Transparent">
+                                    
                                     <TextBlock Visibility="Hidden" Text="ON" TextWrapping="Wrap" FontWeight="Bold" FontSize="10" HorizontalAlignment="Right" Margin="0,0,3,0"/>
                                     <TextBlock Visibility="Hidden" HorizontalAlignment="Left" Margin="2,0,0,0" FontSize="12" FontWeight="Bold" Text="OFF" TextWrapping="Wrap"/>
                                     <Border BorderThickness="0" BorderBrush="Transparent" HorizontalAlignment="Left" x:Name="slider" Height="12" Width="12" VerticalAlignment="Center" CornerRadius="100" RenderTransformOrigin="0.5,0.5">
@@ -61,10 +82,25 @@
                                             </TransformGroup>
                                         </Border.RenderTransform>
                                         <Border.Background>
-                                            <SolidColorBrush Color="White"></SolidColorBrush>
+                                            <SolidColorBrush Color="{Binding Foreground.Color, ElementName=SettingsWindow}"></SolidColorBrush>
                                         </Border.Background>
                                     </Border>
+                                        <Border Opacity="0" BorderThickness="0" BorderBrush="Transparent" HorizontalAlignment="Left" x:Name="sliderm" Height="12" Width="12" VerticalAlignment="Center" CornerRadius="100" RenderTransformOrigin="0.5,0.5">
+                                            <Border.RenderTransform>
+                                                <TransformGroup>
+                                                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                                    <SkewTransform AngleX="0" AngleY="0"/>
+                                                    <RotateTransform Angle="0"/>
+                                                    <TranslateTransform X="0" Y="0"/>
+                                                </TransformGroup>
+                                            </Border.RenderTransform>
+                                            <Border.Background>
+                                                <SolidColorBrush Color="White"></SolidColorBrush>
+                                            </Border.Background>
+                                        </Border>
+                                    </Grid>
                                 </Grid>
+                                
                             </Border>
                         </DockPanel>
 
@@ -384,6 +420,7 @@
         </Style>
     </Window.Resources>
 
+
     <Grid Name="MainGrid"  fw:PointerTracker.Enabled="True">
         <Grid.RenderTransform>
             <ScaleTransform x:Name="SetsTrans" ScaleX="1" ScaleY="1"></ScaleTransform>
@@ -395,21 +432,22 @@
             <RowDefinition Height="30"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
+
         <Grid Grid.Row="0" MouseDown="Grid_MouseDown">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"></ColumnDefinition>
                 <ColumnDefinition Width="200"></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            <TextBlock Name="SettingsHeader" Text="Settings" VerticalAlignment="Center" Padding="10,0,0,0" Foreground="White"></TextBlock>
+            <TextBlock Name="SettingsHeader" Text="Settings" VerticalAlignment="Center" Padding="10,0,0,0" Foreground="{Binding Foreground, ElementName=SettingsWindow}"></TextBlock>
             <StackPanel HorizontalAlignment="Right" Grid.Column="1" Orientation="Horizontal">
                 <Button Background="Transparent" BorderThickness="0" Width="50" Height="30" Command="{x:Static SystemCommands.MinimizeWindowCommand}" Style="{DynamicResource MinButtonStyle}" Cursor="Hand">
                     <Path Width="10" Height="10" Data="M0,4 L10,4 L10,5 L0,5 z"
-                                  Fill="White"
+                                  Fill="{Binding Foreground, ElementName=SettingsWindow}"
                                   RenderTransformOrigin="0.5,0.5" Stretch="Uniform" />
                 </Button>
                 <Button Background="Transparent" BorderThickness="0" Width="50" Height="30" Command="{x:Static SystemCommands.CloseWindowCommand}" Style="{DynamicResource MinButtonStyle}" Cursor="Hand">
                     <Path Width="10" Height="10" Data="M0.7,0 L5,4.3 L9.3,0 L10,0.7 L5.7,5 L10,9.3 L9.3,10 L5,5.7 L0.7,10 L0,9.3 L4.3,5 L0,0.7 z"
-                                  Fill="White"
+                                  Fill="{Binding Foreground, ElementName=SettingsWindow}"
                                   RenderTransformOrigin="0.5,0.5" Stretch="Uniform" />
                 </Button>
             </StackPanel>
@@ -420,7 +458,7 @@
                 <ColumnDefinition Width="*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0">
-                <Rectangle Fill="#111" Opacity=".3"></Rectangle>
+                <Rectangle Fill="#111" Name="BgPanel1" Opacity=".3"></Rectangle>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="50"></RowDefinition>
@@ -431,12 +469,12 @@
                     </Grid.RowDefinitions>
                     <Button Background="{Binding Path=(fw:AccentColors.ImmersiveSystemAccentBrush)}" MouseEnter="MButton_MouseEnter" MouseLeave="MButton_MouseLeave" Cursor="Hand" Click="HomeTabButton_Click" Name="HomeTabButton" IsEnabled="False" Grid.Row="0" Padding="7" Style="{StaticResource ButtonAccentRevealStyle}">
                         <StackPanel Orientation="Horizontal"  HorizontalAlignment="Stretch" Width="250">
-                            <TextBlock Name="t_1_icon" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe MDL2 Assets" Text="&#xE80F;" FontSize="20" Height="25" Margin="10,5,0,0">
+                            <TextBlock Name="t_1_icon" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe MDL2 Assets" Text="&#xE80F;" FontSize="20" Height="25" Margin="10,5,0,0">
                                 <TextBlock.Effect>
                                     <DropShadowEffect ShadowDepth="0" Color="White" Opacity=".5"/>
                                 </TextBlock.Effect>
                             </TextBlock>
-                            <TextBlock Name="t_1_text" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI Light" Text="Home" FontSize="15" Margin="20,0,0,0">
+                            <TextBlock Name="t_1_text" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI Light" Text="Home" FontSize="15" Margin="20,0,0,0">
                                 <TextBlock.Effect>
                                     <DropShadowEffect ShadowDepth="0" Color="White" Opacity=".5"/>
                                 </TextBlock.Effect>
@@ -445,20 +483,20 @@
                     </Button>
                     <Button MouseEnter="MButton_MouseEnter" MouseLeave="MButton_MouseLeave" Background="Transparent" Cursor="Hand" Click="PerfomanceTabButton_Click" Name="PerfomanceTabButton" Grid.Row="1" Padding="7" Style="{StaticResource ButtonAccentRevealStyle}">
                         <StackPanel Orientation="Horizontal"  HorizontalAlignment="Stretch" Width="250">
-                            <TextBlock Name="t_2_icon" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe MDL2 Assets" Text="&#xEC4A;" FontSize="20" Height="25" Margin="10,5,0,0"/>
-                            <TextBlock Name="t_2_text" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI Light" Text="Perfomance" FontSize="15" Margin="20,0,0,0"/>
+                            <TextBlock Name="t_2_icon" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe MDL2 Assets" Text="&#xEC4A;" FontSize="20" Height="25" Margin="10,5,0,0"/>
+                            <TextBlock Name="t_2_text" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI Light" Text="Perfomance" FontSize="15" Margin="20,0,0,0"/>
                         </StackPanel>
                     </Button>
                     <Button MouseEnter="MButton_MouseEnter" MouseLeave="MButton_MouseLeave" Background="Transparent" Cursor="Hand" Click="CustomizeTabButton_Click" Name="CustomizeTabButton" Grid.Row="2" Padding="7" Style="{StaticResource ButtonAccentRevealStyle}">
                         <StackPanel Orientation="Horizontal"  HorizontalAlignment="Stretch" Width="250">
-                            <TextBlock Name="t_3_icon" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe MDL2 Assets" Text="&#xE790;" FontSize="20" Height="25" Margin="10,5,0,0"/>
-                            <TextBlock Name="t_3_text" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI Light" Text="Customize" FontSize="15" Margin="20,0,0,0"/>
+                            <TextBlock Name="t_3_icon" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe MDL2 Assets" Text="&#xE790;" FontSize="20" Height="25" Margin="10,5,0,0"/>
+                            <TextBlock Name="t_3_text" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI Light" Text="Customize" FontSize="15" Margin="20,0,0,0"/>
                         </StackPanel>
                     </Button>
                 </Grid>
             </Grid>
             <Grid Grid.Column="1">
-                <Rectangle Fill="#0d0d0d" Opacity=".7"></Rectangle>
+                <Rectangle Fill="#1d1d1d" Name="BgPanel2" Opacity=".7"></Rectangle>
                 <TabControl Name="SettingsTabs" Background="Transparent" BorderThickness="0" Style="{DynamicResource SettingsTabControl}" SelectionChanged="SettingsTabs_SelectionChanged">
                     <TabItem Name="HomeTab" VerticalContentAlignment="Top" VerticalAlignment="Top">
                         <Grid Margin="20">
@@ -466,8 +504,8 @@
                                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"  Margin="5"  VerticalAlignment="Center" Foreground="White" Name="DockSettingsStartupLabel">Run FoxDock at Windows startup:</TextBlock>
-                            <CheckBox Width="70" Grid.Column="1" Background="Transparent" Loaded="Toggle_Loaded" Cursor="Hand" Name="StartupToggle" Checked="StartupToggle_Checked" Unchecked="StartupToggle_Unchecked" VerticalAlignment="Center" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}">
+                            <TextBlock Grid.Column="0"  Margin="5"  VerticalAlignment="Center" Foreground="{Binding Foreground, ElementName=SettingsWindow}" Name="DockSettingsStartupLabel">Run FoxDock at Windows startup:</TextBlock>
+                            <CheckBox Width="70" Grid.Column="1" Background="{Binding Foreground, ElementName=SettingsWindow}" Loaded="Toggle_Loaded" Cursor="Hand" Name="StartupToggle" Checked="StartupToggle_Checked" Unchecked="StartupToggle_Unchecked" VerticalAlignment="Center" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}">
                             </CheckBox>
                         </Grid>
 
@@ -484,10 +522,10 @@
                                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="0" Grid.Column="0" Foreground="White" Name="DockSettingsDisableBlurLabel">Disable blur:</TextBlock>
-                            <CheckBox Width="70" Grid.Row="0" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Name="DisableBlurToggle" Checked="DisableBlur_Checked" Unchecked="DisableBlur_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
-                            <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="1" Grid.Column="0" Foreground="White" Name="DockSettingsEnableStarDustLabel">Enable StarDust:</TextBlock>
-                            <CheckBox Width="70" Grid.Row="1" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Name="StarDustEnableToggle" Checked="StarDustEnable_Checked" Unchecked="StarDustEnable_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+                            <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="0" Grid.Column="0" Foreground="{Binding Foreground, ElementName=SettingsWindow}" Name="DockSettingsDisableBlurLabel">Disable blur:</TextBlock>
+                            <CheckBox Width="70" Grid.Row="0" Grid.Column="1" Cursor="Hand" Background="{Binding Foreground, ElementName=SettingsWindow}" Loaded="Toggle_Loaded" Name="DisableBlurToggle" Checked="DisableBlur_Checked" Unchecked="DisableBlur_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+                            <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="1" Grid.Column="0" Foreground="{Binding Foreground, ElementName=SettingsWindow}" Name="DockSettingsEnableStarDustLabel">Enable StarDust:</TextBlock>
+                            <CheckBox Width="70" Grid.Row="1" Grid.Column="1" Cursor="Hand" Background="{Binding Foreground, ElementName=SettingsWindow}" Loaded="Toggle_Loaded" Name="StarDustEnableToggle" Checked="StarDustEnable_Checked" Unchecked="StarDustEnable_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
                         </Grid>
                     </TabItem>
                     <TabItem Name="CustomizeTab">
@@ -505,19 +543,19 @@
                                     <ColumnDefinition Width="Auto"></ColumnDefinition>
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="0" Grid.Column="0" Name="DockSettingsPanelScaleLabel" Foreground="White">Panel scale:</TextBlock>
+                                <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="0" Grid.Column="0" Name="DockSettingsPanelScaleLabel" Foreground="{Binding Foreground, ElementName=SettingsWindow}">Panel scale:</TextBlock>
                                 <Slider Width="130" Grid.Row="0" Grid.Column="1" Name="ScaleSlider" ValueChanged="ScaleSlider_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal" Minimum="0.92" Maximum="1.4" />
-                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="1" Grid.Column="0" Name="DockSettingsBackgroundOpacityLabel" Foreground="White">Dock background opacity:</TextBlock>
+                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="1" Grid.Column="0" Name="DockSettingsBackgroundOpacityLabel" Foreground="{Binding Foreground, ElementName=SettingsWindow}">Dock background opacity:</TextBlock>
                                 <Slider Width="130" Grid.Row="1" Grid.Column="1" Name="Trans_bar" ValueChanged="Slider_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal"  Minimum="0.05" Maximum="1" />
-                                <TextBlock VerticalAlignment="Center" Margin="5" Name="DockSettingsHintOpacityLabel" Grid.Row="2" Grid.Column="0" Foreground="White">Hint background opacity:</TextBlock>
+                                <TextBlock VerticalAlignment="Center" Margin="5" Name="DockSettingsHintOpacityLabel" Grid.Row="2" Grid.Column="0" Foreground="{Binding Foreground, ElementName=SettingsWindow}">Hint background opacity:</TextBlock>
                                 <Slider Width="130" Grid.Row="2" Grid.Column="1" Name="Hint_trans_bar" ValueChanged="Hint_trans_bar_ValueChanged"  Margin="20,6,0,0" TickFrequency="0.1" Orientation="Horizontal"  Minimum="0" Maximum="1" />
-                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="3" Grid.Column="0" Name="DockSettingsDisplayDockOnTopLabel" Foreground="White">Display Dock on top:</TextBlock>
-                                <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="3" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Checked="EnableTopmostToggle_Checked" Unchecked="EnableTopmostToggle_Unchecked" Name="EnableTopmostToggle" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
-                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsAutoHideLabel" Foreground="White">Auto hide Dock if it's on top:</TextBlock>
-                                <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="5" Grid.Column="1" Cursor="Hand" Background="Transparent" Loaded="Toggle_Loaded" Name="AHToggle" Checked="AHToggle_Checked" Unchecked="AHToggle_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="3" Grid.Column="0" Name="DockSettingsDisplayDockOnTopLabel" Foreground="{Binding Foreground, ElementName=SettingsWindow}">Display Dock on top:</TextBlock>
+                                <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="3" Grid.Column="1" Cursor="Hand" Background="{Binding Foreground, ElementName=SettingsWindow}" Loaded="Toggle_Loaded" Checked="EnableTopmostToggle_Checked" Unchecked="EnableTopmostToggle_Unchecked" Name="EnableTopmostToggle" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+                                <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsAutoHideLabel" Foreground="{Binding Foreground, ElementName=SettingsWindow}">Auto hide Dock if it's on top:</TextBlock>
+                                <CheckBox HorizontalAlignment="Left" Width="70" Grid.Row="5" Grid.Column="1" Cursor="Hand" Background="{Binding Foreground, ElementName=SettingsWindow}" Loaded="Toggle_Loaded" Name="AHToggle" Checked="AHToggle_Checked" Unchecked="AHToggle_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
 
                             </Grid>
-                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGMColorLabel" Foreground="White">Background color:</TextBlock>
+                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGMColorLabel" Foreground="{Binding Foreground, ElementName=SettingsWindow}">Background color:</TextBlock>
                             <StackPanel Orientation="Horizontal" Name="BGM_Colors">
                                 <Border Cursor="Hand" MouseUp="BGMAuto_MouseUp"  Name="BGMAuto" Background="#000" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5">
                                     <Viewbox Width="20">
@@ -531,7 +569,7 @@
                                 <Border Cursor="Hand" MouseUp="BGMWhite_MouseUp" Name="BGMWhite" Background="#eee" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
                                 <Border Cursor="Hand" MouseUp="BGMAccent_MouseUp"  Name="BGMAccent" Background="{x:Static fw:AccentColors.ImmersiveSystemAccentDark1Brush}" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
                             </StackPanel>
-                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGHColorLabel" Foreground="White">Hint color:</TextBlock>
+                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGHColorLabel" Foreground="{Binding Foreground, ElementName=SettingsWindow}">Hint color:</TextBlock>
                             <StackPanel Orientation="Horizontal" Name="BGH_Colors">
                                 <Border Cursor="Hand" MouseUp="BGHAuto_MouseUp"  Name="BGHAuto" Background="#000" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5">
                                     <Viewbox Width="20">
@@ -545,7 +583,7 @@
                                 <Border Cursor="Hand" MouseUp="BGHWhite_MouseUp"  Name="BGHWhite" Background="#eee" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
                                 <Border Cursor="Hand" MouseUp="BGHAccent_MouseUp"  Name="BGHAccent" Background="{x:Static fw:AccentColors.ImmersiveSystemAccentBrush}" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
                             </StackPanel>
-                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGIColorLabel" Foreground="White">Indicator color:</TextBlock>
+                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGIColorLabel" Foreground="{Binding Foreground, ElementName=SettingsWindow}">Indicator color:</TextBlock>
                             <StackPanel Orientation="Horizontal" Name="BGI_Colors">
                                 <Border Cursor="Hand" MouseUp="BGIAuto_MouseUp" Name="BGIAuto" Background="#000" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5">
                                     <Viewbox Width="20">
@@ -559,7 +597,7 @@
                                 <Border Cursor="Hand" MouseUp="BGIWhite_MouseUp"  Name="BGIWhite" Background="#eee" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
                                 <Border Cursor="Hand" MouseUp="BGIAccent_MouseUp"  Name="BGIAccent" Background="{x:Static fw:AccentColors.ImmersiveSystemAccentBrush}" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5"></Border>
                             </StackPanel>
-                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGNColorLabel" Foreground="White">Menu color:</TextBlock>
+                            <TextBlock VerticalAlignment="Center" Margin="5" Grid.Row="4" Grid.Column="0" Name="DockSettingsBGNColorLabel" Foreground="{Binding Foreground, ElementName=SettingsWindow}">Menu color:</TextBlock>
                             <StackPanel Orientation="Horizontal" Name="BGN_Colors">
                                 <Border Cursor="Hand" MouseUp="BGNAuto_MouseUp"  Name="BGNAuto" Background="#000" Width="40" Height="40" BorderBrush="#fff" BorderThickness="2" CornerRadius="100" Margin="5">
                                     <Viewbox Width="20">
