@@ -438,8 +438,9 @@ namespace FoxDock
 
             SHERB_NOPROGRESSUI = 0x00000001, // No progress tracking window during the emptying of the recycle bin
 
-            SHERB_NOSOUND = 0x00000004 // No sound when the emptying of the recycle bin is complete
-
+            SHERB_NOSOUND = 0x00000004, // No sound when the emptying of the recycle bin is complete
+            
+            SHERB_EMPTY = 0x00000000
         }
         [DllImport("Shell32.dll")]
         public static extern int SHEmptyRecycleBin(IntPtr hwnd, string pszRootPath, RecycleFlag dwFlags);

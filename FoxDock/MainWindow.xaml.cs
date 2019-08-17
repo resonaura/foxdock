@@ -81,7 +81,8 @@ namespace FoxDock
         private bool panelIconsAnimating = false;
         private DockIcon dr_ic = null;
         private bool movingToTrash = false;
-        
+        private SHDocVw.ShellWindows shellWindows;
+
 
 
         //Необходимые константы
@@ -98,6 +99,8 @@ namespace FoxDock
         public MainWindow()
         {
             InitializeComponent(); //Инициализируем все компоненты
+
+            GC.Collect(); //Эта фигня вроде очищяет мусор из оперативы
 
             //Применяем локализацию для кнопок меню
             ExitButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ExitDock, locale);
@@ -126,7 +129,16 @@ namespace FoxDock
             //Получаем значки Проводника и Корзины и задаём их для соответствующих виджетов на Доке
             string epath = Environment.GetEnvironmentVariable("windir") + "\\explorer.exe";
             ExplorerIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetSystemIcon(epath).ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-            TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+            Icon trash_icon = GetTrashIcon();
+            if (trash_icon != null)
+            {
+                BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(trash_icon.ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+                if (source != null)
+                {
+                    TrashIcon.Source = source;
+                }
+            }
 
             //Получаем высоту панели задач
             int taskbar = GetTaskBarH();
@@ -635,7 +647,9 @@ namespace FoxDock
         /// <param name="e"></param>
         private void MainTimer_Tick(object sender, EventArgs e)
         {
-            SHDocVw.ShellWindows shellWindows = new SHDocVw.ShellWindows(); //Получаем все окна проводника
+            
+            
+            shellWindows = new SHDocVw.ShellWindows(); //Получаем все окна проводника
 
             //В зависимости от кол-ва окон проводника отображаем или скрываем хайлайт под виджетом проводника
             if(shellWindows.Count > 0)
@@ -658,7 +672,6 @@ namespace FoxDock
                     rb_matches = true;
                 }
             }
-
             //Если есть корзина
             if(rb_matches)
             {
@@ -669,18 +682,29 @@ namespace FoxDock
             }
 
             //Пытаемся получить и задать значок Корзины
-            
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                try
-                {
-                    TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-                }
-                catch
-                {
-                    Debug.WriteLine("Ошибка получения и задания значка Корзины");
-                }
-            });
+            Application.Current.Dispatcher.Invoke(
+                DispatcherPriority.Loaded,
+                new Action(() => {
+                    try
+                    {
+                        Icon trash_icon = GetTrashIcon();
+                        if (trash_icon != null)
+                        {
+                            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(trash_icon.ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+                            if (source != null)
+                            {
+                                TrashIcon.Source = source;
+                            }
+                        }
+
+                    }
+                    catch
+                    {
+                        Debug.WriteLine("Ошибка получения и задания значка Корзины");
+                    }
+                })
+            );
             
 
             //Получаем высоту Панели Задач в случае того, если она расположена снизу
@@ -813,16 +837,24 @@ namespace FoxDock
                 }
 
                 ppv.GetIcon(i, flags, ref picon);
-                Icon icon = (Icon)System.Drawing.Icon.FromHandle(picon).Clone();
-                Win32E.DestroyIcon(psfi.hIcon);
-                return icon;
+                if(picon != null && System.Drawing.Icon.FromHandle(picon) != null)
+                {
+                    Icon icon = (Icon)System.Drawing.Icon.FromHandle(picon).Clone();
+                    Win32E.DestroyIcon(psfi.hIcon);
+                    return icon;
+                } else
+                {
+                    return null;
+                }
+                
             }
             catch (Exception ex)
             {
                 //Если таки ошибка - выводим её в консоль
                 Debug.WriteLine(ex.Message + " beda #4");
             }
-            return (Icon)null;
+            return null;
+            
         }
         /// <summary>
         /// Функция получения значка по пути
@@ -2352,13 +2384,13 @@ namespace FoxDock
             item.Icon = ti;
             item.Header = text;
 
-            if (func != null)
+            item.Click += (s, e) =>
             {
-                item.Click += (s, e) =>
+                if (func != null)
                 {
                     func();
-                };
-            }
+                }
+            };
                 
             return item;
         }
@@ -2400,7 +2432,16 @@ namespace FoxDock
 
                         RecyclingBin.MoveHere(fn);
 
-                        TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                        Icon trash_icon = GetTrashIcon();
+                        if (trash_icon != null)
+                        {
+                            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(trash_icon.ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+                            if (source != null)
+                            {
+                                TrashIcon.Source = source;
+                            }
+                        }
 
                         Task.Factory.StartNew(() =>
                         {
@@ -2512,7 +2553,7 @@ namespace FoxDock
             Timeline.SetDesiredFrameRate(myDoubleAnimation, 30);
             ic.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation);
 
-            SHDocVw.ShellWindows shellWindows = new SHDocVw.ShellWindows();
+            shellWindows = new SHDocVw.ShellWindows();
 
             if(e.ChangedButton == MouseButton.Left)
             {
@@ -2592,10 +2633,17 @@ namespace FoxDock
 
             ContextMenu contextMenu = GenerateContextMenu(items);
 
-
-            contextMenu.PlacementTarget = ic;
-            contextMenu.IsOpen = true;
-            e.Handled = true;
+            try
+            {
+                contextMenu.PlacementTarget = ic;
+                contextMenu.IsOpen = true;
+                e.Handled = true;
+            }
+            catch
+            {
+                consoleLog("Context menu show error...");
+            }
+            
         }
         /// <summary>
         /// Логика нажатия на Корзину
@@ -2620,7 +2668,7 @@ namespace FoxDock
 
             if (e.ChangedButton == MouseButton.Left)
             {
-                SHDocVw.ShellWindows shellWindows = new SHDocVw.ShellWindows();
+                shellWindows = new SHDocVw.ShellWindows();
                 bool rb_matches = false;
                 SHDocVw.InternetExplorer lastIe = null;
                 foreach (SHDocVw.InternetExplorer ie in shellWindows)
@@ -2667,7 +2715,7 @@ namespace FoxDock
             items.Add(GenerateMenuItem("\uE8BB", AppLanguage.GetDialogByLocale(AppLanguage.Dialog.CloseRecycleBin, locale), () =>
             {
                 //Получаем окна проводника
-                SHDocVw.ShellWindows shellWindows = new SHDocVw.ShellWindows();
+                shellWindows = new SHDocVw.ShellWindows();
 
                 //Проходимся по всем окнам проводника
                 foreach (SHDocVw.InternetExplorer ie in shellWindows)
@@ -2682,8 +2730,17 @@ namespace FoxDock
             }));
             items.Add(GenerateMenuItem("\uE74D", AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ClearRecycleBin, locale), () =>
             {
-                WindowAPI.SHEmptyRecycleBin(IntPtr.Zero, null, WindowAPI.RecycleFlag.SHERB_NOSOUND);
-                TrashIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetTrashIcon().ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                WindowAPI.SHEmptyRecycleBin(IntPtr.Zero, null, WindowAPI.RecycleFlag.SHERB_EMPTY);
+                Icon trash_icon = GetTrashIcon();
+                if (trash_icon != null)
+                {
+                    BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(trash_icon.ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+                    if (source != null)
+                    {
+                        TrashIcon.Source = source;
+                    }
+                }
                 return 1;
             }));
             items.Add(GenerateSeparator());
