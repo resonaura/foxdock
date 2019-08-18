@@ -132,12 +132,15 @@ namespace FoxDock
             Icon trash_icon = GetTrashIcon();
             if (trash_icon != null)
             {
-                BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(trash_icon.ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                IntPtr hbmp = trash_icon.ToBitmap().GetHbitmap();
+                BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
 
                 if (source != null)
                 {
                     TrashIcon.Source = source;
                 }
+
+                DeleteObject(hbmp);
             }
 
             //Получаем высоту панели задач
@@ -407,7 +410,17 @@ namespace FoxDock
 
                 //Создаём новый DockIcon и присваиваем ему все события
                 DockIcon dockIcon = new DockIcon();
-                dockIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+                IntPtr hbmp = bitmap.GetHbitmap();
+                BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+                if (source != null)
+                {
+                    dockIcon.Source = source;
+                }
+
+                DeleteObject(hbmp);
+
                 dockIcon.MouseDown += Img_MouseDown;
                 dockIcon.MouseEnter += Img_MouseEnter;
                 dockIcon.MouseLeave += Img_MouseLeave;
@@ -639,7 +652,8 @@ namespace FoxDock
                 consoleLog("Invoke error");
             }
         }
-        
+        [System.Runtime.InteropServices.DllImport("gdi32.dll")]
+        public static extern bool DeleteObject(IntPtr hObject);
         /// <summary>
         /// Логика основного таймера
         /// </summary>
@@ -690,12 +704,15 @@ namespace FoxDock
                         Icon trash_icon = GetTrashIcon();
                         if (trash_icon != null)
                         {
-                            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(trash_icon.ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                            IntPtr hbmp = trash_icon.ToBitmap().GetHbitmap();
+                            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
 
                             if (source != null)
                             {
                                 TrashIcon.Source = source;
                             }
+
+                            DeleteObject(hbmp);
                         }
 
                     }
@@ -2435,12 +2452,15 @@ namespace FoxDock
                         Icon trash_icon = GetTrashIcon();
                         if (trash_icon != null)
                         {
-                            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(trash_icon.ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                            IntPtr hbmp = trash_icon.ToBitmap().GetHbitmap();
+                            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
 
                             if (source != null)
                             {
                                 TrashIcon.Source = source;
                             }
+
+                            DeleteObject(hbmp);
                         }
 
                         Task.Factory.StartNew(() =>
@@ -2734,12 +2754,15 @@ namespace FoxDock
                 Icon trash_icon = GetTrashIcon();
                 if (trash_icon != null)
                 {
-                    BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(trash_icon.ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                    IntPtr hbmp = trash_icon.ToBitmap().GetHbitmap();
+                    BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
 
                     if (source != null)
                     {
                         TrashIcon.Source = source;
                     }
+
+                    DeleteObject(hbmp);
                 }
                 return 1;
             }));

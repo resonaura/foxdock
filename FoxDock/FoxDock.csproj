@@ -128,7 +128,6 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Animations.cs" />
-    <Compile Include="BitmapCache.cs" />
     <Compile Include="BrushAnimation.cs" />
     <Compile Include="Cache.cs" />
     <Compile Include="CacheOperations.cs" />
