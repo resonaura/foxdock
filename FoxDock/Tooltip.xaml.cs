@@ -19,9 +19,12 @@ namespace FoxDock
     /// </summary>
     public partial class Tooltip : Window
     {
+        public static AppLanguage.Locale locale = AppLanguage.GetSystemLocale();
         public Tooltip()
         {
             InitializeComponent();
+
+            this.Title = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.Tooltip, locale);
         }
     }
 }

@@ -60,7 +60,8 @@ namespace FoxDock
             DockSettingsBGHColorLabel,
             DockSettingsBGIColorLabel,
             DockSettingsBGNColorLabel,
-            DockSettingsSmartDisableLabel
+            DockSettingsSmartDisableLabel,
+            Tooltip
         }
 
         //Основные функции
@@ -134,7 +135,8 @@ namespace FoxDock
             [Dialog.DockSettingsBGHColorLabel] = "Hint color:",
             [Dialog.DockSettingsBGIColorLabel] = "Indicator color:",
             [Dialog.DockSettingsBGNColorLabel] = "Menu color:",
-            [Dialog.DockSettingsSmartDisableLabel] = "Smart disable background tasks:"
+            [Dialog.DockSettingsSmartDisableLabel] = "Smart disable background tasks:",
+            [Dialog.Tooltip] = "Tooltip"
         };
         private static Dictionary<Dialog, string> RU_DICT = new Dictionary<Dialog, string>()
         {
@@ -172,7 +174,8 @@ namespace FoxDock
             [Dialog.DockSettingsBGHColorLabel] = "Цвет подсказки:",
             [Dialog.DockSettingsBGIColorLabel] = "Цвет индикатора:",
             [Dialog.DockSettingsBGNColorLabel] = "Цвет меню:",
-            [Dialog.DockSettingsSmartDisableLabel] = "Умное отключение фоновых задач:"
+            [Dialog.DockSettingsSmartDisableLabel] = "Умное отключение фоновых задач:",
+            [Dialog.Tooltip] = "Подсказка"
         };
         private static Dictionary<Dialog, string> UA_DICT = new Dictionary<Dialog, string>()
         {
@@ -210,7 +213,8 @@ namespace FoxDock
             [Dialog.DockSettingsBGHColorLabel] = "Колір підсказки:",
             [Dialog.DockSettingsBGIColorLabel] = "Колір індикатору:",
             [Dialog.DockSettingsBGNColorLabel] = "Колір меню:",
-            [Dialog.DockSettingsSmartDisableLabel] = "Розумне відключення фонових завдань:"
+            [Dialog.DockSettingsSmartDisableLabel] = "Розумне відключення фонових завдань:",
+            [Dialog.Tooltip] = "Підсказка"
         };
 
         //Комбинированный словарь
