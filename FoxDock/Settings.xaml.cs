@@ -86,6 +86,7 @@ namespace FoxDock
             DockSettingsStartupLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsStartupLabel, locale);
             DockSettingsDisableBlurLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsDisableBlurLabel, locale);
             DockSettingsEnableStarDustLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsEnableStarDustLabel, locale);
+            DockSettingsSmartDisableLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsSmartDisableLabel, locale);
             DockSettingsPanelScaleLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsPanelScaleLabel, locale);
             DockSettingsBackgroundOpacityLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsBackgroundOpacityLabel, locale);
             DockSettingsHintOpacityLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsHintOpacityLabel, locale);
@@ -104,6 +105,7 @@ namespace FoxDock
             StartupToggle.IsChecked = MainWindow.cache.runAtStartup;
             DisableBlurToggle.IsChecked = MainWindow.cache.disableBlur;
             StarDustEnableToggle.IsChecked = MainWindow.cache.enableStarDust;
+            SmartDisableToggle.IsChecked = MainWindow.cache.smart_disable;
             EnableTopmostToggle.IsChecked = MainWindow.cache.enableTopmost;
             AHToggle.IsChecked = MainWindow.cache.dockAutoHide;
             Trans_bar.Value = MainWindow.cache.bg_trans;
@@ -114,6 +116,9 @@ namespace FoxDock
             Toggle_Loaded_Do(StartupToggle);
             Toggle_Loaded_Do(DisableBlurToggle);
             Toggle_Loaded_Do(StarDustEnableToggle);
+            Toggle_Loaded_Do(SmartDisableToggle);
+            Toggle_Loaded_Do(AHToggle);
+            Toggle_Loaded_Do(EnableTopmostToggle);
 
             switch (MainWindow.cache.background)
             {
@@ -829,6 +834,18 @@ namespace FoxDock
             CacheOperations.StoreCache(MainWindow.cache);
             UpdateDockBG();
             BGActiveAnimation(sender, BGN_Colors.Children);
+        }
+
+        private void SmartDisableToggle_Checked(object sender, RoutedEventArgs e)
+        {
+            MainWindow.cache.smart_disable = true;
+            CacheOperations.StoreCache(MainWindow.cache);
+        }
+
+        private void SmartDisableToggle_Unchecked(object sender, RoutedEventArgs e)
+        {
+            MainWindow.cache.smart_disable = false;
+            CacheOperations.StoreCache(MainWindow.cache);
         }
     }
 }

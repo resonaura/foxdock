@@ -43,7 +43,6 @@ namespace FoxDock
 
         //Основные таймеры
         private System.Timers.Timer mainTimer = new System.Timers.Timer();
-        private System.Timers.Timer mouseTimer = new System.Timers.Timer();
 
         //Инициализируем окна
         public Tooltip tooltip = new Tooltip();
@@ -82,8 +81,9 @@ namespace FoxDock
         private DockIcon dr_ic = null;
         private bool movingToTrash = false;
         private SHDocVw.ShellWindows shellWindows;
-
-
+        private BitmapSource fullTrashIcon = GetSourceFromIcon(GetTrashIcon(true));
+        private BitmapSource emptyTrashIcon = GetSourceFromIcon(GetTrashIcon(false));
+        private Point lastMousePosition = new Point();
 
         //Необходимые константы
         public const int SPI_SETDESKWALLPAPER = 20;
@@ -99,8 +99,6 @@ namespace FoxDock
         public MainWindow()
         {
             InitializeComponent(); //Инициализируем все компоненты
-
-            GC.Collect(); //Эта фигня вроде очищяет мусор из оперативы
 
             //Применяем локализацию для кнопок меню
             ExitButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ExitDock, locale);
@@ -129,18 +127,13 @@ namespace FoxDock
             //Получаем значки Проводника и Корзины и задаём их для соответствующих виджетов на Доке
             string epath = Environment.GetEnvironmentVariable("windir") + "\\explorer.exe";
             ExplorerIcon.Source = Imaging.CreateBitmapSourceFromHBitmap(GetSystemIcon(epath).ToBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-            Icon trash_icon = GetTrashIcon();
-            if (trash_icon != null)
+            
+            if(TrashCount() > 0)
             {
-                IntPtr hbmp = trash_icon.ToBitmap().GetHbitmap();
-                BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-
-                if (source != null)
-                {
-                    TrashIcon.Source = source;
-                }
-
-                DeleteObject(hbmp);
+                TrashIcon.Source = fullTrashIcon;
+            } else
+            {
+                TrashIcon.Source = emptyTrashIcon;
             }
 
             //Получаем высоту панели задач
@@ -238,14 +231,9 @@ namespace FoxDock
             }
 
             //Запускаем основной таймер
-            mainTimer.Interval = 2000;
+            mainTimer.Interval = 1000;
             mainTimer.Elapsed += MainTimer_Tick;
             mainTimer.Start();
-
-            //Запускаем таймер для автоматического появления/скрытия Дока в режиме Поверх Всех Окон
-            mouseTimer.Interval = 2000;
-            mouseTimer.Elapsed += MouseTimer_Elapsed;
-            mouseTimer.Start();
 
             //Загружаем кеш
             cache = CacheOperations.LoadCache(cache);
@@ -304,50 +292,6 @@ namespace FoxDock
             }
         }
         
-        /// <summary>
-        /// Логика таймера положения мыши в режиме Поверх Всех Окон (Topmost)
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MouseTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-
-            double y = WindowAPI.GetMousePosition().Y / dpiY; //Получаем положение мыши по Y
-
-            //Если режим Topmost активен
-            if (cache.enableTopmost)
-            {
-                //Получаем положение дока по вертикале относительно экрана
-                double top = System.Windows.SystemParameters.PrimaryScreenHeight - (size + size / 2.5) - taskbar_g;
-
-                //Если курсор находится в триггер-зоне экрана
-                if (y >= System.Windows.SystemParameters.PrimaryScreenHeight - 20)
-                {
-
-                    if (dockHidden)
-                        SafeInvoke(() => ShowDock()); //Отображаем Док
-                }
-                else //Если курсор находится вне триггер-зоны
-                {
-                    if (y < System.Windows.SystemParameters.PrimaryScreenHeight - (System.Windows.SystemParameters.PrimaryScreenHeight - top))
-                    {
-                        //Если пользователь находится на Рабочем Столе
-                        if (WindowAPI.IsOnDesktop())
-                        {
-                            if (dockHidden)
-                                SafeInvoke(() => ShowDock()); //Отображаем док
-                        }
-                        else //В обратном случае
-                        {
-                            if (!dockHidden && cache.dockAutoHide)
-                            {
-                                SafeInvoke(() => HideDock()); //Скрываем док
-                            }
-                        }
-                    }
-                }
-            }
-        }
         /// <summary>
         /// Обработчик события изменения параметра WindowState главного окна
         /// </summary>
@@ -487,7 +431,7 @@ namespace FoxDock
         /// <param name="image">Значок программы</param>
         private void ifAppRunned(DockIcon image)
         {
-            if (!move_lock)
+            if (!move_lock && !image.Highlight)
             {
                 image.Highlight = true;
             }
@@ -499,7 +443,7 @@ namespace FoxDock
         /// <param name="image">Значок программы</param>
         private void ifNotAppRunned(DockIcon image)
         {
-            if (!move_lock)
+            if (!move_lock && image.Highlight)
             {
                 image.Highlight = false;
             }
@@ -536,8 +480,7 @@ namespace FoxDock
         /// <returns>Результат</returns>
         private bool CheckIfAppRunned(string path)
         {
-            string app_path = getRealAppPath(path);
-            string app_name = appFromPath(app_path);
+            string app_name = appFromPath(path);
 
             return System.Diagnostics.Process.GetProcessesByName(app_name).Length >= 1;
         }
@@ -547,8 +490,7 @@ namespace FoxDock
         /// <param name="path">Путь</param>
         private void killProcess(string path)
         {
-            string app_path = getRealAppPath(path);
-            string app_name = appFromPath(app_path);
+            string app_name = appFromPath(path);
 
             System.Diagnostics.Process.GetProcessesByName(app_name)[0].Kill();
         }
@@ -654,22 +596,77 @@ namespace FoxDock
         }
         [System.Runtime.InteropServices.DllImport("gdi32.dll")]
         public static extern bool DeleteObject(IntPtr hObject);
+
         /// <summary>
-        /// Логика основного таймера
+        /// Логика режима Поверх Всех Окон
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MainTimer_Tick(object sender, EventArgs e)
+        private void TopmostTimerLogic()
         {
+            //Получаем положение дока по вертикале относительно экрана
+            double top = System.Windows.SystemParameters.PrimaryScreenHeight - (size + size / 2.5) - taskbar_g;
+            double y = WindowAPI.GetMousePosition().Y / dpiY; //Получаем положение мыши по Y
             
-            
+            //Если курсор находится в триггер-зоне экрана
+            if (y >= System.Windows.SystemParameters.PrimaryScreenHeight - 20)
+            {
+                if (dockHidden)
+                    SafeInvoke(() => ShowDock()); //Отображаем Док
+            }
+            else //Если курсор находится вне триггер-зоны
+            {
+                if (y < System.Windows.SystemParameters.PrimaryScreenHeight - (System.Windows.SystemParameters.PrimaryScreenHeight - top))
+                {
+                    //Если пользователь находится на Рабочем Столе
+                    if (WindowAPI.IsOnDesktop())
+                    {
+                        if (dockHidden)
+                            SafeInvoke(() => ShowDock()); //Отображаем док
+                    }
+                    else //В обратном случае
+                    {
+                        if (!dockHidden && cache.dockAutoHide)
+                            SafeInvoke(() => HideDock()); //Скрываем док
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Логика значка Корзины в зависимости от наличия в Корзине элементов
+        /// </summary>
+        private void TrashIconLogic()
+        {
+            Application.Current.Dispatcher.Invoke(
+                DispatcherPriority.Loaded,
+                new Action(() => {
+                    try
+                    {
+                        int trash_count = TrashCount();
+                        if (trash_count > 0)
+                            TrashIcon.Source = fullTrashIcon;
+                        else
+                            TrashIcon.Source = emptyTrashIcon;
+                    }
+                    catch
+                    {
+                        Debug.WriteLine("Ошибка получения и задания значка Корзины");
+                    }
+                })
+            );
+        }
+        /// <summary>
+        /// Логика хайлайтов Проводника и Корзины
+        /// </summary>
+        private void ExplorerAndTrashHighlightLogic()
+        {
             shellWindows = new SHDocVw.ShellWindows(); //Получаем все окна проводника
 
             //В зависимости от кол-ва окон проводника отображаем или скрываем хайлайт под виджетом проводника
-            if(shellWindows.Count > 0)
+            if (shellWindows.Count > 0)
             {
                 SafeInvoke(() => ExplorerIcon.Highlight = true);
-            } else
+            }
+            else
             {
                 SafeInvoke(() => ExplorerIcon.Highlight = false);
             }
@@ -681,53 +678,39 @@ namespace FoxDock
             foreach (SHDocVw.InternetExplorer ie in shellWindows)
             {
                 //Если есть в кармане пачка... Ой, не то пальто... Кхм. Если текущее окно - окно корзины задаём значение переменной на положительное
-                if(ie.LocationName == "Recycle Bin" || ie.LocationName == "Корзина" || ie.LocationName == "Кошик")
+                if (ie.LocationName == "Recycle Bin" || ie.LocationName == "Корзина" || ie.LocationName == "Кошик")
                 {
                     rb_matches = true;
                 }
             }
             //Если есть корзина
-            if(rb_matches)
+            SafeInvoke(() => TrashIcon.Highlight = rb_matches); //Делаем хайлайт активным в зависимости от наличия Корзины
+        }
+        /// <summary>
+        /// Логика основного таймера
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MainTimer_Tick(object sender, EventArgs e)
+        {
+            
+            //Если режим Topmost активен
+            if (cache.enableTopmost)
+                TopmostTimerLogic();
+
+            //Если режим умной блокировки активен
+            if (cache.smart_disable)
             {
-                SafeInvoke(() => TrashIcon.Highlight = true); //Делаем хайлайт активным
-            } else //Иначе
-            {
-                SafeInvoke(() => TrashIcon.Highlight = false); //Делаем хайлайт неактивным
+                Point current_mouse_position = WindowAPI.GetMousePosition();
+                if (lastMousePosition == current_mouse_position)
+                    return;
+                else
+                    lastMousePosition = current_mouse_position;
             }
 
-            //Пытаемся получить и задать значок Корзины
-            Application.Current.Dispatcher.Invoke(
-                DispatcherPriority.Loaded,
-                new Action(() => {
-                    try
-                    {
-                        Icon trash_icon = GetTrashIcon();
-                        if (trash_icon != null)
-                        {
-                            IntPtr hbmp = trash_icon.ToBitmap().GetHbitmap();
-                            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-
-                            if (source != null)
-                            {
-                                TrashIcon.Source = source;
-                            }
-
-                            DeleteObject(hbmp);
-                        }
-
-                    }
-                    catch
-                    {
-                        Debug.WriteLine("Ошибка получения и задания значка Корзины");
-                    }
-                })
-            );
+            ExplorerAndTrashHighlightLogic(); //Выполняем логику хайлайтов Проводника и Корзины
+            TrashIconLogic(); //Пытаемся получить и задать значок Корзины
             
-
-            //Получаем высоту Панели Задач в случае того, если она расположена снизу
-            int taskbar = GetTaskBarH();
-            taskbar_g = taskbar;
-
             //Если нету блокировки движений
             if (!move_lock)
             {
@@ -737,7 +720,7 @@ namespace FoxDock
                     AppsActiveLogic();
                 });
 
-                //Пробуем анимировать положение Дока по вертикали
+                //Пробуем изменять положение Дока по вертикали (нужно для того, чтобы при перемещении панели задач и других действиях док становился на нужное место)
                 try
                 {
                     SafeInvoke(() => animateHChange(System.Windows.SystemParameters.PrimaryScreenHeight - this.Height, this.Height));
@@ -824,12 +807,45 @@ namespace FoxDock
         {
             Debug.WriteLine(cdd);
         }
+        /// <summary>
+        /// Функция для получения кол-ва элементов Корзины
+        /// </summary>
+        /// <returns></returns>
+        private static int TrashCount()
+        {
+            try
+            {
+                Shell shell = new Shell();
+                Folder recycleBin = shell.NameSpace(10);
+                return recycleBin.Items().Count;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+        /// <summary>
+        /// Функция для получения BitmapSource из Icon
+        /// </summary>
+        /// <param name="icon">Icon</param>
+        /// <returns>BitmapSource</returns>
+        private static BitmapSource GetSourceFromIcon(Icon icon)
+        {
+            BitmapSource result = null;
+            if (icon != null)
+            {
+                IntPtr hbmp = icon.ToBitmap().GetHbitmap();
+                result = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
 
+                DeleteObject(hbmp);
+            }
+            return result;
+        }
         /// <summary>
         /// Функция получения значка Корзины
         /// </summary>
         /// <returns>Значок</returns>
-        private static Icon GetTrashIcon()
+        private static Icon GetTrashIcon(bool isFull)
         {
             //Снова неведомая херня с взаимодействием с Win32 API. Писал в состоянии алкогольного опьянения...
             //На всякий случай, чтобы не еб#нуло ошибку всю логику помещаем в try, catch
@@ -843,12 +859,8 @@ namespace FoxDock
                 IntPtr picon = IntPtr.Zero;
                 int flags = 0;
 
-                Shell shell = new Shell();
-                Folder recycleBin = shell.NameSpace(10);
-                int itemsCount = recycleBin.Items().Count;
-
                 int i = 31;
-                if(itemsCount > 0)
+                if(isFull)
                 {
                     i = 32;
                 }
@@ -868,7 +880,7 @@ namespace FoxDock
             catch (Exception ex)
             {
                 //Если таки ошибка - выводим её в консоль
-                Debug.WriteLine(ex.Message + " beda #4");
+                Debug.WriteLine(ex.ToString() + " beda #4");
             }
             return null;
             
@@ -913,8 +925,9 @@ namespace FoxDock
         /// <param name="e"></param>
         private void Main_Drop(object sender, DragEventArgs e)
         {
-            if (cache.dockLock || movingToTrash) return; //Если не включена блокировка значков или идёт перемещение в корзину
             isDrop = false; //Задаём отрицательное значение переменной, которая сигнализирует о том, что происходит перетаскивание
+            if (cache.dockLock || movingToTrash) return; //Если не включена блокировка значков или идёт перемещение в корзину
+            
             
             //Если на Док перетащили файлы/папки, а не какую-то иную фигню
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
@@ -935,7 +948,7 @@ namespace FoxDock
                         {
                             //Добавляем в кеш и на панель
                             cache.dock_apps.Add(lname);
-                            cache.dock_apps_path.Add(fn);
+                            cache.dock_apps_path.Add(getRealAppPath(fn));
                             CacheOperations.StoreCache(cache);
 
                             addIconToPanel(fn);
@@ -1059,7 +1072,7 @@ namespace FoxDock
                 if (down_icon == img)
                 {
                     //Проучаем путь к приложению
-                    string app_path = getRealAppPath(cache.dock_apps_path[current_index]);
+                    string app_path = cache.dock_apps_path[current_index];
                     string app_name = appFromPath(app_path);
 
                     //Проверяем запущено ли оно
@@ -1095,8 +1108,14 @@ namespace FoxDock
                                 {
                                     //Если процесс последний и кол-во окон - 0 или приложение - проводник
                                     if (i == proc_c - 1 && real_windows == 0 || app_name == "explorer")
+                                    {
+                                        string path = cache.dock_apps_path[current_index];
+                                        ProcessStartInfo _processStartInfo = new ProcessStartInfo();
+                                        _processStartInfo.WorkingDirectory = Path.GetDirectoryName(path);
+                                        _processStartInfo.FileName = Path.GetFileName(path);
                                         //Запускаем приложение по-новой
-                                        System.Diagnostics.Process.Start(cache.dock_apps_path[current_index]);
+                                        System.Diagnostics.Process.Start(_processStartInfo);
+                                    }
                                 }
                                 else //В противном случае
                                 {
@@ -1123,7 +1142,12 @@ namespace FoxDock
                         else //Если приложение не запущено
                         {
                             //Запускаем его
-                            System.Diagnostics.Process.Start(cache.dock_apps_path[current_index]);
+                            string path = cache.dock_apps_path[current_index];
+                            ProcessStartInfo _processStartInfo = new ProcessStartInfo();
+                            _processStartInfo.WorkingDirectory = Path.GetDirectoryName(path);
+                            _processStartInfo.FileName = Path.GetFileName(path);
+                            //Запускаем приложение по-новой
+                            System.Diagnostics.Process.Start(_processStartInfo);
                         }
 
                     }
@@ -1435,7 +1459,6 @@ namespace FoxDock
         {
             //Останавливаем таймеры
             mainTimer.Stop();
-            mouseTimer.Stop();
 
             //Блокируем док
             move_lock = true;
@@ -1760,7 +1783,6 @@ namespace FoxDock
         {
             //Останавливаем все таймеры
             mainTimer.Stop();
-            mouseTimer.Stop();
 
             //Блокируем Док
             move_lock = true;
@@ -2449,26 +2471,22 @@ namespace FoxDock
 
                         RecyclingBin.MoveHere(fn);
 
-                        Icon trash_icon = GetTrashIcon();
-                        if (trash_icon != null)
+                        if (TrashCount() > 0)
                         {
-                            IntPtr hbmp = trash_icon.ToBitmap().GetHbitmap();
-                            BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-
-                            if (source != null)
-                            {
-                                TrashIcon.Source = source;
-                            }
-
-                            DeleteObject(hbmp);
+                            TrashIcon.Source = fullTrashIcon;
+                        }
+                        else
+                        {
+                            TrashIcon.Source = emptyTrashIcon;
                         }
 
-                        Task.Factory.StartNew(() =>
-                        {
-                            Thread.Sleep(300);
-                            movingToTrash = false;
-                        });
+                        
                     }
+                    Task.Factory.StartNew(() =>
+                    {
+                        Thread.Sleep(100);
+                        movingToTrash = false;
+                    });
                 }
                 catch (Exception ex)
                 {
@@ -2751,18 +2769,13 @@ namespace FoxDock
             items.Add(GenerateMenuItem("\uE74D", AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ClearRecycleBin, locale), () =>
             {
                 WindowAPI.SHEmptyRecycleBin(IntPtr.Zero, null, WindowAPI.RecycleFlag.SHERB_EMPTY);
-                Icon trash_icon = GetTrashIcon();
-                if (trash_icon != null)
+                if (TrashCount() > 0)
                 {
-                    IntPtr hbmp = trash_icon.ToBitmap().GetHbitmap();
-                    BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-
-                    if (source != null)
-                    {
-                        TrashIcon.Source = source;
-                    }
-
-                    DeleteObject(hbmp);
+                    TrashIcon.Source = fullTrashIcon;
+                }
+                else
+                {
+                    TrashIcon.Source = emptyTrashIcon;
                 }
                 return 1;
             }));

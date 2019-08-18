@@ -55,5 +55,6 @@ namespace FoxDock
         public HintBackground hintBackground = HintBackground.Auto;
         public IndicatorColor IndicatorColor = IndicatorColor.Auto;
         public MenuColor MenuColor = MenuColor.Auto;
+        public bool smart_disable = true;
     }
 }

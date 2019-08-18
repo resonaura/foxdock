@@ -516,6 +516,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"></RowDefinition>
                                 <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -526,6 +527,8 @@
                             <CheckBox Width="70" Grid.Row="0" Grid.Column="1" Cursor="Hand" Background="{Binding Foreground, ElementName=SettingsWindow}" Loaded="Toggle_Loaded" Name="DisableBlurToggle" Checked="DisableBlur_Checked" Unchecked="DisableBlur_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
                             <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="1" Grid.Column="0" Foreground="{Binding Foreground, ElementName=SettingsWindow}" Name="DockSettingsEnableStarDustLabel">Enable StarDust:</TextBlock>
                             <CheckBox Width="70" Grid.Row="1" Grid.Column="1" Cursor="Hand" Background="{Binding Foreground, ElementName=SettingsWindow}" Loaded="Toggle_Loaded" Name="StarDustEnableToggle" Checked="StarDustEnable_Checked" Unchecked="StarDustEnable_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+                            <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="2" Grid.Column="0" Foreground="{Binding Foreground, ElementName=SettingsWindow}" Name="DockSettingsSmartDisableLabel">Smart disable background tasks:</TextBlock>
+                            <CheckBox Width="70" Grid.Row="2" Grid.Column="1" Cursor="Hand" Background="{Binding Foreground, ElementName=SettingsWindow}" Loaded="Toggle_Loaded" Name="SmartDisableToggle" Checked="SmartDisableToggle_Checked"  Unchecked="SmartDisableToggle_Unchecked"  Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
                         </Grid>
                     </TabItem>
                     <TabItem Name="CustomizeTab">
