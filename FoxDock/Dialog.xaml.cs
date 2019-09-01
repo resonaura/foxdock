@@ -30,11 +30,12 @@ namespace FoxDock
 
             DialogLabel.Content = text;
             MainGrid.Opacity = 0;
-            RoutedEventHandler handler = null;
-            handler = (s, e) =>
+            void handler(object s, RoutedEventArgs e)
             {
-                if(!MainWindow.cache.disableBlur)
+                if (!Dock.cache.disableBlur)
+                {
                     NativeMethods.EnableBlur(this);
+                }
 
                 DoubleAnimation opacityAnimation = new DoubleAnimation
                 {
@@ -54,25 +55,26 @@ namespace FoxDock
                     EasingFunction = new BackEase()
                 };
                 DialogPanel.BeginAnimation(StackPanel.MarginProperty, topAnimation);
-            };
+            }
+
             Loaded += handler;
 
             
         }
         public delegate void DialogEvent();
         public bool result = false;
-        public event DialogEvent onResult;
+        public event DialogEvent OnResult;
 
         private void NoButton_Click(object sender, RoutedEventArgs e)
         {
             result = false;
-            onResult();
+            OnResult();
         }
 
         private void YesButton_Click(object sender, RoutedEventArgs e)
         {
             result = true;
-            onResult();
+            OnResult();
         }
 
         public void CloseDialog()

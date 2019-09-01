@@ -34,7 +34,9 @@ namespace FoxDock
                     using (Stream reader = new FileStream(cacheFile, FileMode.Open))
                     {
                         if (reader != null && text.Contains("<Cache xmlns"))
+                        {
                             cache = (Cache)serializer.Deserialize(reader);
+                        }
                     }
                 }
                 catch
@@ -61,7 +63,9 @@ namespace FoxDock
             bool exists = System.IO.Directory.Exists(subPath);
 
             if (!exists)
+            {
                 System.IO.Directory.CreateDirectory(subPath);
+            }
 
             try
             {

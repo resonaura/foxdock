@@ -61,7 +61,9 @@ namespace FoxDock
             DockSettingsBGIColorLabel,
             DockSettingsBGNColorLabel,
             DockSettingsSmartDisableLabel,
-            Tooltip
+            Tooltip,
+            RecentFiles,
+            OpenInExplorer
         }
 
         //Основные функции
@@ -99,7 +101,7 @@ namespace FoxDock
         }
 
         //Основные словари
-        private static Dictionary<Dialog, string> EN_DICT = new Dictionary<Dialog, string>()
+        private readonly static Dictionary<Dialog, string> EN_DICT = new Dictionary<Dialog, string>()
         {
             [Dialog.ExitDock] = "Exit",
             [Dialog.RestartDock] = "Restart Dock",
@@ -136,9 +138,11 @@ namespace FoxDock
             [Dialog.DockSettingsBGIColorLabel] = "Indicator color:",
             [Dialog.DockSettingsBGNColorLabel] = "Menu color:",
             [Dialog.DockSettingsSmartDisableLabel] = "Smart disable background tasks:",
-            [Dialog.Tooltip] = "Tooltip"
+            [Dialog.Tooltip] = "Tooltip",
+            [Dialog.RecentFiles] = "Recent items",
+            [Dialog.OpenInExplorer] = "Open in Explorer"
         };
-        private static Dictionary<Dialog, string> RU_DICT = new Dictionary<Dialog, string>()
+        private static readonly Dictionary<Dialog, string> RU_DICT = new Dictionary<Dialog, string>()
         {
             [Dialog.ExitDock] = "Выйти",
             [Dialog.RestartDock] = "Перезапустить Док-бар",
@@ -175,9 +179,11 @@ namespace FoxDock
             [Dialog.DockSettingsBGIColorLabel] = "Цвет индикатора:",
             [Dialog.DockSettingsBGNColorLabel] = "Цвет меню:",
             [Dialog.DockSettingsSmartDisableLabel] = "Умное отключение фоновых задач:",
-            [Dialog.Tooltip] = "Подсказка"
+            [Dialog.Tooltip] = "Подсказка",
+            [Dialog.RecentFiles] = "Недавние документы",
+            [Dialog.OpenInExplorer] = "Открыть в Проводнике"
         };
-        private static Dictionary<Dialog, string> UA_DICT = new Dictionary<Dialog, string>()
+        private static readonly Dictionary<Dialog, string> UA_DICT = new Dictionary<Dialog, string>()
         {
             [Dialog.ExitDock] = "Вийти",
             [Dialog.RestartDock] = "Перезавантажити Док-бар",
@@ -214,11 +220,13 @@ namespace FoxDock
             [Dialog.DockSettingsBGIColorLabel] = "Колір індикатору:",
             [Dialog.DockSettingsBGNColorLabel] = "Колір меню:",
             [Dialog.DockSettingsSmartDisableLabel] = "Розумне відключення фонових завдань:",
-            [Dialog.Tooltip] = "Підсказка"
+            [Dialog.Tooltip] = "Підсказка",
+            [Dialog.RecentFiles] = "Недавні документи",
+            [Dialog.OpenInExplorer] = "Відкрити у Провіднику"
         };
 
         //Комбинированный словарь
-        private static Dictionary<Locale, Dictionary<Dialog, string>> DICT = new Dictionary<Locale, Dictionary<Dialog, string>> {
+        private static readonly Dictionary<Locale, Dictionary<Dialog, string>> DICT = new Dictionary<Locale, Dictionary<Dialog, string>> {
             [Locale.EN] = EN_DICT,
             [Locale.RU] = RU_DICT,
             [Locale.UA] = UA_DICT

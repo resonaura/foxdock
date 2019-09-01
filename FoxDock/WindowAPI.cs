@@ -14,7 +14,7 @@ namespace FoxDock
 {
     class WindowAPI
     {
-        public static MainWindow window = new MainWindow();
+        public static Dock window = new Dock();
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
@@ -36,7 +36,9 @@ namespace FoxDock
                     var placement = GetPlacement(cWin);
                     //Debug.WriteLine(placement.showCmd.ToString());
                     if (placement.showCmd.ToString() == "Maximized" || IsFullScreen(cWin))
+                    {
                         return false;
+                    }
                 }
             }
 
@@ -105,25 +107,20 @@ namespace FoxDock
         public const UInt32 SWP_NOSIZE = 0x0001;
         public const UInt32 SWP_NOMOVE = 0x0002;
         [DllImport("user32.dll")]
-        static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
+        static extern void Keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
 
         /// <summary>
         /// Shows the desktop.
         /// </summary>
         public static void ShowDesktop()
         {
-            keybd_event(0x5B, 0, 0, 0);
-            keybd_event(0x4D, 0, 0, 0);
-            keybd_event(0x5B, 0, 0x2, 0);
+            Keybd_event(0x5B, 0, 0, 0);
+            Keybd_event(0x4D, 0, 0, 0);
+            Keybd_event(0x5B, 0, 0x2, 0);
         }
 
         public static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
         public static readonly IntPtr HWND_TOP = new IntPtr(-1);
-
-        const int HC_ACTION = 0;
-        const int WH_KEYBOARD_LL = 13;
-        const int WM_KEYDOWN = 0x0100;
-        static IntPtr HookHandle = IntPtr.Zero;
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         static extern IntPtr SetWindowsHookEx(int idHook, KbHook lpfn, IntPtr hMod, uint dwThreadId);
@@ -140,30 +137,6 @@ namespace FoxDock
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
-
-        static IntPtr IgnoreWin_D(int nCode, IntPtr wParam, IntPtr lParam)
-        {
-            if (nCode == HC_ACTION
-                && IsWin_D(wParam, lParam))
-            {
-                ShowDesktop();
-                return (IntPtr)1; //just ignore the key press
-            }
-
-
-            return CallNextHookEx(HookHandle, nCode, wParam, lParam);
-        }
-
-        static bool IsWin_D(IntPtr wParam, IntPtr lParam)
-        {
-            if ((int)wParam != WM_KEYDOWN)
-                return false;
-
-            var keyInfo = (KbHookParam)Marshal.PtrToStructure(lParam, typeof(KbHookParam));
-            if (keyInfo.VkCode != (int)System.Windows.Forms.Keys.D) return false;
-            return GetAsyncKeyState(System.Windows.Forms.Keys.LWin) < 0
-                   || GetAsyncKeyState(System.Windows.Forms.Keys.RWin) < 0;
-        }
 
         delegate IntPtr KbHook(int nCode, IntPtr wParam, [In] IntPtr lParam);
 
@@ -271,8 +244,10 @@ namespace FoxDock
             var handles = new List<IntPtr>();
 
             foreach (ProcessThread thread in Process.GetProcessById(processId).Threads)
+            {
                 EnumThreadWindows(thread.Id,
                     (hWnd, lParam) => { handles.Add(hWnd); return true; }, IntPtr.Zero);
+            }
 
             return handles;
         }
@@ -298,12 +273,21 @@ namespace FoxDock
         {
             //System.Windows.SystemParameters....
             if (SystemParameters.WorkArea.Left > 0)
+            {
                 return TaskBarLocation.LEFT;
+            }
+
             if (SystemParameters.WorkArea.Top > 0)
+            {
                 return TaskBarLocation.TOP;
+            }
+
             if (SystemParameters.WorkArea.Left == 0
               && SystemParameters.WorkArea.Width < SystemParameters.PrimaryScreenWidth)
+            {
                 return TaskBarLocation.RIGHT;
+            }
+
             return TaskBarLocation.BOTTOM;
         }
 
@@ -342,7 +326,6 @@ namespace FoxDock
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool EnumChildWindows(IntPtr window, EnumWindowProc callback, IntPtr lParam);
 
-        private static IntPtr _MainHandle;
 
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -377,7 +360,11 @@ namespace FoxDock
             placement.length = Marshal.SizeOf(placement);
             GetWindowPlacement(w, ref placement);
             string cmd = placement.showCmd.ToString();
-            if (cmd == "Minimized" ||  cmd == "Maximized") return true;
+            if (cmd == "Minimized" ||  cmd == "Maximized")
+            {
+                return true;
+            }
+
             return false;
         }
         [DllImport("user32.dll")]
@@ -389,11 +376,17 @@ namespace FoxDock
         {
             IntPtr lastPopUp = GetLastActivePopup(window);
             if (IsWindowVisible(lastPopUp))
+            {
                 return lastPopUp;
+            }
             else if (lastPopUp == window)
+            {
                 return IntPtr.Zero;
+            }
             else
+            {
                 return GetLastVisibleActivePopUpOfWindow(lastPopUp);
+            }
         }
         public static List<IntPtr> GetAllChildHandles(IntPtr handl)
         {
@@ -444,6 +437,23 @@ namespace FoxDock
         }
         [DllImport("Shell32.dll")]
         public static extern int SHEmptyRecycleBin(IntPtr hwnd, string pszRootPath, RecycleFlag dwFlags);
+
+        /// <summary>
+        /// Функция получения высоты Панели Задач, если она расположена снизу
+        /// </summary>
+        /// <returns>Высота</returns>
+        public static int GetTaskBarH(Window w)
+        {
+            WindowAPI.TaskBarLocation location = WindowAPI.GetTaskBarLocation(); //Получаем положение Панели Задач
+            if (location == WindowAPI.TaskBarLocation.BOTTOM) //Если она снизу
+            {
+                return Application.Current.Dispatcher.Invoke(() => (int)(WpfScreen.GetScreenFrom(w).DeviceBounds.Bottom - WpfScreen.GetScreenFrom(w).WorkingArea.Bottom));  //Возвращаем высоту Панели Задач
+            }
+            else
+            {
+                return 0; //Возращаем 0 (да-да, я кеп)
+            }
+        }
     }
 
 

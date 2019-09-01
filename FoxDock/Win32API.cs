@@ -1,22 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
+using Microsoft.Win32;
+using Shell32;
+using System.IO;
 
 namespace FoxDock
 {
-    public class Win32E
+    public class Win32API
     {
         public const uint WM_COMMAND = 273U;
         public const uint WM_CLOSE = 16U;
         public const uint WM_SYSCOMMAND = 274U;
-        private const int MAX_PATH = 260;
-        private const int MAX_TYPE = 80;
         public const int SHIL_LARGE = 0;
         public const int SHIL_SMALL = 1;
         public const int SHIL_EXTRALARGE = 2;
@@ -45,25 +42,25 @@ namespace FoxDock
         public static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto)]
-        public static extern int SHGetFileInfo(string pszPath, int dwFileAttributes, out Win32E.SHFILEINFO psfi, uint cbfileInfo, Win32E.SHGFI uFlags);
+        public static extern int SHGetFileInfo(string pszPath, int dwFileAttributes, out Win32API.SHFILEINFO psfi, uint cbfileInfo, Win32API.SHGFI uFlags);
 
         [DllImport("User32.dll")]
         public static extern int DestroyIcon(IntPtr hIcon);
 
         [DllImport("shell32.dll", EntryPoint = "#727")]
-        public static extern int SHGetImageList(int iImageList, ref Guid riid, out Win32E.IImageList ppv);
+        public static extern int SHGetImageList(int iImageList, ref Guid riid, out Win32API.IImageList ppv);
 
         [DllImport("netapi32.dll")]
-        public static extern int NetServerEnum([MarshalAs(UnmanagedType.LPWStr)] string servername, int level, out IntPtr bufptr, int prefmaxlen, ref int entriesread, ref int totalentries, Win32E.SV_TYPE servertype, [MarshalAs(UnmanagedType.LPWStr)] string domain, IntPtr resume_handle);
+        public static extern int NetServerEnum([MarshalAs(UnmanagedType.LPWStr)] string servername, int level, out IntPtr bufptr, int prefmaxlen, ref int entriesread, ref int totalentries, Win32API.SV_TYPE servertype, [MarshalAs(UnmanagedType.LPWStr)] string domain, IntPtr resume_handle);
 
         [DllImport("netapi32.dll")]
         public static extern int NetApiBufferFree(IntPtr buffer);
 
         [DllImport("user32.dll")]
-        public static extern bool GetIconInfo(IntPtr hIcon, out Win32E.ICONINFO piconinfo);
+        public static extern bool GetIconInfo(IntPtr hIcon, out Win32API.ICONINFO piconinfo);
 
         [DllImport("user32.dll")]
-        public static extern bool GetCursorInfo(out Win32E.CURSORINFO pci);
+        public static extern bool GetCursorInfo(out Win32API.CURSORINFO pci);
 
         [DllImport("user32.dll")]
         public static extern IntPtr CopyIcon(IntPtr hIcon);
@@ -88,14 +85,14 @@ namespace FoxDock
 
         [DllImport("gdi32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool BitBlt(IntPtr hdc, int nXDest, int nYDest, int nWidth, int nHeight, IntPtr hdcSrc, int nXSrc, int nYSrc, Win32E.TernaryRasterOperations dwRop);
+        public static extern bool BitBlt(IntPtr hdc, int nXDest, int nYDest, int nWidth, int nHeight, IntPtr hdcSrc, int nXSrc, int nYSrc, Win32API.TernaryRasterOperations dwRop);
 
         [DllImport("gdi32.dll")]
         public static extern bool DeleteDC(IntPtr hdc);
 
         [DllImport("psapi.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool GetPerformanceInfo(out Win32E.PERFORMANCE_INFORMATION pPerformanceInformation, [In] int cb);
+        public static extern bool GetPerformanceInfo(out Win32API.PERFORMANCE_INFORMATION pPerformanceInformation, [In] int cb);
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct SHFILEINFO
@@ -168,15 +165,11 @@ namespace FoxDock
             public IntPtr hbmMask;
             public int Unused1;
             public int Unused2;
-            public Win32E.RECT rcImage;
+            public Win32API.RECT rcImage;
         }
 
         public struct RECT
         {
-            private int left;
-            private int top;
-            private int right;
-            private int bottom;
         }
 
         public struct POINT
@@ -190,14 +183,14 @@ namespace FoxDock
                 this.y = y;
             }
 
-            public static implicit operator Point(Win32E.POINT p)
+            public static implicit operator Point(Win32API.POINT p)
             {
                 return new Point(p.x, p.y);
             }
 
-            public static implicit operator Win32E.POINT(Point p)
+            public static implicit operator Win32API.POINT(Point p)
             {
-                return new Win32E.POINT(p.X, p.Y);
+                return new Win32API.POINT(p.X, p.Y);
             }
         }
 
@@ -222,7 +215,7 @@ namespace FoxDock
             int AddMasked(IntPtr hbmImage, int crMask, ref int pi);
 
             [MethodImpl(MethodImplOptions.PreserveSig)]
-            int Draw(ref Win32E.IMAGELISTDRAWPARAMS pimldp);
+            int Draw(ref Win32API.IMAGELISTDRAWPARAMS pimldp);
 
             [MethodImpl(MethodImplOptions.PreserveSig)]
             int Remove(int i);
@@ -231,19 +224,19 @@ namespace FoxDock
             int GetIcon(int i, int flags, ref IntPtr picon);
 
             [MethodImpl(MethodImplOptions.PreserveSig)]
-            int GetImageInfo(int i, ref Win32E.IMAGEINFO pImageInfo);
+            int GetImageInfo(int i, ref Win32API.IMAGEINFO pImageInfo);
 
             [MethodImpl(MethodImplOptions.PreserveSig)]
-            int Copy(int iDst, Win32E.IImageList punkSrc, int iSrc, int uFlags);
+            int Copy(int iDst, Win32API.IImageList punkSrc, int iSrc, int uFlags);
 
             [MethodImpl(MethodImplOptions.PreserveSig)]
-            int Merge(int i1, Win32E.IImageList punk2, int i2, int dx, int dy, ref Guid riid, ref IntPtr ppv);
+            int Merge(int i1, Win32API.IImageList punk2, int i2, int dx, int dy, ref Guid riid, ref IntPtr ppv);
 
             [MethodImpl(MethodImplOptions.PreserveSig)]
             int Clone(ref Guid riid, ref IntPtr ppv);
 
             [MethodImpl(MethodImplOptions.PreserveSig)]
-            int GetImageRect(int i, ref Win32E.RECT prc);
+            int GetImageRect(int i, ref Win32API.RECT prc);
 
             [MethodImpl(MethodImplOptions.PreserveSig)]
             int GetIconSize(ref int cx, ref int cy);
@@ -279,13 +272,13 @@ namespace FoxDock
             int DragMove(int x, int y);
 
             [MethodImpl(MethodImplOptions.PreserveSig)]
-            int SetDragCursorImage(ref Win32E.IImageList punk, int iDrag, int dxHotspot, int dyHotspot);
+            int SetDragCursorImage(ref Win32API.IImageList punk, int iDrag, int dxHotspot, int dyHotspot);
 
             [MethodImpl(MethodImplOptions.PreserveSig)]
             int DragShowNolock(int fShow);
 
             [MethodImpl(MethodImplOptions.PreserveSig)]
-            int GetDragImage(ref Win32E.POINT ppt, ref Win32E.POINT pptHotspot, ref Guid riid, ref IntPtr ppv);
+            int GetDragImage(ref Win32API.POINT ppt, ref Win32API.POINT pptHotspot, ref Guid riid, ref IntPtr ppv);
 
             [MethodImpl(MethodImplOptions.PreserveSig)]
             int GetItemFlags(int i, ref int dwFlags);
@@ -396,7 +389,7 @@ namespace FoxDock
             public int cbSize;
             public int flags;
             public IntPtr hCursor;
-            public Win32E.POINT ptScreenPos;
+            public Win32API.POINT ptScreenPos;
         }
 
         public enum TernaryRasterOperations : uint
@@ -437,5 +430,189 @@ namespace FoxDock
             public int ProcessCount;
             public int ThreadCount;
         }
+        public static string GetSysTheme()
+        {
+            //Получаем из реестра тему
+            var wpReg = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", false);
+            string theme = wpReg.GetValue("SystemUsesLightTheme").ToString();
+
+            //Закрываем работу с реестра
+            wpReg.Close();
+
+            return theme;
+        }
+        public static Icon GetShellIcon(int i)
+        {
+            try
+            {
+                SHFILEINFO psfi = new Win32API.SHFILEINFO();
+
+                Guid riid = new Guid("46EB5926-582E-4017-9FDF-E8998DAA0950");
+                SHGetImageList(4, ref riid, out IImageList ppv);
+                IntPtr picon = IntPtr.Zero;
+                int flags = 0;
+
+                ppv.GetIcon(i, flags, ref picon);
+                if (picon != null && System.Drawing.Icon.FromHandle(picon) != null)
+                {
+                    Icon icon = (Icon)System.Drawing.Icon.FromHandle(picon).Clone();
+                    DestroyIcon(psfi.hIcon);
+                    return icon;
+                }
+                else
+                {
+                    return null;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                //Если таки ошибка - выводим её в консоль
+                Debug.WriteLine(ex.ToString() + " beda #4");
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Функция получения значка по пути
+        /// </summary>
+        /// <param name="path">Путь к файлу/папке</param>
+        /// <returns></returns>
+        public static Icon GetSystemIcon(string path)
+        {
+            //Тут всё почти так же, как и в предыдущей функции. Мне лень описывать)
+            try
+            {
+                Win32API.SHFILEINFO psfi = new Win32API.SHFILEINFO();
+                int dwFileAttributes = 2048;
+                Win32API.SHGFI uFlags = Win32API.SHGFI.SHGFI_SYSICONINDEX;
+                if (Win32API.SHGetFileInfo(path, dwFileAttributes, out psfi, (uint)Marshal.SizeOf((object)psfi), uFlags) == 0)
+                {
+                    return (Icon)null;
+                }
+
+                int i = psfi.iIcon;
+
+                return Win32API.GetShellIcon(i);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+            return (Icon)null;
+        }
+
+        /// <summary>
+        /// Проверка файла на то, является ли он ярлыком
+        /// </summary>
+        /// <param name="path">Путь к ярлыку</param>
+        /// <returns></returns>
+        public static bool IsLink(string path)
+        {
+
+            string pathOnly = System.IO.Path.GetDirectoryName(path);
+            string filenameOnly = System.IO.Path.GetFileName(path);
+
+
+            Type shellAppType = Type.GetTypeFromProgID("Shell.Application");
+
+            Object shell = Activator.CreateInstance(shellAppType);
+            Folder folder = (Shell32.Folder)shellAppType.InvokeMember("NameSpace",
+            System.Reflection.BindingFlags.InvokeMethod, null, shell, new object[] { pathOnly });
+
+            FolderItem folderItem = folder.ParseName(filenameOnly);
+
+            if (folderItem != null)
+            {
+                return folderItem.IsLink;
+            }
+            return false; // not found
+        }
+        /// <summary>
+        /// Получение исходного пути ярлыка
+        /// </summary>
+        /// <param name="shortcutFilename">Путь к ярлыку</param>
+        /// <returns></returns>
+        public static string GetShortcutTarget(string shortcutFilename)
+        {
+
+            string pathOnly;
+            string filenameOnly = System.IO.Path.GetFileName(shortcutFilename);
+
+            if (File.Exists(Path.GetTempPath() + "\\" + filenameOnly))
+            {
+                pathOnly = Path.GetTempPath();
+            }
+            else
+            {
+                File.Copy(shortcutFilename, Path.GetTempPath() + "\\" + filenameOnly);
+                pathOnly = Path.GetTempPath();
+            }
+
+            Type shellAppType = Type.GetTypeFromProgID("Shell.Application");
+
+            Object shell = Activator.CreateInstance(shellAppType);
+            Folder folder = (Shell32.Folder)shellAppType.InvokeMember("NameSpace",
+            System.Reflection.BindingFlags.InvokeMethod, null, shell, new object[] { pathOnly });
+
+            Shell32.FolderItem folderItem = folder.ParseName(filenameOnly);
+            if (folderItem != null)
+            {
+                if (folderItem.IsLink)
+                {
+                    try
+                    {
+                        Shell32.ShellLinkObject link = (Shell32.ShellLinkObject)folderItem.GetLink;
+                        return link.Path;
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message + " beda #7");
+                    }
+
+                }
+                return shortcutFilename;
+            }
+            return string.Empty;  // not found
+
+
+        }
+        /// <summary>
+        /// Получение пути к приложению
+        /// </summary>
+        /// <param name="path">Путь</param>
+        /// <returns>Путь</returns>
+        public static string GetRealAppPath(string path)
+        {
+            if (IsLink(path)) //Если путь - ярлык
+            {
+                return GetShortcutTarget(path); //Получаем путь из ярлыка
+            }
+            else
+            {
+                return path; //В противном случае - возвращаем - путь который был
+            }
+
+        }
+        /// <summary>
+        /// Функция получения названия исполняемого файла из пути
+        /// </summary>
+        /// <param name="path">Путь</param>
+        /// <returns>Название исполняемого файла</returns>
+        public static string AppFromPath(string path)
+        {
+            string app_name = System.IO.Path.GetFileNameWithoutExtension(path); //Получаем файлнейм
+            return app_name; //Возвращаем правильный файлнейм
+        }
+        /// <summary>
+        /// Проверка того запущено ли приложение
+        /// </summary>
+        /// <param name="path">Путь</param>
+        /// <returns>Результат</returns>
+        public static bool CheckIfAppRunned(string path)
+        {
+            return System.Diagnostics.Process.GetProcessesByName(AppFromPath(path)).Length >= 1;
+        }
+
     }
 }

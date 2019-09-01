@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -7,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
+using SourceChord.FluentWPF;
 
 namespace FoxDock
 {
@@ -108,18 +110,19 @@ namespace FoxDock
         static extern void DwmEnableBlurBehindWindow(IntPtr hwnd, ref DWM_BLURBEHIND blurBehind);
         public static void EnableBlur(Window window)
         {
+            IntPtr windowHandle = new WindowInteropHelper(window).Handle;
             if (SystemParameters.HighContrast)
             {
                 return; // Blur is not useful in high contrast mode 
             }
             SetAccentPolicy(window, NativeMethods.AccentState.ACCENT_ENABLE_BLURBEHIND);
 
-            var blurBehindParameters = new DWM_BLURBEHIND();
-            blurBehindParameters.dwFlags = DWM_BB.Enable;
-            blurBehindParameters.fEnable = 1;
-            blurBehindParameters.hRgnBlur = IntPtr.Zero;
-
-            IntPtr windowHandle = new WindowInteropHelper(window).Handle;
+            var blurBehindParameters = new DWM_BLURBEHIND
+            {
+                dwFlags = DWM_BB.Enable,
+                fEnable = 1,
+                hRgnBlur = IntPtr.Zero
+            };
             DwmEnableBlurBehindWindow(windowHandle, ref blurBehindParameters);
         }
 
@@ -128,10 +131,12 @@ namespace FoxDock
         {
             SetAccentPolicy(window, NativeMethods.AccentState.ACCENT_DISABLED);
 
-            var blurBehindParameters = new DWM_BLURBEHIND();
-            blurBehindParameters.dwFlags = DWM_BB.Enable;
-            blurBehindParameters.fEnable = 0;
-            blurBehindParameters.hRgnBlur = IntPtr.Zero;
+            var blurBehindParameters = new DWM_BLURBEHIND
+            {
+                dwFlags = DWM_BB.Enable,
+                fEnable = 0,
+                hRgnBlur = IntPtr.Zero
+            };
 
             IntPtr windowHandle = new WindowInteropHelper(window).Handle;
             DwmEnableBlurBehindWindow(windowHandle, ref blurBehindParameters);

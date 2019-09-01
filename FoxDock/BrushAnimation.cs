@@ -33,7 +33,9 @@ namespace FoxDock
                                       AnimationClock animationClock)
         {
             if (!animationClock.CurrentProgress.HasValue)
+            {
                 return System.Windows.Media.Brushes.Transparent;
+            }
 
             //use the standard values if From and To are not set 
             //(it is the value of the given property)
@@ -41,9 +43,14 @@ namespace FoxDock
             defaultDestinationValue = this.To ?? defaultDestinationValue;
 
             if (animationClock.CurrentProgress.Value == 0)
+            {
                 return defaultOriginValue;
+            }
+
             if (animationClock.CurrentProgress.Value == 1)
+            {
                 return defaultDestinationValue;
+            }
 
             return new VisualBrush(new Border()
             {

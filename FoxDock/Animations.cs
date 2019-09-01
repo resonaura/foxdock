@@ -65,26 +65,50 @@ namespace FoxDock
 
                 if (r > 255)
                 {
-                    g = g - (r - 255);
-                    b = b - (r - 255);
-                    if (g < 0) g = 0;
-                    if (b < 0) b = 0;
+                    g -= (r - 255);
+                    b -= (r - 255);
+                    if (g < 0)
+                    {
+                        g = 0;
+                    }
+
+                    if (b < 0)
+                    {
+                        b = 0;
+                    }
+
                     r = 255;
                 }
                 if (g > 255)
                 {
-                    r = r - (g - 255);
-                    b = b - (g - 255);
-                    if (r < 0) r = 0;
-                    if (b < 0) b = 0;
+                    r -= (g - 255);
+                    b -= (g - 255);
+                    if (r < 0)
+                    {
+                        r = 0;
+                    }
+
+                    if (b < 0)
+                    {
+                        b = 0;
+                    }
+
                     g = 255;
                 }
                 if (b > 255)
                 {
-                    r = r - (b - 255);
-                    g = g - (b - 255);
-                    if (r < 0) r = 0;
-                    if (g < 0) g = 0;
+                    r -= (b - 255);
+                    g -= (b - 255);
+                    if (r < 0)
+                    {
+                        r = 0;
+                    }
+
+                    if (g < 0)
+                    {
+                        g = 0;
+                    }
+
                     b = 255;
                 }
 
@@ -107,7 +131,10 @@ namespace FoxDock
                 double bright = dominant.GetBrightness();
 
                 double black_per = (0.5 - bright) / 0.5;
-                if (black_per < 0) black_per = 0;
+                if (black_per < 0)
+                {
+                    black_per = 0;
+                }
 
                 double white_per = 1 - black_per;
 
@@ -259,9 +286,10 @@ namespace FoxDock
 
                         foreach (UIElement item in MainContextMenu.Items)
                         {
-                            MenuItem mi = item as MenuItem;
-                            if (mi != null)
+                            if (item is MenuItem mi)
+                            {
                                 mi.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
+                            }
                         }
                     }
                     if (theme == "1")
@@ -271,9 +299,10 @@ namespace FoxDock
 
                         foreach (UIElement item in MainContextMenu.Items)
                         {
-                            MenuItem mi = item as MenuItem;
-                            if (mi != null)
+                            if (item is MenuItem mi)
+                            {
                                 mi.Template = (ControlTemplate)Resources["WhiteCoolMenuItem"];
+                            }
                         }
                     }
                     break;
@@ -283,9 +312,10 @@ namespace FoxDock
 
                     foreach (UIElement item in MainContextMenu.Items)
                     {
-                        MenuItem mi = item as MenuItem;
-                        if (mi != null)
+                        if (item is MenuItem mi)
+                        {
                             mi.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
+                        }
                     }
                     break;
                 case MenuColor.Gray:
@@ -294,9 +324,10 @@ namespace FoxDock
 
                     foreach (UIElement item in MainContextMenu.Items)
                     {
-                        MenuItem mi = item as MenuItem;
-                        if (mi != null)
+                        if (item is MenuItem mi)
+                        {
                             mi.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
+                        }
                     }
                     break;
                 case MenuColor.White:
@@ -305,9 +336,10 @@ namespace FoxDock
 
                     foreach (UIElement item in MainContextMenu.Items)
                     {
-                        MenuItem mi = item as MenuItem;
-                        if (mi != null)
+                        if (item is MenuItem mi)
+                        {
                             mi.Template = (ControlTemplate)Resources["WhiteCoolMenuItem"];
+                        }
                     }
                     break;
                 case MenuColor.Accent:
@@ -316,9 +348,10 @@ namespace FoxDock
 
                     foreach (UIElement item in MainContextMenu.Items)
                     {
-                        MenuItem mi = item as MenuItem;
-                        if (mi != null)
+                        if (item is MenuItem mi)
+                        {
                             mi.Template = (ControlTemplate)Resources["DarkCoolMenuItem"];
+                        }
                     }
                     break;
             }

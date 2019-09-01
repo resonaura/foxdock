@@ -131,10 +131,17 @@
     <Compile Include="BrushAnimation.cs" />
     <Compile Include="Cache.cs" />
     <Compile Include="CacheOperations.cs" />
+    <Compile Include="ContextMenuTools.cs" />
     <Compile Include="DockIcon.xaml.cs">
       <DependentUpon>DockIcon.xaml</DependentUpon>
     </Compile>
     <Compile Include="AppLanguage.cs" />
+    <Compile Include="FileTools.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="IconsMove.cs" />
+    <Compile Include="RecentFiles.xaml.cs">
+      <DependentUpon>RecentFiles.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
     </Compile>
@@ -152,7 +159,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Dock.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -161,11 +168,15 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BlurBG.cs" />
-    <Compile Include="Win32E.cs" />
-    <Compile Include="MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
+    <Compile Include="Win32API.cs" />
+    <Compile Include="Dock.xaml.cs">
+      <DependentUpon>Dock.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="RecentFiles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Settings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
