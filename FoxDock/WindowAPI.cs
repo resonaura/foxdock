@@ -454,6 +454,18 @@ namespace FoxDock
                 return 0; //Возращаем 0 (да-да, я кеп)
             }
         }
+
+        public static double[] GetDPI(Window window)
+        {
+            PresentationSource source = PresentationSource.FromVisual(window);
+            if(source != null)
+            {
+                return new double[] { source.CompositionTarget.TransformToDevice.M11, source.CompositionTarget.TransformToDevice.M22 };
+            } else
+            {
+                return new double[] { 1, 1 };
+            }
+        }
     }
 
 

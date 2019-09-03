@@ -117,11 +117,11 @@ namespace FoxDock
 
             grid.MouseDown += (x, y) =>
             {
-                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.OpacityAnimation(.8, .4, 0.3));
+                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(.8, .4, 0.3));
             };
             grid.MouseUp += (x, y) =>
             {
-                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.OpacityAnimation(.4, .8, 0.3));
+                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(.4, .8, 0.3));
                 Process.Start(path);
                 window.RecentIcon.Highlight = false;
                 CloseApp();
@@ -130,15 +130,15 @@ namespace FoxDock
             {
                 foreach(Grid g in container.Children)
                 {
-                    g.BeginAnimation(Grid.OpacityProperty, Animations.OpacityAnimation(g.Opacity, .5, .3));
+                    g.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(g.Opacity, .5, .3));
                 }
-                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.OpacityAnimation((x as Grid).Opacity, 1, 0.3));
+                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation((x as Grid).Opacity, 1, 0.3));
             };
             this.MouseLeave += (x, y) =>
             {
                 foreach (Grid g in container.Children)
                 {
-                    g.BeginAnimation(Grid.OpacityProperty, Animations.OpacityAnimation(g.Opacity, 1, 0.3));
+                    g.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(g.Opacity, 1, 0.3));
                 }
             };
             container.Children.Insert(0, grid);
@@ -166,7 +166,7 @@ namespace FoxDock
             };
             offsetTransform.BeginAnimation(TranslateTransform.YProperty, anim);
             MainD.RenderTransform = offsetTransform;
-            MainD.BeginAnimation(Grid.OpacityProperty, Animations.OpacityAnimation(1, 0, .2));
+            MainD.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(1, 0, .2));
 
             
             
@@ -231,7 +231,7 @@ namespace FoxDock
             {
                 if (x < limit)
                 {
-                    string truepath = Win32API.GetRealAppPath(file.FullName);
+                    string truepath = FileTools.GetRealAppPath(file.FullName);
                     if(File.Exists(truepath) || Directory.Exists(truepath))
                     {
                         FileInfo fileInfo = new FileInfo(truepath);
@@ -241,7 +241,7 @@ namespace FoxDock
                             shortfilename = fileInfo.FullName;
                         }
 
-                        AddNew(shortfilename, Dock.GetSourceFromIcon(Dock.GetSystemIcon(truepath)), truepath);
+                        AddNew(shortfilename, IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(truepath)), truepath);
                     } else
                     {
                         x--;
@@ -252,7 +252,7 @@ namespace FoxDock
                 x++;
             }
             string epath = Environment.GetEnvironmentVariable("windir") + "\\explorer.exe";
-            AddNew(AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenInExplorer, Dock.locale), Dock.GetSourceFromIcon(Dock.GetSystemIcon(epath)), "explorer");
+            AddNew(AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenInExplorer, Dock.locale), IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(epath)), "explorer");
 
             Loaded += (a, b) =>
             {
@@ -266,9 +266,9 @@ namespace FoxDock
                 };
                 offsetTransform.BeginAnimation(TranslateTransform.YProperty, anim);
                 MainD.RenderTransform = offsetTransform;
-                MainD.BeginAnimation(Grid.OpacityProperty, Animations.OpacityAnimation(0, 1));
+                MainD.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(0, 1));
 
-                NativeMethods.EnableBlur(this);
+                Acryl.EnableBlur(this);
             };
         }
 

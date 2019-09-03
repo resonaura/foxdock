@@ -386,7 +386,7 @@ namespace FoxDock
             {
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
-                    NativeMethods.DisableBlur(window);
+                    Acryl.DisableBlur(window);
                 }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             }
 
@@ -402,7 +402,7 @@ namespace FoxDock
             {
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
-                    NativeMethods.EnableBlur(window);
+                    Acryl.EnableBlur(window);
                 }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             }
 

@@ -12,7 +12,7 @@ using SourceChord.FluentWPF;
 
 namespace FoxDock
 {
-    internal static class NativeMethods
+    internal static class Acryl
     {
         [DllImport("user32.dll")]
         internal static extern int SetWindowCompositionAttribute(IntPtr hwnd, ref WindowCompositionAttribData data);
@@ -115,7 +115,7 @@ namespace FoxDock
             {
                 return; // Blur is not useful in high contrast mode 
             }
-            SetAccentPolicy(window, NativeMethods.AccentState.ACCENT_ENABLE_BLURBEHIND);
+            SetAccentPolicy(window, Acryl.AccentState.ACCENT_ENABLE_BLURBEHIND);
 
             var blurBehindParameters = new DWM_BLURBEHIND
             {
@@ -129,7 +129,7 @@ namespace FoxDock
 
         public static void DisableBlur(Window window)
         {
-            SetAccentPolicy(window, NativeMethods.AccentState.ACCENT_DISABLED);
+            SetAccentPolicy(window, Acryl.AccentState.ACCENT_DISABLED);
 
             var blurBehindParameters = new DWM_BLURBEHIND
             {
@@ -142,10 +142,10 @@ namespace FoxDock
             DwmEnableBlurBehindWindow(windowHandle, ref blurBehindParameters);
         }
 
-        private static void SetAccentPolicy(Window window, NativeMethods.AccentState accentState)
+        private static void SetAccentPolicy(Window window, Acryl.AccentState accentState)
         {
             var windowHelper = new WindowInteropHelper(window);
-            var accent = new NativeMethods.AccentPolicy
+            var accent = new Acryl.AccentPolicy
             {
                 AccentState = accentState,
                 AccentFlags = GetAccentFlagsForTaskbarPosition(),
@@ -154,19 +154,19 @@ namespace FoxDock
             var accentStructSize = Marshal.SizeOf(accent);
             var accentPtr = Marshal.AllocHGlobal(accentStructSize);
             Marshal.StructureToPtr(accent, accentPtr, false);
-            var data = new NativeMethods.WindowCompositionAttribData
+            var data = new Acryl.WindowCompositionAttribData
             {
-                Attribute = NativeMethods.WindowCompositionAttribute.WCA_ACCENT_POLICY,
+                Attribute = Acryl.WindowCompositionAttribute.WCA_ACCENT_POLICY,
                 SizeOfData = accentStructSize,
                 Data = accentPtr
             };
-            NativeMethods.SetWindowCompositionAttribute(windowHelper.Handle, ref data);
+            Acryl.SetWindowCompositionAttribute(windowHelper.Handle, ref data);
             Marshal.FreeHGlobal(accentPtr);
         }
 
-        private static NativeMethods.AccentFlags GetAccentFlagsForTaskbarPosition()
+        private static Acryl.AccentFlags GetAccentFlagsForTaskbarPosition()
         {
-            return NativeMethods.AccentFlags.DrawAllBorders;
+            return Acryl.AccentFlags.DrawAllBorders;
         }
     }
 }

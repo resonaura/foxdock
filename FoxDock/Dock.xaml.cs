@@ -62,8 +62,8 @@ namespace FoxDock
         private DockIcon dr_ic = null;
         private bool movingToTrash = false;
         private SHDocVw.ShellWindows shellWindows;
-        private readonly BitmapSource fullTrashIcon = GetSourceFromIcon(GetTrashIcon(true));
-        private readonly BitmapSource emptyTrashIcon = GetSourceFromIcon(GetTrashIcon(false));
+        private readonly BitmapSource fullTrashIcon = IconsWorker.GetSourceFromIcon(IconsWorker.GetTrashIcon(true));
+        private readonly BitmapSource emptyTrashIcon = IconsWorker.GetSourceFromIcon(IconsWorker.GetTrashIcon(false));
         private Point lastMousePosition = new Point();
         #endregion
 
@@ -74,6 +74,7 @@ namespace FoxDock
         public const int WM_THEMECHANGED = 0x031A;
         public const int SC_MINIMIZE = 0xF020;
         public const int WM_WININICHANGE = 0x001A;
+        public const int WM_DISPLAYCHANGE = 0x007e;
         #endregion
 
         /// <summary>
@@ -116,8 +117,8 @@ namespace FoxDock
             try { WindowAPI.window = this; } catch { ConsoleLog("Ошибка задания основного окна для WindowAPI"); }
 
             //Получаем значки Проводника и Корзины и задаём их для соответствующих виджетов на Доке
-            ExplorerIcon.Source = GetSourceFromIcon(GetSystemIcon(FileTools.GetExplorerPath()));
-            RecentIcon.Source = GetSourceFromIcon(GetSystemIcon(FileTools.GetRecentsPath()));
+            ExplorerIcon.Source = IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(FileTools.GetExplorerPath()));
+            RecentIcon.Source = IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(FileTools.GetRecentsPath()));
 
             TrashIcon.Source = TrashCount() > 0 ? fullTrashIcon : emptyTrashIcon;
 
@@ -129,8 +130,8 @@ namespace FoxDock
             void handler(object s, RoutedEventArgs e)
             {
                 //Получаем DPI
-                PresentationSource source = PresentationSource.FromVisual(this);
-                if (source != null) { dpiY = source.CompositionTarget.TransformToDevice.M22; dpiX = source.CompositionTarget.TransformToDevice.M11; }
+                double[] dpi = WindowAPI.GetDPI(this);
+                dpiY = dpi[1]; dpiX = dpi[0];
 
                 //Прячем окно подсказки
                 tooltip.Hide();
@@ -144,7 +145,7 @@ namespace FoxDock
                 //Выполняем необходимые действия в зависимости от кеша
                 if (cache.disableBlur == false)
                 {
-                    NativeMethods.EnableBlur(this);
+                    Acryl.EnableBlur(this);
                 }
 
                 if (cache.enableStarDust)
@@ -182,7 +183,7 @@ namespace FoxDock
                 Timeline.SetDesiredFrameRate(myDoubleAnimation, 60);
                 myDoubleAnimation.Completed += StartUpAnimation_Completed;
                 this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
-                this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(0, 1));
+                this.BeginAnimation(OpacityProperty, Animations.SingleAnimation(0, 1));
             }
 
             Loaded += handler;
@@ -272,6 +273,16 @@ namespace FoxDock
             {
                 AutoWallUI();
             }
+            switch(msg)
+            {
+                case WM_SETTINGCHANGE:
+                    AutoWallUI();
+                    break;
+                case WM_DISPLAYCHANGE:
+                    this.Width = 0;
+                    UpdateDockWidth();
+                    break;
+            }
 
             return IntPtr.Zero;
         }
@@ -288,7 +299,7 @@ namespace FoxDock
             //Пробуем получить значок этого файла или папки (вообще похер)
             try
             {
-                icon = GetSystemIcon(path); //Получаем значок
+                icon = IconsWorker.GetSystemIcon(path); //Получаем значок
             }
             catch (Exception ex) //Если словили ошибку
             {
@@ -396,7 +407,7 @@ namespace FoxDock
         /// <param name="path">Путь</param>
         private void KillProcess(string path)
         {
-            Process.GetProcessesByName(Win32API.AppFromPath(path))[0].Kill();
+            Process.GetProcessesByName(FileTools.AppFromPath(path))[0].Kill();
         }
         /// <summary>
         /// Логика проверки активности приложений из Дока
@@ -425,7 +436,10 @@ namespace FoxDock
                                 }
                             } else
                             {
-                                IfNotAppRunned(MainPanel.Children[i] as DockIcon);
+                                if (i < MainPanel.Children.Count && i >= 0)
+                                {
+                                    IfNotAppRunned(MainPanel.Children[i] as DockIcon);
+                                }
                             }
                         });
                     }
@@ -458,7 +472,7 @@ namespace FoxDock
             };
             Timeline.SetDesiredFrameRate(myDoubleAnimation, 60);
             this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
-            this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(this.Opacity, 1));
+            this.BeginAnimation(OpacityProperty, Animations.SingleAnimation(this.Opacity, 1));
         }
         /// <summary>
         /// Функция скрытия Док бара
@@ -476,7 +490,7 @@ namespace FoxDock
             };
             Timeline.SetDesiredFrameRate(myDoubleAnimation, 60);
             this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
-            this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(this.Opacity, 0));
+            this.BeginAnimation(OpacityProperty, Animations.SingleAnimation(this.Opacity, 0));
         }
         /// <summary>
         /// Фунция безопасного инвока
@@ -674,6 +688,19 @@ namespace FoxDock
                 this.BeginAnimation(TopProperty, fastda);
             }
         }
+        public static List<DockIcon> GetCombined(UIElementCollection uI1, UIElementCollection uL2)
+        {
+            List<DockIcon> combined = new List<DockIcon>();
+            foreach (DockIcon di in uI1)
+            {
+                combined.Add(di);
+            }
+            foreach (DockIcon di in uL2)
+            {
+                combined.Add(di);
+            }
+            return combined;
+        }
         /// <summary>
         /// Функция адаптивного фона
         /// </summary>
@@ -687,18 +714,10 @@ namespace FoxDock
                 SafeInvoke(() =>
                 {
                     //Комбинируем основные значки с виджетами
-                    List<DockIcon> combined = new List<DockIcon>();
-                    foreach (DockIcon di in MainPanel.Children)
-                    {
-                        combined.Add(di);
-                    }
-                    foreach (DockIcon di in AIcons.Children)
-                    {
-                        combined.Add(di);
-                    }
+                    List<DockIcon> combined = GetCombined(MainPanel.Children, AIcons.Children);
 
                     //Выполняем стандартную анимацию анимации темы
-                    Animations.ThemeAnimate(theme, App_bg, tooltip, WhiteOverlay, BlackOverlay, combined, cache.background, cache.hintBackground, MainContextMenu, Resources, cache);
+                    Animations.ThemeAnimate(theme, this);
                 });
             });
         }
@@ -727,76 +746,6 @@ namespace FoxDock
             {
                 return 0;
             }
-        }
-        /// <summary>
-        /// Функция для получения BitmapSource из Icon
-        /// </summary>
-        /// <param name="icon">Icon</param>
-        /// <returns>BitmapSource</returns>
-        public static BitmapSource GetSourceFromIcon(Icon icon)
-        {
-            BitmapSource result = null;
-            if (icon != null)
-            {
-                IntPtr hbmp = icon.ToBitmap().GetHbitmap();
-                result = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-                Win32API.DeleteObject(hbmp);
-            }
-            return result;
-        }
-        /// <summary>
-        /// Функция получения значка Корзины
-        /// </summary>
-        /// <returns>Значок</returns>
-        private static Icon GetTrashIcon(bool isFull)
-        {
-            //Снова неведомая херня с взаимодействием с Win32 API. Писал в состоянии алкогольного опьянения...
-            //На всякий случай, чтобы не еб#нуло ошибку всю логику помещаем в try, catch
-            try
-            {
-                int i = 31;
-                if(isFull)
-                {
-                    i = 32;
-                }
-                return Win32API.GetShellIcon(i);
-            }
-            catch (Exception ex)
-            {
-                //Если таки ошибка - выводим её в консоль
-                Debug.WriteLine(ex.ToString());
-            }
-            return null;
-            
-        }
-
-        /// <summary>
-        /// Функция получения значка по пути
-        /// </summary>
-        /// <param name="path">Путь к файлу/папке</param>
-        /// <returns></returns>
-        public static Icon GetSystemIcon(string path)
-        {
-            //Тут всё почти так же, как и в предыдущей функции. Мне лень описывать)
-            try
-            {
-                Win32API.SHFILEINFO psfi = new Win32API.SHFILEINFO();
-                int dwFileAttributes = 2048;
-                Win32API.SHGFI uFlags = Win32API.SHGFI.SHGFI_SYSICONINDEX;
-                if (Win32API.SHGetFileInfo(path, dwFileAttributes, out psfi, (uint)Marshal.SizeOf((object)psfi), uFlags) == 0)
-                {
-                    return (Icon)null;
-                }
-
-                int i = psfi.iIcon;
-                
-                return Win32API.GetShellIcon(i);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-            }
-            return (Icon)null;
         }
         
         /// <summary>
@@ -831,13 +780,16 @@ namespace FoxDock
                         if (cache.dock_apps_path.IndexOf(fn) == -1)
                         {
                             //Добавляем в кеш и на панель
-                            cache.dock_apps.Add(lname);
-                            cache.dock_apps_path.Add(Win32API.GetRealAppPath(fn));
-                            CacheOperations.StoreCache(cache);
+                            if(File.Exists(fn))
+                            {
+                                cache.dock_apps.Add(lname);
+                                cache.dock_apps_path.Add(FileTools.GetRealAppPath(fn));
+                                CacheOperations.StoreCache(cache);
 
-                            AddIconToPanel(fn);
+                                AddIconToPanel(fn);
+                            }
+                            
                         }
-
                     }
                 }
                 catch (Exception ex)
@@ -867,7 +819,7 @@ namespace FoxDock
                 {
                     //Проучаем путь к приложению
                     string app_path = cache.dock_apps_path[current_index];
-                    string app_name = Win32API.AppFromPath(app_path);
+                    string app_name = FileTools.AppFromPath(app_path);
 
                     //Проверяем запущено ли оно
                     var already_runned = System.Diagnostics.Process.GetProcessesByName(app_name).Count() >= 1;
@@ -960,7 +912,7 @@ namespace FoxDock
             isDown = false;
 
             //Выполняем анимацию прозрачности, чтобы вернуть её в нормальное состояние для значка
-            img.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(img.Opacity, 1, 0.2));
+            img.BeginAnimation(DockIcon.OpacityProperty, Animations.SingleAnimation(img.Opacity, 1, 0.2));
 
         }
         
@@ -993,7 +945,7 @@ namespace FoxDock
             down_icon = img;
             
             //Делаем значок полупрозрачным
-            img.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(img.Opacity, 0.5, 0.2));
+            img.BeginAnimation(DockIcon.OpacityProperty, Animations.SingleAnimation(img.Opacity, 0.5, 0.2));
         }
         
         /// <summary>
@@ -1106,7 +1058,7 @@ namespace FoxDock
                     {
                         tooltip.Show();
                         Animations.Break(tooltip.app_hint);
-                        tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.OpacityAnimation(0, 1, .2));
+                        tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(0, 1, .2));
                     }
                 }
                 catch
@@ -1234,7 +1186,7 @@ namespace FoxDock
 
             //Анимируем закрытие Дока
             this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
-            this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(this.Opacity, 0));
+            this.BeginAnimation(OpacityProperty, Animations.SingleAnimation(this.Opacity, 0));
         }
         /// <summary>
         /// Обработка события нажатия кнопки закрытия Дока
@@ -1261,15 +1213,7 @@ namespace FoxDock
         private void StabilizeIcons(bool opacityOnly = false)
         {
             //Комбинируем пользовательские значки с виджетами
-            List<DockIcon> combined = new List<DockIcon>();
-            foreach (DockIcon di in MainPanel.Children)
-            {
-                combined.Add(di);
-            }
-            foreach (DockIcon di in AIcons.Children)
-            {
-                combined.Add(di);
-            }
+            List<DockIcon> combined = GetCombined(MainPanel.Children, AIcons.Children);
 
             //Проходимся по всем значкам из комбинированных
             foreach (DockIcon img_cur in combined)
@@ -1278,7 +1222,7 @@ namespace FoxDock
                 if (img_cur != null)
                 {
                     //Анимируем его в нормальное состояние и размер
-                    img_cur.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(img_cur.Opacity, 1, 0.2));
+                    img_cur.BeginAnimation(DockIcon.OpacityProperty, Animations.SingleAnimation(img_cur.Opacity, 1, 0.2));
                     if (opacityOnly) return;
                     DoubleAnimation doubleAnimation = new DoubleAnimation
                     {
@@ -1292,7 +1236,7 @@ namespace FoxDock
                         tooltip.Hide();
                         panelIconsAnimating = false;
                     };
-                    tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.OpacityAnimation(1, 0, .2));
+                    tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(1, 0, .2));
                     img_cur.BeginAnimation(DockIcon.SizeProperty, doubleAnimation);
                 }
             }
@@ -1382,7 +1326,7 @@ namespace FoxDock
             if (dialog != null)
             {
                 //Делаем значок полупрозрачным
-                image.BeginAnimation(StackPanel.OpacityProperty, Animations.OpacityAnimation(image.Opacity, 0.2, 0.3));
+                image.BeginAnimation(StackPanel.OpacityProperty, Animations.SingleAnimation(image.Opacity, 0.2, 0.3));
 
                 //Для безопасности выполняем код в конструкции try, catch
                 try
@@ -1427,7 +1371,7 @@ namespace FoxDock
                             else //Если пользователь отказался
                             {
                                 //Делаем всё как было
-                                image.BeginAnimation(StackPanel.OpacityProperty, Animations.OpacityAnimation(image.Opacity, 1, 0.3));
+                                image.BeginAnimation(StackPanel.OpacityProperty, Animations.SingleAnimation(image.Opacity, 1, 0.3));
                             }
                             isDown = false; //Отменяем нажатие
                         }
@@ -1574,7 +1518,7 @@ namespace FoxDock
 
             //Анимируем
             this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
-            this.BeginAnimation(OpacityProperty, Animations.OpacityAnimation(this.Opacity, 0));
+            this.BeginAnimation(OpacityProperty, Animations.SingleAnimation(this.Opacity, 0));
         }
         /// <summary>
         /// Логика нажатия мыши на переносной значок
@@ -1666,10 +1610,10 @@ namespace FoxDock
                         }
 
                         //Анимация исчезновения значка перетаскивания
-                        DoubleAnimation myDoubleAnimation1 = Animations.OpacityAnimation(Draggable_icon.Opacity, 0, 0.3);
+                        DoubleAnimation myDoubleAnimation1 = Animations.SingleAnimation(Draggable_icon.Opacity, 0, 0.3);
                         myDoubleAnimation1.Completed += (a, es) =>
                         {
-                            MainPanel.Children[cur_index].BeginAnimation(OpacityProperty, Animations.OpacityAnimation(MainPanel.Children[cur_index].Opacity, 1, 0.3));
+                            MainPanel.Children[cur_index].BeginAnimation(OpacityProperty, Animations.SingleAnimation(MainPanel.Children[cur_index].Opacity, 1, 0.3));
                             Draggable_icon.Source = null;
                             dr_ic = null;
                         };
@@ -1859,7 +1803,7 @@ namespace FoxDock
                         Draggable_icon_an = false;
 
                         //Вызываем анимацию перетаскиваемой иконки
-                        Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(Draggable_icon.Opacity, 1, 0.1));
+                        Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, Animations.SingleAnimation(Draggable_icon.Opacity, 1, 0.1));
                     }
                 }
 
@@ -2052,7 +1996,6 @@ namespace FoxDock
         {
             DockIcon ic = sender as DockIcon;
             List<object> items = new List<object>();
-            ic.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(ic.Opacity, 1, 0.2));
 
             shellWindows = new SHDocVw.ShellWindows();
 
@@ -2116,12 +2059,7 @@ namespace FoxDock
 
                 return 1;
             },this));
-            items.Add(ContextMenuTools.GenerateSeparator(this));
-            items.Add(ContextMenuTools.CloneMenuItem(LockDockButton, this));
-            items.Add(ContextMenuTools.GenerateSeparator(this));
-            items.Add(ContextMenuTools.CloneMenuItem(SettingsButton, this));
-            items.Add(ContextMenuTools.CloneMenuItem(RestartButton, this));
-            items.Add(ContextMenuTools.CloneMenuItem(ExitButton, this));
+            items.AddRange(ContextMenuTools.GetDefaultItems(this));
 
             ContextMenu contextMenu = ContextMenuTools.GenerateContextMenu(items, this);
 
@@ -2150,7 +2088,6 @@ namespace FoxDock
         {
             DockIcon ic = sender as DockIcon;
             List<object> items = new List<object>();
-            ic.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(ic.Opacity, 1, 0.2));
 
             if (e.ChangedButton == MouseButton.Left)
             {
@@ -2210,26 +2147,11 @@ namespace FoxDock
                 TrashIcon.Source = TrashCount() > 0 ? fullTrashIcon : emptyTrashIcon;
                 return 1;
             },this));
-            items.Add(ContextMenuTools.GenerateSeparator(this));
-            items.Add(ContextMenuTools.CloneMenuItem(LockDockButton, this));
-            items.Add(ContextMenuTools.GenerateSeparator(this));
-            items.Add(ContextMenuTools.CloneMenuItem(SettingsButton, this));
-            items.Add(ContextMenuTools.CloneMenuItem(RestartButton, this));
-            items.Add(ContextMenuTools.CloneMenuItem(ExitButton, this));
+            items.AddRange(ContextMenuTools.GetDefaultItems(this));
             ContextMenu contextMenu = ContextMenuTools.GenerateContextMenu(items, this);
             contextMenu.PlacementTarget = ic;
             contextMenu.IsOpen = true;
             e.Handled = true;
-        }
-        /// <summary>
-        /// Логика старта зажатия виджета Проводника/Корзины
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ExplorerIcon_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            DockIcon ic = sender as DockIcon;
-            ic.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(ic.Opacity, 0.5, 0.2));
         }
         /// <summary>
         /// Обработка события наведения мыши на окно
@@ -2239,9 +2161,18 @@ namespace FoxDock
         private RecentFiles recentFiles;
         private void RecentIcon_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            DockIcon ic = sender as DockIcon;
-            ic.BeginAnimation(DockIcon.OpacityProperty, Animations.OpacityAnimation(ic.Opacity, 1, 0.2));
+            if (e.ChangedButton == MouseButton.Right)
+            {
+                DockIcon ic = sender as DockIcon;
+                List<object> items = new List<object>();
+                items.AddRange(ContextMenuTools.GetDefaultItems(this));
+                ContextMenu contextMenu = ContextMenuTools.GenerateContextMenu(items, this);
+                contextMenu.PlacementTarget = ic;
+                contextMenu.IsOpen = true;
+                e.Handled = true;
 
+                return;
+            }
             if (recentFiles == null)
             {
                 recentFiles = new RecentFiles(this);

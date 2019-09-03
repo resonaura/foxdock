@@ -77,7 +77,6 @@ namespace FoxDock
             CultureInfo ci = CultureInfo.InstalledUICulture;
 
             string lang_full = ci.TwoLetterISOLanguageName;
-            Debug.WriteLine(lang_full);
             switch (lang_full)
             {
                 case "en":

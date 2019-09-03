@@ -139,6 +139,7 @@
     <Compile Include="FileTools.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="IconsMove.cs" />
+    <Compile Include="IconsWorker.cs" />
     <Compile Include="RecentFiles.xaml.cs">
       <DependentUpon>RecentFiles.xaml</DependentUpon>
     </Compile>
@@ -167,7 +168,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="BlurBG.cs" />
+    <Compile Include="Acryl.cs" />
     <Compile Include="Win32API.cs" />
     <Compile Include="Dock.xaml.cs">
       <DependentUpon>Dock.xaml</DependentUpon>

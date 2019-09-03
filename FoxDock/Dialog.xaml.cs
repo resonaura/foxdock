@@ -28,13 +28,13 @@ namespace FoxDock
             NoButton.Content = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ConfNo, locale);
             YesButton.Content = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ConfYes, locale);
 
-            DialogLabel.Content = text;
+            DialogLabel.Text = text;
             MainGrid.Opacity = 0;
             void handler(object s, RoutedEventArgs e)
             {
                 if (!Dock.cache.disableBlur)
                 {
-                    NativeMethods.EnableBlur(this);
+                    Acryl.EnableBlur(this);
                 }
 
                 DoubleAnimation opacityAnimation = new DoubleAnimation

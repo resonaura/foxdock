@@ -173,5 +173,19 @@ namespace FoxDock
             //Задаём текущий значок как контекстный
             dock.context_icon = img;
         }
+
+        public static List<object> GetDefaultItems(Dock dock)
+        {
+            List<object> items = new List<object>
+            {
+                GenerateSeparator(dock),
+                CloneMenuItem(dock.LockDockButton, dock),
+                GenerateSeparator(dock),
+                CloneMenuItem(dock.SettingsButton, dock),
+                CloneMenuItem(dock.RestartButton, dock),
+                CloneMenuItem(dock.ExitButton, dock)
+            };
+            return items;
+        }
     }
 }
