@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
@@ -168,28 +171,76 @@ namespace FoxDock
         /// </summary>
         /// <param name="path">Путь к файлу/папке</param>
         /// <returns></returns>
-        public static Icon GetSystemIcon(string path)
+        public static BitmapSource SourceFromPath(string path)
         {
             //Тут всё почти так же, как и в предыдущей функции. Мне лень описывать)
             try
             {
+                if(Directory.Exists(path))
+                {
+                    Bitmap source = Properties.Resources.folder;
+
+                    string myDocuments = GetSFPath(Environment.SpecialFolder.MyDocuments);
+                    string commonDocuments = GetSFPath(Environment.SpecialFolder.CommonDocuments);
+                    string myMusic = GetSFPath(Environment.SpecialFolder.MyMusic);
+                    string commonMusic = GetSFPath(Environment.SpecialFolder.CommonMusic);
+                    string myPictures = GetSFPath(Environment.SpecialFolder.MyPictures);
+                    string commonPictures = GetSFPath(Environment.SpecialFolder.CommonPictures);
+                    string myVideos = GetSFPath(Environment.SpecialFolder.MyVideos);
+                    string commonVideos = GetSFPath(Environment.SpecialFolder.CommonVideos);
+
+                    if (path == myDocuments || path == commonDocuments) source = Properties.Resources.documents;
+                    if (path == myMusic || path == commonMusic) source = Properties.Resources.music;
+                    if (path == myPictures || path == commonPictures) source = Properties.Resources.images;
+                    if (path == myVideos || path == commonVideos) source = Properties.Resources.videos;
+
+                    return GetSourceFromBitmap(source);
+                }
+                if(File.Exists(path))
+                {
+                    string mimeType = MimeMapping.GetMimeMapping(path);
+                    if(mimeType != "")
+                    {
+                        string type = mimeType.Split('/')[0];
+                        switch(type)
+                        {
+                            case "image":
+                                return GetSourceFromBitmap(Properties.Resources.file_image);
+                            case "audio":
+                                return GetSourceFromBitmap(Properties.Resources.file_music);
+                            case "video":
+                                return GetSourceFromBitmap(Properties.Resources.file_video);
+                            case "application":
+                                string extension = Path.GetExtension(path).ToUpper();
+                                if (extension != ".EXE" && extension != ".LNK")
+                                {
+                                    return GetSourceFromBitmap(Properties.Resources.file_document);
+                                }
+                                break;
+
+                        }
+                    }
+
+                    
+
+                }
                 Win32API.SHFILEINFO psfi = new Win32API.SHFILEINFO();
                 int dwFileAttributes = 2048;
                 Win32API.SHGFI uFlags = Win32API.SHGFI.SHGFI_SYSICONINDEX;
                 if (Win32API.SHGetFileInfo(path, dwFileAttributes, out psfi, (uint)Marshal.SizeOf((object)psfi), uFlags) == 0)
                 {
-                    return (Icon)null;
+                    return (BitmapSource)null;
                 }
 
                 int i = psfi.iIcon;
 
-                return GetShellIcon(i);
+                return GetSourceFromIcon(GetShellIcon(i));
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
             }
-            return (Icon)null;
+            return (BitmapSource)null;
         }
 
         /// <summary>
@@ -218,6 +269,34 @@ namespace FoxDock
 
         }
 
+        public static Icon GetIconFromBitmap(Bitmap b)
+        {
+            try
+            {
+                IntPtr icH = b.GetHicon();
+                Icon ico = Icon.FromHandle(icH);
+                DestroyIcon(icH);
+                return ico;
+            }
+            catch(Exception e)
+            {
+                Debug.WriteLine(e.ToString());
+                return (Icon)null;
+            }
+            
+            
+        }
+        public static BitmapSource GetSourceFromBitmap(Bitmap bitmap)
+        {
+            BitmapSource result = null;
+            if (bitmap != null)
+            {
+                IntPtr hbmp = bitmap.GetHbitmap();
+                result = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                Win32API.DeleteObject(hbmp);
+            }
+            return result;
+        }
         /// <summary>
         /// Функция для получения BitmapSource из Icon
         /// </summary>
@@ -228,11 +307,23 @@ namespace FoxDock
             BitmapSource result = null;
             if (icon != null)
             {
-                IntPtr hbmp = icon.ToBitmap().GetHbitmap();
-                result = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-                Win32API.DeleteObject(hbmp);
+                result = GetSourceFromBitmap(Optimize(icon.ToBitmap()));
             }
             return result;
+        }
+       private static Bitmap ResizeBitmap(Bitmap bmp, int width, int height)
+        {
+            Bitmap result = new Bitmap(width, height);
+            using (Graphics g = Graphics.FromImage(result))
+            {
+                g.DrawImage(bmp, 0, 0, width, height);
+            }
+
+            return result;
+        }
+        public static Bitmap Optimize(Bitmap bmp)
+        {
+            return ResizeBitmap(bmp, 128, 128);
         }
     }
 }

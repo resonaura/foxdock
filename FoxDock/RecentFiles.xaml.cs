@@ -42,8 +42,8 @@ namespace FoxDock
             Image image = new Image
             {
                 Source = source,
-                Height = 64,
-                Width = 64
+                Height = 56,
+                Width = 56
             };
             RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality); 
             image.SetValue(Grid.ColumnProperty, 0);
@@ -112,16 +112,16 @@ namespace FoxDock
 
             grid.RenderTransform = transformGroup;
             grid.RenderTransformOrigin = new Point(1, 1);
-            grid.Margin = new Thickness(5);
+            grid.Margin = new Thickness(2);
             grid.Background = new SolidColorBrush(Color.FromArgb(1, 255, 255, 255));
 
             grid.MouseDown += (x, y) =>
             {
-                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(.8, .4, 0.3));
+                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(.8, .4, 0.1));
             };
             grid.MouseUp += (x, y) =>
             {
-                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(.4, .8, 0.3));
+                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(.4, .8, 0.1));
                 Process.Start(path);
                 window.RecentIcon.Highlight = false;
                 CloseApp();
@@ -130,15 +130,15 @@ namespace FoxDock
             {
                 foreach(Grid g in container.Children)
                 {
-                    g.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(g.Opacity, .5, .3));
+                    g.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(g.Opacity, .5, .1));
                 }
-                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation((x as Grid).Opacity, 1, 0.3));
+                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation((x as Grid).Opacity, 1, 0.2));
             };
             this.MouseLeave += (x, y) =>
             {
                 foreach (Grid g in container.Children)
                 {
-                    g.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(g.Opacity, 1, 0.3));
+                    g.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(g.Opacity, 1, 0.1));
                 }
             };
             container.Children.Insert(0, grid);
@@ -241,7 +241,7 @@ namespace FoxDock
                             shortfilename = fileInfo.FullName;
                         }
 
-                        AddNew(shortfilename, IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(truepath)), truepath);
+                        AddNew(shortfilename, IconsWorker.SourceFromPath(truepath), truepath);
                     } else
                     {
                         x--;
@@ -251,8 +251,7 @@ namespace FoxDock
                 
                 x++;
             }
-            string epath = Environment.GetEnvironmentVariable("windir") + "\\explorer.exe";
-            AddNew(AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenInExplorer, Dock.locale), IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(epath)), "explorer");
+            AddNew(AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenInExplorer, Dock.locale), IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.explorer)), "explorer");
 
             Loaded += (a, b) =>
             {
@@ -261,7 +260,7 @@ namespace FoxDock
                 {
                     From = 30,
                     To = 0,
-                    Duration = TimeSpan.FromMilliseconds(500),
+                    Duration = TimeSpan.FromMilliseconds(200),
                     EasingFunction = new QuarticEase()
                 };
                 offsetTransform.BeginAnimation(TranslateTransform.YProperty, anim);

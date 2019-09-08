@@ -43,8 +43,11 @@ namespace FoxDock
             ClearRecycleBin,
             ConfAppClose,
             ConfRemove,
+            ConfRename,
             ConfNo,
             ConfYes,
+            ConfCancel,
+            ConfSave,
             SettingsHomeTab,
             SettingsPerfomanceTab,
             SettingsCustomizeTab,
@@ -63,7 +66,8 @@ namespace FoxDock
             DockSettingsSmartDisableLabel,
             Tooltip,
             RecentFiles,
-            OpenInExplorer
+            OpenInExplorer,
+            RenameIcon
         }
 
         //Основные функции
@@ -119,8 +123,11 @@ namespace FoxDock
             [Dialog.ClearRecycleBin] = "Clear Recycle Bin",
             [Dialog.ConfAppClose] = "Are you sure you want to close ",
             [Dialog.ConfRemove] = "Are you sure you want to remove this item from Dock?",
+            [Dialog.ConfRename] = "Rename icon:",
             [Dialog.ConfNo] = "No",
             [Dialog.ConfYes] = "Yes",
+            [Dialog.ConfCancel] = "Cancel",
+            [Dialog.ConfSave] = "Save",
             [Dialog.SettingsHomeTab] = "Home",
             [Dialog.SettingsPerfomanceTab] = "Perfomance",
             [Dialog.SettingsCustomizeTab] = "Customize",
@@ -139,7 +146,8 @@ namespace FoxDock
             [Dialog.DockSettingsSmartDisableLabel] = "Smart disable background tasks:",
             [Dialog.Tooltip] = "Tooltip",
             [Dialog.RecentFiles] = "Recent items",
-            [Dialog.OpenInExplorer] = "Open in Explorer"
+            [Dialog.OpenInExplorer] = "Open in Explorer",
+            [Dialog.RenameIcon] = "Rename icon"
         };
         private static readonly Dictionary<Dialog, string> RU_DICT = new Dictionary<Dialog, string>()
         {
@@ -160,8 +168,11 @@ namespace FoxDock
             [Dialog.ClearRecycleBin] = "Очистить Корзину",
             [Dialog.ConfAppClose] = "Вы действительно хотите закрыть ",
             [Dialog.ConfRemove] = "Вы уверены, что хотите удалить этот элемент из Док-бара?",
+            [Dialog.ConfRename] = "Переименовать значок:",
             [Dialog.ConfNo] = "Нет",
             [Dialog.ConfYes] = "Да",
+            [Dialog.ConfCancel] = "Отменить",
+            [Dialog.ConfSave] = "Сохранить",
             [Dialog.SettingsHomeTab] = "Главная",
             [Dialog.SettingsPerfomanceTab] = "Производительность",
             [Dialog.SettingsCustomizeTab] = "Персонализация",
@@ -180,7 +191,8 @@ namespace FoxDock
             [Dialog.DockSettingsSmartDisableLabel] = "Умное отключение фоновых задач:",
             [Dialog.Tooltip] = "Подсказка",
             [Dialog.RecentFiles] = "Недавние документы",
-            [Dialog.OpenInExplorer] = "Открыть в Проводнике"
+            [Dialog.OpenInExplorer] = "Открыть в Проводнике",
+            [Dialog.RenameIcon] = "Переименовать значок"
         };
         private static readonly Dictionary<Dialog, string> UA_DICT = new Dictionary<Dialog, string>()
         {
@@ -201,8 +213,11 @@ namespace FoxDock
             [Dialog.ClearRecycleBin] = "Очистити Кошик",
             [Dialog.ConfAppClose] = "Ви дійсно хочете закрити ",
             [Dialog.ConfRemove] = "Ви впевнені, що хочете видалити цей елемент з Док-бару?",
+            [Dialog.ConfRename] = "Перейменувати значок:",
             [Dialog.ConfNo] = "Ні",
             [Dialog.ConfYes] = "Так",
+            [Dialog.ConfCancel] = "Відмінити",
+            [Dialog.ConfSave] = "Зберегти",
             [Dialog.SettingsHomeTab] = "Головна",
             [Dialog.SettingsPerfomanceTab] = "Продуктивність",
             [Dialog.SettingsCustomizeTab] = "Персоналізація",
@@ -221,7 +236,8 @@ namespace FoxDock
             [Dialog.DockSettingsSmartDisableLabel] = "Розумне відключення фонових завдань:",
             [Dialog.Tooltip] = "Підсказка",
             [Dialog.RecentFiles] = "Недавні документи",
-            [Dialog.OpenInExplorer] = "Відкрити у Провіднику"
+            [Dialog.OpenInExplorer] = "Відкрити у Провіднику",
+            [Dialog.RenameIcon] = "Перейменувати значок"
         };
 
         //Комбинированный словарь

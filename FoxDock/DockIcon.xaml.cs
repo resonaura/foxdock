@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,6 +28,7 @@ namespace FoxDock
         public static readonly DependencyProperty SizeProperty = DependencyProperty.Register("Size", typeof(double), typeof(DockIcon));
         public static readonly DependencyProperty LabelProperty = DependencyProperty.Register("Label", typeof(string), typeof(DockIcon));
         public static readonly DependencyProperty HighlightColorProperty = DependencyProperty.Register("HighlightColor", typeof(string), typeof(DockIcon));
+        public static readonly DependencyProperty NotifyCountProperty = DependencyProperty.Register("NotifyCount", typeof(string), typeof(DockIcon));
 
         public static readonly RoutedEvent ClickEvent = EventManager.RegisterRoutedEvent("Click", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(DockIcon));
 
@@ -47,7 +50,22 @@ namespace FoxDock
         }
 
         
-
+        public string NotifyCount
+        {
+            get { return (string)GetValue(NotifyCountProperty); }
+            set
+            {
+                if (value != "0" && NotifyCounter.Opacity == 0)
+                {
+                    NotifyCounter.BeginAnimation(OpacityProperty, Animations.SingleAnimation(NotifyCounter.Opacity, 1, .3));
+                } else if(value == "0" && NotifyCounter.Opacity == 1)
+                {
+                    NotifyCounter.BeginAnimation(OpacityProperty, Animations.SingleAnimation(NotifyCounter.Opacity, 0, .3));
+                }
+                NotifyLabel.Content = value;
+                SetValue(NotifyCountProperty, value);
+            }
+        }
         public BitmapSource Source
         {
             get { return (BitmapSource)GetValue(SourceProperty); }

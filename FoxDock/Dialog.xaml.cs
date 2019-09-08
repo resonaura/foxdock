@@ -21,12 +21,25 @@ namespace FoxDock
     public partial class Dialog : Window
     {
         public static AppLanguage.Locale locale = AppLanguage.GetSystemLocale();
-        public Dialog(string text)
+        public Dialog(string text, bool isRenameWindow = false, string oldName = "")
         {
             InitializeComponent();
 
-            NoButton.Content = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ConfNo, locale);
-            YesButton.Content = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ConfYes, locale);
+            if(!isRenameWindow)
+            {
+                NoButton.Content = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ConfNo, locale);
+                YesButton.Content = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ConfYes, locale);
+                RenameBox.Visibility = Visibility.Collapsed;
+            } else
+            {
+                NoButton.Content = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ConfCancel, locale);
+                YesButton.Content = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ConfSave, locale);
+                RenameBox.Visibility = Visibility.Visible;
+                RenameBox.Text = oldName;
+                DialogLabel.Padding = new Thickness(10);
+                //DialogPanel.Height = DialogPanel.Height + 30;
+            }
+            
 
             DialogLabel.Text = text;
             MainGrid.Opacity = 0;

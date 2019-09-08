@@ -7,6 +7,8 @@ using Microsoft.Win32;
 using Shell32;
 using System.IO;
 using System.Drawing.Imaging;
+using static System.Environment;
+using System.Text;
 
 namespace FoxDock
 {
@@ -50,6 +52,7 @@ namespace FoxDock
 
         [DllImport("shell32.dll", EntryPoint = "#727")]
         public static extern int SHGetImageList(int iImageList, ref Guid riid, out Win32API.IImageList ppv);
+
 
         [DllImport("netapi32.dll")]
         public static extern int NetServerEnum([MarshalAs(UnmanagedType.LPWStr)] string servername, int level, out IntPtr bufptr, int prefmaxlen, ref int entriesread, ref int totalentries, Win32API.SV_TYPE servertype, [MarshalAs(UnmanagedType.LPWStr)] string domain, IntPtr resume_handle);
@@ -95,6 +98,20 @@ namespace FoxDock
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool GetPerformanceInfo(out Win32API.PERFORMANCE_INFORMATION pPerformanceInformation, [In] int cb);
 
+        [DllImport("shfolder.dll", CharSet = CharSet.Auto)]
+        private static extern int SHGetFolderPath(IntPtr hwndOwner, int nFolder, IntPtr hToken, int dwFlags, StringBuilder lpszPath);
+
+        /// <summary> 
+        /// Get an environment folder path for Windows environment folders 
+        /// </summary> 
+        /// <returns>A string pointing to the special path</returns> 
+        /// <remarks></remarks> 
+        public static string GetSFPath(SpecialFolder folder)
+        {
+            StringBuilder lpszPath = new StringBuilder(260);
+            SHGetFolderPath(IntPtr.Zero, (int)folder, IntPtr.Zero, 0, lpszPath);
+            return lpszPath.ToString();
+        }
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct SHFILEINFO
         {
@@ -444,7 +461,42 @@ namespace FoxDock
         }
         public static bool CheckIfAppRunned(string path)
         {
-            return System.Diagnostics.Process.GetProcessesByName(FileTools.AppFromPath(path)).Length >= 1;
+            return Process.GetProcessesByName(FileTools.AppFromPath(path)).Length >= 1;
+        }
+        private static string lastTelegramNotify = "0"; 
+        public static string GetTelegramNotifyCount(string path)
+        {
+            string fullwname = Process.GetProcessesByName(FileTools.AppFromPath(path))[0].MainWindowTitle;
+            try
+            {
+                if(fullwname.Split(' ').Length > 1)
+                {
+                    string rightPart = fullwname.Split(' ')[1];
+                    if (rightPart != "" && rightPart != null)
+                    {
+                        string count = (rightPart.Split(')')[0]).Split('(')[1];
+                        if (count != "" && count != null)
+                        {
+                            lastTelegramNotify = count;
+                            return count;
+                        }
+                        else
+                        {
+                            return lastTelegramNotify;
+                        }
+                    }
+                    else
+                    {
+                        return lastTelegramNotify;
+                    }
+                }
+                return lastTelegramNotify;
+            }
+            catch (Exception)
+            {
+                Debug.WriteLine("Telegram get count error...");
+                return lastTelegramNotify;
+            }
         }
 
     }

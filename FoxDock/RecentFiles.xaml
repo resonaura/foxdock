@@ -10,7 +10,7 @@
         Background="Transparent"
         ShowInTaskbar="False"
         mc:Ignorable="d"
-        Title="RecentApps" Height="800" Width="700" Deactivated="Window_Deactivated">
+        Title="RecentApps" Height="800" Width="600" Deactivated="Window_Deactivated">
     <Window.Resources>
         <Style x:Key="CoolLabel" TargetType="{x:Type Label}">
             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
@@ -45,7 +45,7 @@
                 </Border>
             </Grid>
             
-            <StackPanel Margin="20" Name="container" VerticalAlignment="Bottom" HorizontalAlignment="Center">
+            <StackPanel Margin="10" Name="container" VerticalAlignment="Center" HorizontalAlignment="Center">
 
             </StackPanel>
         </Grid>

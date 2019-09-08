@@ -19,6 +19,8 @@ using Point = System.Windows.Point;
 using Shell32;
 using Path = System.IO.Path;
 using Color = System.Windows.Media.Color;
+using Windows.ApplicationModel;
+using Windows.Management.Deployment;
 
 namespace FoxDock
 {
@@ -62,8 +64,10 @@ namespace FoxDock
         private DockIcon dr_ic = null;
         private bool movingToTrash = false;
         private SHDocVw.ShellWindows shellWindows;
-        private readonly BitmapSource fullTrashIcon = IconsWorker.GetSourceFromIcon(IconsWorker.GetTrashIcon(true));
-        private readonly BitmapSource emptyTrashIcon = IconsWorker.GetSourceFromIcon(IconsWorker.GetTrashIcon(false));
+        //private readonly BitmapSource fullTrashIcon = IconsWorker.GetSourceFromIcon(IconsWorker.GetTrashIcon(true));
+        //private readonly BitmapSource emptyTrashIcon = IconsWorker.GetSourceFromIcon(IconsWorker.GetTrashIcon(false));
+        private readonly BitmapSource fullTrashIcon = IconsWorker.GetSourceFromBitmap(FoxDock.Properties.Resources.trashbin_full);
+        private readonly BitmapSource emptyTrashIcon = IconsWorker.GetSourceFromBitmap(FoxDock.Properties.Resources.trashbin_empty);
         private Point lastMousePosition = new Point();
         #endregion
 
@@ -106,6 +110,7 @@ namespace FoxDock
             SettingsButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettings, locale);
             LockDockButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.LockDock, locale);
             RemoveFromDockButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.RemoveFromDock, locale);
+            RenameButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.RenameIcon, locale);
             OpenNewButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenNew, locale);
 
             //Применяем локализацию для виджетов
@@ -117,8 +122,10 @@ namespace FoxDock
             try { WindowAPI.window = this; } catch { ConsoleLog("Ошибка задания основного окна для WindowAPI"); }
 
             //Получаем значки Проводника и Корзины и задаём их для соответствующих виджетов на Доке
-            ExplorerIcon.Source = IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(FileTools.GetExplorerPath()));
-            RecentIcon.Source = IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(FileTools.GetRecentsPath()));
+            //ExplorerIcon.Source = IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(FileTools.GetExplorerPath()));
+            ExplorerIcon.Source = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.explorer));
+            //RecentIcon.Source = IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(FileTools.GetRecentsPath()));
+            RecentIcon.Source = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.recent_apps));
 
             TrashIcon.Source = TrashCount() > 0 ? fullTrashIcon : emptyTrashIcon;
 
@@ -293,35 +300,14 @@ namespace FoxDock
         private void AddIconToPanel(string path)
         {
             //Создаём иконку
-            object icn = new object();
-            Icon icon = icn as Icon;
-
-            //Пробуем получить значок этого файла или папки (вообще похер)
-            try
+            BitmapSource source = IconsWorker.SourceFromPath(path);
+            if (source != null)
             {
-                icon = IconsWorker.GetSystemIcon(path); //Получаем значок
-            }
-            catch (Exception ex) //Если словили ошибку
-            {
-                icon = null; //Убиваем значок самым жестоким способом...
-                Debug.WriteLine(ex.Message + " - ошибка получения значка приложения"); //Выводим в консоль сообщение об ошибке
-            }
-
-            //Если значок ещё живой (а вдруг?)
-            if (icon != null)
-            {
-                Bitmap bitmap = icon.ToBitmap(); //Переводим его в битмап
-
                 //Создаём новый DockIcon и присваиваем ему все события
-                DockIcon dockIcon = new DockIcon();
-
-                IntPtr hbmp = bitmap.GetHbitmap();
-                BitmapSource source = Imaging.CreateBitmapSourceFromHBitmap(hbmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-                if (source != null)
+                DockIcon dockIcon = new DockIcon
                 {
-                    dockIcon.Source = source;
-                }
-                Win32API.DeleteObject(hbmp);
+                    Source = source
+                };
 
                 dockIcon.MouseDown += DockIcon_MouseDown;
                 dockIcon.MouseEnter += DockIcon_MouseEnter;
@@ -387,6 +373,20 @@ namespace FoxDock
             if (!image.Highlight)
             {
                 image.Highlight = true;
+            }
+            //Получаем путь и имя приложения
+            string current_path = cache.dock_apps_path[MainPanel.Children.IndexOf(image)];
+            string current_name = Path.GetFileNameWithoutExtension(current_path).ToLower();
+
+            if(current_name == "telegram")
+            {
+                string count_str = Win32API.GetTelegramNotifyCount(current_path);
+                int count = int.Parse(count_str);
+                if(count > 99)
+                {
+                    count_str = ".." + Convert.ToInt32(count_str.AsEnumerable().Last().ToString());
+                }
+                image.NotifyCount = count_str;
             }
 
         }
@@ -552,6 +552,12 @@ namespace FoxDock
                     try
                     {
                         int trash_count = TrashCount();
+                        string trash_count_string = trash_count.ToString();
+                        if(trash_count > 9)
+                        {
+                            trash_count_string = "9+";
+                        }
+                        TrashIcon.NotifyCount = trash_count_string;
                         if (trash_count > 0)
                         {
                             TrashIcon.Source = fullTrashIcon;
@@ -760,6 +766,8 @@ namespace FoxDock
             {
                 return; //Если не включена блокировка значков или идёт перемещение в корзину
             }
+
+            Debug.WriteLine(string.Join(", ", e.Data.GetFormats()));
 
 
             //Если на Док перетащили файлы/папки, а не какую-то иную фигню
@@ -1057,7 +1065,6 @@ namespace FoxDock
                     if (!lockSizeChange)
                     {
                         tooltip.Show();
-                        Animations.Break(tooltip.app_hint);
                         tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(0, 1, .2));
                     }
                 }
@@ -1066,6 +1073,7 @@ namespace FoxDock
                     ConsoleLog("Tooltip show error");
                 }
             }
+
             //Получаем текущий значок
             DockIcon img = sender as DockIcon;
 
@@ -1089,7 +1097,7 @@ namespace FoxDock
                 tooltip.app_hint.Content = current_label;
 
                 //Запускаем анимацию прозрачности подсказки
-                tooltip.app_hint.Opacity = 1;
+                tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(0, 1, .05));
             }
 
             //Если индекс существует
@@ -1392,6 +1400,53 @@ namespace FoxDock
 
             }
         }
+
+        private void RenameIcon(int index)
+        {
+            //Создаём диалог
+            if (dialog == null)
+            {
+                dialog = new Dialog(AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ConfRename, locale), true, cache.dock_apps[index]);
+            }
+
+            //Если диалог существует
+            if (dialog != null)
+            {
+                //Для безопасности выполняем код в конструкции try, catch
+                try
+                {
+                    dialog.Show(); //Отображаем диалог
+                    dialog.OnResult += () => //Если есть результат диалога
+                    {
+                        //Если диалог всё ещё существует
+                        if (dialog != null)
+                        {
+                            //Если пользователь сохранил изменения
+                            if (dialog.result == true)
+                            {
+                                
+                                cache.dock_apps[index] = dialog.RenameBox.Text;
+                                //Сохраняем кеш
+                                CacheOperations.StoreCache(cache);
+                            }
+                        }
+                        //Если диалог всё ещё существует
+                        if (dialog != null)
+                        {
+                            //Закрываем диалог
+                            dialog.CloseDialog();
+                        }
+                        //Убиваем диалог
+                        dialog = null;
+                    };
+                }
+                catch
+                {
+                    Debug.WriteLine("Ошибка удаления значка");
+                }
+
+            }
+        }
         /// <summary>
         /// Обработка события отмены перетаскивания на Док
         /// </summary>
@@ -1647,7 +1702,7 @@ namespace FoxDock
             }
 
             //Считаем ширину мнимой линии
-            double width = (combined.Count) * 80;
+            double width = (combined.Count) * (size + combined.First().Margin.Left + size + combined.First().Margin.Right);
             if (width < 300)
             {
                 width = 300;
@@ -1657,24 +1712,24 @@ namespace FoxDock
             double[] big_array = new double[(int)width];
 
             //Дальше немного эльфийской магии (или мне просто лень комментировать)
-            int end = 300;
-            for (int i = 0; i < end; i++)
+            int eye_size = 1000;
+            for (int i = 0; i < eye_size; i++)
             {
                 double m_val = 0;
-                if (i < end / 2)
+                if (i < eye_size / 2)
                 {
                     m_val = i;
                 }
                 else
                 {
-                    m_val = end - (i);
+                    m_val = eye_size - (i);
                 }
 
-                int index = (int)(i + width * x - end / 2);
+                int index = (int)(i + width * x + size/2 + 5 - eye_size / 2);
 
                 if (index < width && index >= 0)
                 {
-                    big_array[index] = m_val / 3;
+                    big_array[index] = m_val;
                 }
             }
             double[] single_array = new double[(int)combined.Count];
@@ -1683,7 +1738,7 @@ namespace FoxDock
             {
                 for (int i = 0; i < combined.Count; i++)
                 {
-                    int m = (int)(width / combined.Count) * (i + 1) - 20;
+                    int m = (int)(width / combined.Count) * (i + 1);
                     if (m >= big_array.Length)
                     {
                         m = big_array.Length - 1;
@@ -1697,7 +1752,7 @@ namespace FoxDock
                     single_array[i] = big_array[m];
 
                     DockIcon image = combined[i] as DockIcon;
-                    double newsize = size * (big_array[m] / 50 / 5 + 1);
+                    double newsize = size * (big_array[m] / eye_size * 0.3 + 1);
 
                     if (newsize >= fe_max_size - 1)
                     {
@@ -1893,7 +1948,7 @@ namespace FoxDock
                             {
                                 //Получаем путь приложения
                                 string current_path = cache.dock_apps_path[MainPanel.Children.IndexOf(context_icon)];
-
+                                
                                 //Узнаём запущено ли оно
                                 bool apprunned = Win32API.CheckIfAppRunned(current_path);
 
@@ -2189,6 +2244,16 @@ namespace FoxDock
                 recentFiles.Height = recentFiles.container.ActualHeight + 60;
                 recentFiles.Left = x - recentFiles.Width/2;
                 recentFiles.Top = this.Top - recentFiles.Height - 10;
+            }
+        }
+
+        private void RenameButton_Click(object sender, RoutedEventArgs e)
+        {
+            int index = MainPanel.Children.IndexOf(context_icon);
+
+            if (index != -1)
+            {
+                RenameIcon(index);
             }
         }
     }
