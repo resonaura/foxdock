@@ -64,6 +64,7 @@ namespace FoxDock
         private DockIcon dr_ic = null;
         private bool movingToTrash = false;
         private SHDocVw.ShellWindows shellWindows;
+        private bool isMouseOnTheDock = false;
         //private readonly BitmapSource fullTrashIcon = IconsWorker.GetSourceFromIcon(IconsWorker.GetTrashIcon(true));
         //private readonly BitmapSource emptyTrashIcon = IconsWorker.GetSourceFromIcon(IconsWorker.GetTrashIcon(false));
         private readonly BitmapSource fullTrashIcon = IconsWorker.GetSourceFromBitmap(FoxDock.Properties.Resources.trashbin_full);
@@ -180,6 +181,7 @@ namespace FoxDock
 
                 //Выполняем стартовую анимацию появления дока
                 double top = System.Windows.SystemParameters.PrimaryScreenHeight - this.Height - taskbar_g;
+                isMouseOnTheDock = true;
                 DoubleAnimation myDoubleAnimation = new DoubleAnimation
                 {
                     From = top + this.Height + taskbar_g,
@@ -457,6 +459,7 @@ namespace FoxDock
         /// </summary>
         public void ShowDock()
         {
+            isMouseOnTheDock = true;
             double top = System.Windows.SystemParameters.PrimaryScreenHeight - this.Height - taskbar_g;
             DoubleAnimation myDoubleAnimation = new DoubleAnimation
             {
@@ -481,12 +484,17 @@ namespace FoxDock
         {
             dockHidden = true;
             lockSizeChange = true;
+            isMouseOnTheDock = true;
             DoubleAnimation myDoubleAnimation = new DoubleAnimation
             {
                 From = this.Top,
                 To = this.Top + this.Height + taskbar_g,
                 Duration = TimeSpan.FromSeconds(0.5),
                 EasingFunction = new PowerEase(),
+            };
+            myDoubleAnimation.Completed += (x, y) =>
+            {
+                isMouseOnTheDock = false;
             };
             Timeline.SetDesiredFrameRate(myDoubleAnimation, 60);
             this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
@@ -613,12 +621,13 @@ namespace FoxDock
         /// <param name="e"></param>
         private void MainTimer_Tick(object sender, EventArgs e)
         {
-            
+
             //Если режим Topmost активен
             if (cache.enableTopmost)
             {
                 TopmostTimerLogic();
             }
+            if (isMouseOnTheDock) return;
 
             //Если режим умной блокировки активен
             if (cache.smart_disable)
@@ -1095,9 +1104,6 @@ namespace FoxDock
             {
                 //Обновляем текст в объекте подсказки
                 tooltip.app_hint.Content = current_label;
-
-                //Запускаем анимацию прозрачности подсказки
-                tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(0, 1, .05));
             }
 
             //Если индекс существует
@@ -1255,7 +1261,7 @@ namespace FoxDock
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Window_MouseLeave(object sender, MouseEventArgs e)
+        private void Dock_MouseLeave(object sender, MouseEventArgs e)
         {
             //Обозначаем то, что значки панели не анимированны
             panelIconsAnimated = false;
@@ -1263,6 +1269,8 @@ namespace FoxDock
             //Очищяем значок переноса
             Draggable_icon.Source = null;
             dr_ic = null;
+
+            isMouseOnTheDock = false;
 
             //Если нету блокировки движения значков Дока
             StabilizeIcons();
@@ -1494,6 +1502,7 @@ namespace FoxDock
         private void StartUpAnimation_Completed(object sender, EventArgs e)
         {
             startup_animation_completed = true;
+            isMouseOnTheDock = false;
         }
         /// <summary>
         /// Обработка события нажатия на кнопку Настроек
@@ -1687,7 +1696,7 @@ namespace FoxDock
         /// Локика рыбьего глаза для значков
         /// </summary>
         /// <param name="x">Смещение</param>
-        private void FishEyeForIcons(double x)
+        private void FishEyeForIcons(float x)
         {
             //Комбинируем пользовательские значки и виджеты
             List<DockIcon> combined = new List<DockIcon>();
@@ -1702,20 +1711,20 @@ namespace FoxDock
             }
 
             //Считаем ширину мнимой линии
-            double width = (combined.Count) * (size + combined.First().Margin.Left + size + combined.First().Margin.Right);
+            float width = (combined.Count) * (size + (float)combined.First().Margin.Left + size + (float)combined.First().Margin.Right);
             if (width < 300)
             {
                 width = 300;
             }
 
             //Создаём большой массив с точкой мнимой линии
-            double[] big_array = new double[(int)width];
+            float[] big_array = new float[(int)width];
 
             //Дальше немного эльфийской магии (или мне просто лень комментировать)
-            int eye_size = 1000;
+            int eye_size = 500;
             for (int i = 0; i < eye_size; i++)
             {
-                double m_val = 0;
+                float m_val = 0;
                 if (i < eye_size / 2)
                 {
                     m_val = i;
@@ -1732,7 +1741,7 @@ namespace FoxDock
                     big_array[index] = m_val;
                 }
             }
-            double[] single_array = new double[(int)combined.Count];
+            float[] single_array = new float[(int)combined.Count];
 
             if (!panelIconsAnimating)
             {
@@ -1822,13 +1831,14 @@ namespace FoxDock
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Window_MouseMove(object sender, MouseEventArgs e)
+        private void Dock_MouseMove(object sender, MouseEventArgs e)
         {
+            isMouseOnTheDock = true;
             //Получаем относительные координаты мыши и вызываем рыбьий глаз (магггииииияяяя)
-            double gl_x = e.GetPosition(DockMain).X;
-            double x = gl_x - Draggable_icon.Width / 2;
+            float gl_x = (float)e.GetPosition(DockMain).X;
+            float x = gl_x - (float)(Draggable_icon.Width / 2);
             double y = e.GetPosition(DockMain).Y - Draggable_icon.Height / 2;
-            FishEyeForIcons(gl_x / DockMain.Width);
+            FishEyeForIcons(gl_x / (float)DockMain.Width);
             
             //Если был зажат какой-либо значок
             if ((isDown || AbsIconDrag))
@@ -2255,6 +2265,11 @@ namespace FoxDock
             {
                 RenameIcon(index);
             }
+        }
+
+        private void Dock_MouseEnter(object sender, MouseEventArgs e)
+        {
+            isMouseOnTheDock = true;
         }
     }
 }
