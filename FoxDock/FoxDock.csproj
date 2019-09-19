@@ -96,9 +96,6 @@
     <Reference Include="MaterialDesignThemes.Wpf, Version=2.6.0.325, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MaterialDesignThemes.2.6.0\lib\net45\MaterialDesignThemes.Wpf.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
@@ -140,6 +137,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Animations.cs" />
+    <Compile Include="API\GDI32.cs" />
+    <Compile Include="API\Shell32.cs" />
+    <Compile Include="API\User32.cs" />
+    <Compile Include="API\WpfScreen.cs" />
     <Compile Include="BrushAnimation.cs" />
     <Compile Include="Cache.cs" />
     <Compile Include="CacheOperations.cs" />
@@ -149,7 +150,6 @@
     </Compile>
     <Compile Include="AppLanguage.cs" />
     <Compile Include="FileTools.cs" />
-    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="IconsMove.cs" />
     <Compile Include="IconsWorker.cs" />
     <Compile Include="RecentFiles.xaml.cs">
@@ -164,10 +164,7 @@
     <Compile Include="Dialog.xaml.cs">
       <DependentUpon>Dialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WindowAPI.cs" />
-    <Compile Include="WinStates.cs" />
-    <Compile Include="WorkingArea.cs" />
-    <Compile Include="WpfScreen.cs" />
+    <Compile Include="API\WindowsManager.cs" />
     <Page Include="DockIcon.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -180,8 +177,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Acryl.cs" />
-    <Compile Include="Win32API.cs" />
+    <Compile Include="API\Acryl.cs" />
+    <Compile Include="API\Win32.cs" />
     <Compile Include="Dock.xaml.cs">
       <DependentUpon>Dock.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -194,7 +191,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\Main.xaml">
+    <Page Include="Styles\RecentFilesStyles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\SettingsStyles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\DockStyles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\TooltipStyles.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -226,6 +235,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.manifest" />
+    <None Include="AppMap.dgml" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -271,26 +281,27 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="icons\explorer.png" />
-    <Resource Include="icons\recent-apps.png" />
-    <Resource Include="icons\trashbin-empty.png" />
-    <Resource Include="icons\trashbin-full.png" />
+    <Resource Include="Icons\explorer.png" />
+    <Resource Include="Icons\recent-apps.png" />
+    <Resource Include="Icons\trashbin-empty.png" />
+    <Resource Include="Icons\trashbin-full.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="icons\documents.png" />
-    <Resource Include="icons\folder.png" />
-    <Resource Include="icons\images.png" />
-    <Resource Include="icons\music.png" />
-    <Resource Include="icons\videos.png" />
+    <Resource Include="Icons\documents.png" />
+    <Resource Include="Icons\folder.png" />
+    <Resource Include="Icons\images.png" />
+    <Resource Include="Icons\music.png" />
+    <Resource Include="Icons\videos.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="icons\file_document.png" />
-    <Resource Include="icons\file_music.png" />
-    <Resource Include="icons\file_video.png" />
-    <Resource Include="icons\file_image.png" />
+    <Resource Include="Icons\file_document.png" />
+    <Resource Include="Icons\file_music.png" />
+    <Resource Include="Icons\file_video.png" />
+    <Resource Include="Icons\file_image.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="icon.ico" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

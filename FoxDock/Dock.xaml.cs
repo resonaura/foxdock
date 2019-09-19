@@ -53,18 +53,21 @@ namespace FoxDock
         private bool isDrop = false;
         private bool dockHidden = false;
         private bool apprunned = false;
-        private bool isHovered = false;
+        public bool isHovered = false;
         private bool startup_animation_completed = false;
         private bool AbsIconDrag = false;
         private bool Draggable_icon_an = true;
-        private double fe_max_size = 0;
-        private int fe_max_size_el = 0;
-        private bool panelIconsAnimated = false;
-        private bool panelIconsAnimating = false;
+        public double fe_max_size = 0;
+        public int fe_max_size_el = 0;
+        public bool panelIconsAnimated = false;
+        public bool panelIconsAnimating = false;
         private DockIcon dr_ic = null;
         private bool movingToTrash = false;
         private SHDocVw.ShellWindows shellWindows;
         private bool isMouseOnTheDock = false;
+        private int inactiveSeconds = 0;
+        private readonly List<string> short_app_names = new List<string>();
+        
         //private readonly BitmapSource fullTrashIcon = IconsWorker.GetSourceFromIcon(IconsWorker.GetTrashIcon(true));
         //private readonly BitmapSource emptyTrashIcon = IconsWorker.GetSourceFromIcon(IconsWorker.GetTrashIcon(false));
         private readonly BitmapSource fullTrashIcon = IconsWorker.GetSourceFromBitmap(FoxDock.Properties.Resources.trashbin_full);
@@ -120,7 +123,7 @@ namespace FoxDock
             RecentIcon.Label = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.RecentFiles, locale);
 
             //Для защиты от вылета используем try,catch
-            try { WindowAPI.window = this; } catch { ConsoleLog("Ошибка задания основного окна для WindowAPI"); }
+            try { API.WindowsManager.window = this; } catch { ConsoleLog("Ошибка задания основного окна для WindowAPI"); }
 
             //Получаем значки Проводника и Корзины и задаём их для соответствующих виджетов на Доке
             //ExplorerIcon.Source = IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(FileTools.GetExplorerPath()));
@@ -131,14 +134,14 @@ namespace FoxDock
             TrashIcon.Source = TrashCount() > 0 ? fullTrashIcon : emptyTrashIcon;
 
             //Получаем высоту панели задач
-            int taskbar = WindowAPI.GetTaskBarH(this);
+            int taskbar = API.WindowsManager.GetTaskBarH(this);
             taskbar_g = taskbar;
 
             //Обработчик события успешной загрузки дока
             void handler(object s, RoutedEventArgs e)
             {
                 //Получаем DPI
-                double[] dpi = WindowAPI.GetDPI(this);
+                double[] dpi = API.WindowsManager.GetDPI(this);
                 dpiY = dpi[1]; dpiX = dpi[0];
 
                 //Прячем окно подсказки
@@ -153,7 +156,7 @@ namespace FoxDock
                 //Выполняем необходимые действия в зависимости от кеша
                 if (cache.disableBlur == false)
                 {
-                    Acryl.EnableBlur(this);
+                    API.Acryl.EnableBlur(this);
                 }
 
                 if (cache.enableStarDust)
@@ -198,7 +201,7 @@ namespace FoxDock
             Loaded += handler;
 
             //Не помню, что эта фигня делает, но она вроде очень нужна
-            WindowAPI.MakeWin();
+            API.WindowsManager.MakeWin();
 
             //Адаптивный фон дока
             AutoWallUI();
@@ -213,7 +216,7 @@ namespace FoxDock
             var exists = System.Diagnostics.Process.GetProcessesByName(System.IO.Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetEntryAssembly().Location)).Count() > 1;
             if (exists)
             {
-                WindowAPI.ShowDesktop(); //Переводим пользователя на Рабочий Стол
+                API.WindowsManager.ShowDesktop(); //Переводим пользователя на Рабочий Стол
                 Close(); //Закрываем текущую копию Дока
                 tooltip.Close(); //Закрываем окно Подсказки
                 settings.Close(); //Закрываем окно настроек
@@ -228,7 +231,7 @@ namespace FoxDock
             //Добавляем значки из кеша на Док
             if (cache.dock_apps_path != null)
             {
-                foreach (string path in cache.dock_apps_path) { AddIconToPanel(path); StabilizeIcons(); UpdateDockWidth(); }
+                foreach (string path in cache.dock_apps_path) { short_app_names.Add(Path.GetFileNameWithoutExtension(path)); AddIconToPanel(path); StabilizeIcons(); UpdateDockWidth(); }
             }
             UpdateDockWidth();
 
@@ -261,7 +264,7 @@ namespace FoxDock
         {
             if (!cache.enableTopmost)
             {
-                WindowAPI.SendToBack(this); //Если не включен режим Поверх Всех Окон отправляем Док на задний план
+                API.WindowsManager.SendToBack(this); //Если не включен режим Поверх Всех Окон отправляем Док на задний план
             }
         }
         
@@ -370,7 +373,7 @@ namespace FoxDock
         /// Функция на случай того если определённая программа запущена
         /// </summary>
         /// <param name="image">Значок программы</param>
-        private void IfAppRunned(DockIcon image)
+        private void IfAppRunned(DockIcon image, string windowname = "")
         {
             if (!image.Highlight)
             {
@@ -382,7 +385,7 @@ namespace FoxDock
 
             if(current_name == "telegram")
             {
-                string count_str = Win32API.GetTelegramNotifyCount(current_path);
+                string count_str = API.Win32.GetTelegramNotifyCount(windowname);
                 int count = int.Parse(count_str);
                 if(count > 99)
                 {
@@ -418,40 +421,45 @@ namespace FoxDock
         {
             try
             {
-                int i = 0;
-                foreach (string path in cache.dock_apps_path)
+                List<Process> allProcesses = Process.GetProcesses().ToList<Process>();
+                List<int> indexes = new List<int>();
+                
+                int index = -1;
+                foreach (Process p in allProcesses)
                 {
-                    var already_runned = Win32API.CheckIfAppRunned(path);
-                    try
+                    string pname = p.ProcessName;
+                    index = short_app_names.IndexOf(pname);
+                    
+                    if (index != -1)
                     {
-                        SafeInvoke(() =>
+                        indexes.Add(index);
+                        
+                        Application.Current.Dispatcher.Invoke(() => 
                         {
-                            if (already_runned)
+                            string window_title = "";
+
+                            if(pname.ToLower() == "telegram")
                             {
-                                if (i < MainPanel.Children.Count && i >= 0)
-                                {
-                                    IfAppRunned(MainPanel.Children[i] as DockIcon);
-                                }
-                                else if (i < MainPanel.Children.Count && i >= 0)
-                                {
-                                    IfNotAppRunned(MainPanel.Children[i] as DockIcon);
-                                }
-                            } else
-                            {
-                                if (i < MainPanel.Children.Count && i >= 0)
-                                {
-                                    IfNotAppRunned(MainPanel.Children[i] as DockIcon);
-                                }
+                                window_title = p.MainWindowTitle;
                             }
+                            IfAppRunned(MainPanel.Children[index] as DockIcon, window_title);
                         });
                     }
-                    catch (Exception ex) { Debug.WriteLine(ex.Message + " beda #1"); }
-                    i++;
+                }
+                for(int i = 0; i < cache.dock_apps_path.Count; i++)
+                {
+                    if(indexes.IndexOf(i) == -1)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            IfNotAppRunned(MainPanel.Children[i] as DockIcon);
+                        });
+                    }
                 }
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                Debug.WriteLine(ex.ToString() + " beda #2");
+                Debug.WriteLine("Apps active logic error.." + ex.ToString());
             }
         }
         /// <summary>
@@ -516,7 +524,7 @@ namespace FoxDock
         {
             //Получаем положение дока по вертикале относительно экрана
             double top = System.Windows.SystemParameters.PrimaryScreenHeight - (size + size / 2.5) - taskbar_g;
-            double y = WindowAPI.GetMousePosition().Y / dpiY; //Получаем положение мыши по Y
+            double y = API.WindowsManager.GetMousePosition().Y / dpiY; //Получаем положение мыши по Y
             
             //Если курсор находится в триггер-зоне экрана
             if (y >= System.Windows.SystemParameters.PrimaryScreenHeight - 20)
@@ -531,7 +539,7 @@ namespace FoxDock
                 if (y < System.Windows.SystemParameters.PrimaryScreenHeight - (System.Windows.SystemParameters.PrimaryScreenHeight - top))
                 {
                     //Если пользователь находится на Рабочем Столе
-                    if (WindowAPI.IsOnDesktop())
+                    if (API.WindowsManager.IsOnDesktop())
                     {
                         if (dockHidden)
                         {
@@ -632,13 +640,18 @@ namespace FoxDock
             //Если режим умной блокировки активен
             if (cache.smart_disable)
             {
-                Point current_mouse_position = WindowAPI.GetMousePosition();
+                Point current_mouse_position = API.WindowsManager.GetMousePosition();
+                inactiveSeconds++;
                 if (lastMousePosition == current_mouse_position)
                 {
-                    return;
+                    if (inactiveSeconds > 10)
+                    {
+                        return;
+                    }
                 }
                 else
                 {
+                    inactiveSeconds = 0;
                     lastMousePosition = current_mouse_position;
                 }
             }
@@ -724,7 +737,7 @@ namespace FoxDock
         {
             Task.Factory.StartNew(() =>
             {
-                string theme = Win32API.GetSysTheme();
+                string theme = API.Win32.GetSysTheme();
 
                 SafeInvoke(() =>
                 {
@@ -799,8 +812,10 @@ namespace FoxDock
                             //Добавляем в кеш и на панель
                             if(File.Exists(fn))
                             {
+                                string reapath = FileTools.GetRealAppPath(fn);
                                 cache.dock_apps.Add(lname);
-                                cache.dock_apps_path.Add(FileTools.GetRealAppPath(fn));
+                                cache.dock_apps_path.Add(reapath);
+                                short_app_names.Add(Path.GetFileNameWithoutExtension(reapath));
                                 CacheOperations.StoreCache(cache);
 
                                 AddIconToPanel(fn);
@@ -880,6 +895,7 @@ namespace FoxDock
                                         };
                                         //Запускаем приложение по-новой
                                         System.Diagnostics.Process.Start(_processStartInfo);
+                                        img.Highlight = true;
                                     }
                                 }
                                 else //В противном случае
@@ -888,17 +904,17 @@ namespace FoxDock
                                     real_windows++;
 
                                     //Если окно скрыто
-                                    if (WindowAPI.IsIconic(proc.MainWindowHandle))
+                                    if (API.WindowsManager.IsIconic(proc.MainWindowHandle))
                                     {
                                         //Показываем и делаем его активным
-                                        WindowAPI.SetForegroundWindow(proc.MainWindowHandle);
-                                        WindowAPI.ShowWindowAsync(proc.MainWindowHandle, 9);
+                                        API.WindowsManager.SetForegroundWindow(proc.MainWindowHandle);
+                                        API.WindowsManager.ShowWindowAsync(proc.MainWindowHandle, 9);
 
                                     }
                                     else //Если окно открыто
                                     {
                                         //Скрываем его
-                                        WindowAPI.ShowWindowAsync(proc.MainWindowHandle, WindowAPI.SW_MINIMIZE);
+                                        API.WindowsManager.ShowWindowAsync(proc.MainWindowHandle, API.WindowsManager.SW_MINIMIZE);
 
                                     }
                                 }
@@ -1103,6 +1119,7 @@ namespace FoxDock
             if ((string)tooltip.app_hint.Content != current_label)
             {
                 //Обновляем текст в объекте подсказки
+                //tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(1, 0, 0));
                 tooltip.app_hint.Content = current_label;
             }
 
@@ -1368,6 +1385,7 @@ namespace FoxDock
                                 if (dindex < cache.dock_apps_path.Count)
                                 {
                                     cache.dock_apps_path.RemoveAt(dindex);
+                                    short_app_names.RemoveAt(dindex);
                                 }
 
                                 //Сохраняем кеш
@@ -1477,7 +1495,7 @@ namespace FoxDock
 
             //Задаём смещение и ширину окну Подсказки
             tooltip.Left = left - 30;
-            tooltip.Width = e.NewSize.Width + 60;
+            tooltip.Width = e.NewSize.Width + 300;
 
             //Считаем положение по верхнему краю для Дока
             double new_h = size + size / 2.5;
@@ -1691,141 +1709,7 @@ namespace FoxDock
             }
 
         }
-
-        /// <summary>
-        /// Локика рыбьего глаза для значков
-        /// </summary>
-        /// <param name="x">Смещение</param>
-        private void FishEyeForIcons(float x)
-        {
-            //Комбинируем пользовательские значки и виджеты
-            List<DockIcon> combined = new List<DockIcon>();
-            foreach (DockIcon di in MainPanel.Children)
-            {
-                combined.Add(di);
-            }
-
-            foreach (DockIcon di in AIcons.Children)
-            {
-                combined.Add(di);
-            }
-
-            //Считаем ширину мнимой линии
-            float width = (combined.Count) * (size + (float)combined.First().Margin.Left + size + (float)combined.First().Margin.Right);
-            if (width < 300)
-            {
-                width = 300;
-            }
-
-            //Создаём большой массив с точкой мнимой линии
-            float[] big_array = new float[(int)width];
-
-            //Дальше немного эльфийской магии (или мне просто лень комментировать)
-            int eye_size = 500;
-            for (int i = 0; i < eye_size; i++)
-            {
-                float m_val = 0;
-                if (i < eye_size / 2)
-                {
-                    m_val = i;
-                }
-                else
-                {
-                    m_val = eye_size - (i);
-                }
-
-                int index = (int)(i + width * x + size/2 + 5 - eye_size / 2);
-
-                if (index < width && index >= 0)
-                {
-                    big_array[index] = m_val;
-                }
-            }
-            float[] single_array = new float[(int)combined.Count];
-
-            if (!panelIconsAnimating)
-            {
-                for (int i = 0; i < combined.Count; i++)
-                {
-                    int m = (int)(width / combined.Count) * (i + 1);
-                    if (m >= big_array.Length)
-                    {
-                        m = big_array.Length - 1;
-                    }
-
-                    if (m < 0)
-                    {
-                        m = 0;
-                    }
-
-                    single_array[i] = big_array[m];
-
-                    DockIcon image = combined[i] as DockIcon;
-                    double newsize = size * (big_array[m] / eye_size * 0.3 + 1);
-
-                    if (newsize >= fe_max_size - 1)
-                    {
-                        fe_max_size = newsize;
-                        if (!isHovered && fe_max_size_el != i)
-                        {
-                            //Img_MouseEnterDo(combined[i]);
-                            if (i < MainPanel.Children.Count)
-                            {
-                                ContextMenuTools.SetContextIcon((DockIcon)MainPanel.Children[i], this);
-                                context_icon = MainPanel.Children[i];
-                            }
-                            fe_max_size_el = i;
-                        }
-                        else
-                        {
-                            if (!isHovered)
-                            {
-                                //Img_MouseMoveDo(combined[fe_max_size_el]);
-                                if (i < MainPanel.Children.Count)
-                                {
-                                    context_icon = MainPanel.Children[fe_max_size_el];
-                                }
-                            }
-                        }
-                    }
-
-                    if (!panelIconsAnimated)
-                    {
-                        DoubleAnimation doubleAnimation = new DoubleAnimation
-                        {
-                            From = image.Size,
-                            To = newsize,
-                            Duration = TimeSpan.FromMilliseconds(100),
-                            EasingFunction = new SineEase()
-                        };
-                        doubleAnimation.Completed += (a, e) =>
-                        {
-                            panelIconsAnimated = true;
-                            panelIconsAnimating = false;
-                        };
-                        if (image.Size != newsize)
-                        {
-                            image.BeginAnimation(DockIcon.SizeProperty, doubleAnimation);
-                        }
-                        panelIconsAnimating = true;
-                    }
-                    else
-                    {
-                        DoubleAnimation doubleAnimation = new DoubleAnimation
-                        {
-                            From = image.Size,
-                            To = newsize,
-                            Duration = TimeSpan.FromMilliseconds(0),
-                            EasingFunction = new SineEase()
-                        };
-                        if (image.Size != newsize)
-                        {
-                            image.BeginAnimation(DockIcon.SizeProperty, doubleAnimation);
-                        }
-                    }
-                }
-            }
-        }
+        
         /// <summary>
         /// Логика перемещения мыши по окну
         /// </summary>
@@ -1838,7 +1722,7 @@ namespace FoxDock
             float gl_x = (float)e.GetPosition(DockMain).X;
             float x = gl_x - (float)(Draggable_icon.Width / 2);
             double y = e.GetPosition(DockMain).Y - Draggable_icon.Height / 2;
-            FishEyeForIcons(gl_x / (float)DockMain.Width);
+            IconsWorker.FishEyeForIcons(gl_x / (float)DockMain.Width, this);
             
             //Если был зажат какой-либо значок
             if ((isDown || AbsIconDrag))
@@ -1960,7 +1844,7 @@ namespace FoxDock
                                 string current_path = cache.dock_apps_path[MainPanel.Children.IndexOf(context_icon)];
                                 
                                 //Узнаём запущено ли оно
-                                bool apprunned = Win32API.CheckIfAppRunned(current_path);
+                                bool apprunned = API.Win32.CheckIfAppRunned(current_path);
 
                                 //Если запущено
                                 if (apprunned)
@@ -1990,7 +1874,7 @@ namespace FoxDock
             //Если не включен режим Поверх Всех Окон, то отправляем Док на задний план
             if (!cache.enableTopmost)
             {
-                WindowAPI.SendToBack(this);
+                API.WindowsManager.SendToBack(this);
             }
         }
         /// <summary>
@@ -2076,14 +1960,14 @@ namespace FoxDock
                         {
 
                             IntPtr intPtr = new IntPtr(ie.HWND);
-                            if (WindowAPI.IsIconic(intPtr))
+                            if (API.WindowsManager.IsIconic(intPtr))
                             {
-                                WindowAPI.SetForegroundWindow(intPtr);
-                                WindowAPI.ShowWindowAsync(intPtr, 9);
+                                API.WindowsManager.SetForegroundWindow(intPtr);
+                                API.WindowsManager.ShowWindowAsync(intPtr, 9);
                             }
                             else
                             {
-                                WindowAPI.ShowWindowAsync(intPtr, WindowAPI.SW_MINIMIZE);
+                                API.WindowsManager.ShowWindowAsync(intPtr, API.WindowsManager.SW_MINIMIZE);
                             }
                         }
                         return;
@@ -2099,8 +1983,8 @@ namespace FoxDock
                     IntPtr intPtr = new IntPtr(ie.HWND);
                     items.Add(ContextMenuTools.GenerateMenuItem("\uE8B7", ie.LocationName, () =>
                     {
-                        WindowAPI.SetForegroundWindow(intPtr);
-                        WindowAPI.ShowWindowAsync(intPtr, 9);
+                        API.WindowsManager.SetForegroundWindow(intPtr);
+                        API.WindowsManager.ShowWindowAsync(intPtr, 9);
                         return 1;
                     }, this));
                 }
@@ -2172,14 +2056,14 @@ namespace FoxDock
                     if(lastIe != null)
                     {
                         IntPtr intPtr = new IntPtr(lastIe.HWND);
-                        if (WindowAPI.IsIconic(intPtr))
+                        if (API.WindowsManager.IsIconic(intPtr))
                         {
-                            WindowAPI.SetForegroundWindow(intPtr);
-                            WindowAPI.ShowWindowAsync(intPtr, 9);
+                            API.WindowsManager.SetForegroundWindow(intPtr);
+                            API.WindowsManager.ShowWindowAsync(intPtr, 9);
                         }
                         else
                         {
-                            WindowAPI.ShowWindowAsync(intPtr, WindowAPI.SW_MINIMIZE);
+                            API.WindowsManager.ShowWindowAsync(intPtr, API.WindowsManager.SW_MINIMIZE);
                         }
                     }
                 } else
@@ -2208,7 +2092,7 @@ namespace FoxDock
             }, this));
             items.Add(ContextMenuTools.GenerateMenuItem("\uE74D", AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ClearRecycleBin, locale), () =>
             {
-                WindowAPI.SHEmptyRecycleBin(IntPtr.Zero, null, WindowAPI.RecycleFlag.SHERB_EMPTY);
+                API.WindowsManager.SHEmptyRecycleBin(IntPtr.Zero, null, API.WindowsManager.RecycleFlag.SHERB_EMPTY);
                 TrashIcon.Source = TrashCount() > 0 ? fullTrashIcon : emptyTrashIcon;
                 return 1;
             },this));
@@ -2247,9 +2131,9 @@ namespace FoxDock
             {
                 recentFiles = new RecentFiles(this);
                 recentFiles.Show();
-                WindowAPI.SetForegroundWindow(new WindowInteropHelper(recentFiles).Handle);
+                API.WindowsManager.SetForegroundWindow(new WindowInteropHelper(recentFiles).Handle);
                 RecentIcon.Highlight = true;
-                double x = WindowAPI.GetMousePosition().X / dpiX; //Получаем положение мыши по X
+                double x = API.WindowsManager.GetMousePosition().X / dpiX; //Получаем положение мыши по X
                 recentFiles.Width = recentFiles.container.ActualWidth + 50;
                 recentFiles.Height = recentFiles.container.ActualHeight + 60;
                 recentFiles.Left = x - recentFiles.Width/2;

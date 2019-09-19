@@ -8,7 +8,7 @@
              d:DesignHeight="70" d:DesignWidth="66" MinWidth="66" MinHeight="70" Margin="0, 5, 0, 0">
     <Grid>
         <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-            <Image RenderSize="96, 96" Margin="5" Width="{Binding Size}" Height="{Binding Size}" x:Name="Icon" Source="{Binding Source}">
+            <Image RenderOptions.EdgeMode="Aliased"  RenderSize="96, 96" Margin="5" Width="{Binding Size}" Height="{Binding Size}" x:Name="Icon" Source="{Binding Source}">
                 <Image.Resources>
                     <Storyboard x:Key="MouseDownAnimation" TargetName="Icon" TargetProperty="(Image.Opacity)">
                         <DoubleAnimation To="0.5" Duration="0:0:0.25">

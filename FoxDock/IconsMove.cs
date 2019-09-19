@@ -9,16 +9,24 @@ using System.Windows.Media;
 
 namespace FoxDock
 {
+    /// <summary>
+    /// Класс для реализации перемещения иконок между собой
+    /// </summary>
     class IconsMove
     {
+        /// <summary>
+        /// Функция для проверки соприкосновения двух элементов
+        /// </summary>
+        /// <param name="el1">Элемент 1</param>
+        /// <param name="el2">Элемент 2</param>
+        /// <param name="e">Аргументы мыши</param>
+        /// <returns></returns>
         public static bool HitTest(UIElement el1, UIElement el2, MouseEventArgs e)
         {
-            //Мне лень всё это переводить
-
-            // Retrieve the coordinate of the mouse position.
+            //Получаем координаты мыши
             System.Windows.Point pt = e.GetPosition(el1);
 
-            // Perform the hit test against a given portion of the visual object tree.
+            //Проверяем соприкосновение
             HitTestResult result = VisualTreeHelper.HitTest(el2, pt);
 
             if (result != null)

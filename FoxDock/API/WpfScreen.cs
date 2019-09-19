@@ -8,7 +8,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Interop;
 
-namespace FoxDock
+namespace FoxDock.API
 {
     public class WpfScreen
     {

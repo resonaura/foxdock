@@ -386,7 +386,7 @@ namespace FoxDock
             {
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
-                    Acryl.DisableBlur(window);
+                    API.Acryl.DisableBlur(window);
                 }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             }
 
@@ -402,7 +402,7 @@ namespace FoxDock
             {
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
-                    Acryl.EnableBlur(window);
+                    API.Acryl.EnableBlur(window);
                 }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             }
 
@@ -499,7 +499,7 @@ namespace FoxDock
                 {
                     Dispatcher.BeginInvoke((Action)(() =>
                     {
-                        WindowAPI.SendToTop(window);
+                        API.WindowsManager.SendToTop(window);
                     }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
                 });
             }
@@ -515,7 +515,7 @@ namespace FoxDock
                 {
                     Dispatcher.BeginInvoke((Action)(() =>
                     {
-                        WindowAPI.SendToBack(window);
+                        API.WindowsManager.SendToBack(window);
                     }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
                 });
             }
@@ -549,54 +549,6 @@ namespace FoxDock
 
         }
 
-        private void ScaleSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (!Dock.lock_slider)
-            {
-                if (window != null)
-                {
-                    Dispatcher.BeginInvoke((Action)(() =>
-                    {
-                        window.size = (int)(Dock.defsize * e.NewValue);
-
-                        //Комбинируем основные значки с виджетами
-                        List<DockIcon> combined = new List<DockIcon>();
-                        foreach (DockIcon di in window.MainPanel.Children)
-                        {
-                            combined.Add(di);
-                        }
-                        foreach (DockIcon di in window.AIcons.Children)
-                        {
-                            combined.Add(di);
-                        }
-
-                        foreach (DockIcon img in combined)
-                        {
-                            DoubleAnimation da = new DoubleAnimation
-                            {
-                                From = img.Size,
-                                To = window.size,
-                                Duration = TimeSpan.FromMilliseconds(100),
-                                EasingFunction = new SineEase()
-                            };
-
-                            img.BeginAnimation(DockIcon.SizeProperty, da);
-                        }
-
-                        double new_h = window.size + window.size / 2.5;
-                        double new_top = System.Windows.SystemParameters.PrimaryScreenHeight - new_h;
-
-                        window.UpdateDockWidth();
-                        window.AnimateHChange(new_top, new_h);
-                    }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
-
-                    Dock.cache.scaleFactor = e.NewValue;
-                    CacheOperations.StoreCache(Dock.cache);
-                }
-
-
-            }
-        }
         private void UpdateDockBG()
         {
             Dispatcher.BeginInvoke((Action)(() =>
@@ -853,6 +805,68 @@ namespace FoxDock
         {
             Dock.cache.smart_disable = false;
             CacheOperations.StoreCache(Dock.cache);
+        }
+        private void ChangeDockSize(double dsize)
+        {
+            if (!Dock.lock_slider)
+            {
+                if (window != null)
+                {
+
+                    Slider slider = ScaleSlider;
+                    Dispatcher.BeginInvoke((Action)(() =>
+                    {
+                        window.size = (int)(Dock.defsize * dsize);
+
+                        //Комбинируем основные значки с виджетами
+                        List<DockIcon> combined = new List<DockIcon>();
+                        foreach (DockIcon di in window.MainPanel.Children)
+                        {
+                            combined.Add(di);
+                        }
+                        foreach (DockIcon di in window.AIcons.Children)
+                        {
+                            combined.Add(di);
+                        }
+
+                        foreach (DockIcon img in combined)
+                        {
+                            DoubleAnimation da = new DoubleAnimation
+                            {
+                                From = img.Size,
+                                To = window.size,
+                                Duration = TimeSpan.FromMilliseconds(100),
+                                EasingFunction = new SineEase()
+                            };
+
+                            img.BeginAnimation(DockIcon.SizeProperty, da);
+                        }
+
+                        double new_h = window.size + window.size / 2.5;
+                        double new_top = System.Windows.SystemParameters.PrimaryScreenHeight - new_h;
+
+                        window.UpdateDockWidth();
+                        window.AnimateHChange(new_top, new_h);
+                    }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+
+                    Dock.cache.scaleFactor = dsize;
+                    CacheOperations.StoreCache(Dock.cache);
+                }
+
+
+            }
+        }
+        private void ScaleSlider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            ChangeDockSize(ScaleSlider.Value);
+        }
+
+        private void ScaleSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (e.OldValue == ScaleSlider.Minimum && e.NewValue == ScaleSlider.Maximum || e.OldValue == ScaleSlider.Maximum && e.NewValue == ScaleSlider.Minimum)
+            {
+                ChangeDockSize(e.NewValue);
+            }
         }
     }
 }

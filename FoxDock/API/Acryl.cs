@@ -10,7 +10,7 @@ using System.Windows;
 using System.Windows.Interop;
 using SourceChord.FluentWPF;
 
-namespace FoxDock
+namespace FoxDock.API
 {
     internal static class Acryl
     {

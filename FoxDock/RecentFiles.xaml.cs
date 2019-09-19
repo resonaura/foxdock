@@ -53,7 +53,7 @@ namespace FoxDock
 
             Brush lfg = new SolidColorBrush();
             Brush lbg = new SolidColorBrush();
-            string theme = Win32API.GetSysTheme();
+            string theme = API.Win32.GetSysTheme();
             int hint_opacity = (int)(Dock.cache.hm_trans * 255);
 
             switch (Dock.cache.hintBackground)
@@ -117,11 +117,11 @@ namespace FoxDock
 
             grid.MouseDown += (x, y) =>
             {
-                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(.8, .4, 0.1));
+                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(.8, .4, 0.04));
             };
             grid.MouseUp += (x, y) =>
             {
-                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(.4, .8, 0.1));
+                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(.4, .8, 0.04));
                 Process.Start(path);
                 window.RecentIcon.Highlight = false;
                 CloseApp();
@@ -130,15 +130,15 @@ namespace FoxDock
             {
                 foreach(Grid g in container.Children)
                 {
-                    g.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(g.Opacity, .5, .1));
+                    g.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(g.Opacity, .5, .04));
                 }
-                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation((x as Grid).Opacity, 1, 0.2));
+                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation((x as Grid).Opacity, 1, 0.04));
             };
             this.MouseLeave += (x, y) =>
             {
                 foreach (Grid g in container.Children)
                 {
-                    g.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(g.Opacity, 1, 0.1));
+                    g.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(g.Opacity, 1, 0.2));
                 }
             };
             container.Children.Insert(0, grid);
@@ -186,7 +186,7 @@ namespace FoxDock
             double white_opacity = 0;
             double accent_opacity = 0;
 
-            string theme = Win32API.GetSysTheme();
+            string theme = API.Win32.GetSysTheme();
             switch (Dock.cache.background)
             {
                 case DockBackground.Auto:
@@ -267,7 +267,7 @@ namespace FoxDock
                 MainD.RenderTransform = offsetTransform;
                 MainD.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(0, 1));
 
-                Acryl.EnableBlur(this);
+                API.Acryl.EnableBlur(this);
             };
         }
 

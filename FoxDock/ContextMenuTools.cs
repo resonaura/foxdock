@@ -144,6 +144,7 @@ namespace FoxDock
         /// Функция задания активного значка для контекстного меню
         /// </summary>
         /// <param name="img">Значок</param>
+        
         public static void SetContextIcon(DockIcon img, Dock dock)
         {
             //Отображаем пункт контекстного меню, отвечающий за удаление значка из Дока
@@ -158,7 +159,7 @@ namespace FoxDock
             dock.CloseSomeAppButton.Header = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.CloseSomeApp, Dock.locale) + " " + current_name;
 
             //Проверяем запущено ли приложение
-            bool apprunned = Win32API.CheckIfAppRunned(current_path);
+            bool apprunned = API.Win32.CheckIfAppRunned(current_path);
 
             //В зависимости от результата делаем активной/неактивной кнопку закрытия приложения
             if (apprunned)
@@ -173,7 +174,11 @@ namespace FoxDock
             //Задаём текущий значок как контекстный
             dock.context_icon = img;
         }
-
+        /// <summary>
+        /// Функция для получения стандартных элементов контекстного меню
+        /// </summary>
+        /// <param name="dock">Док</param>
+        /// <returns></returns>
         public static List<object> GetDefaultItems(Dock dock)
         {
             List<object> items = new List<object>

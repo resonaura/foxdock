@@ -10,24 +10,19 @@ using System.Windows;
 using System.Windows.Interop;
 using Microsoft.Win32;
 
-namespace FoxDock
+namespace FoxDock.API
 {
-    class WindowAPI
+    class WindowsManager
     {
         public static Dock window = new Dock();
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll")]
-        static extern IntPtr GetTopWindow(IntPtr hWnd);
-
+        
         public static bool IsOnDesktop()
         {
             // Get all the processes.
             Process[] proc = Process.GetProcesses();
 
             // Get current window handle.
-            IntPtr cWin = GetForegroundWindow();
+            IntPtr cWin = API.User32.GetForegroundWindow();
 
             foreach (Process x in proc)
             {
@@ -255,16 +250,16 @@ namespace FoxDock
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, int wParam, StringBuilder lParam);
 
-        public static void SendToBack(Window window)
+        public static void SendToBack(System.Windows.Window window)
         {
             var hWnd = new WindowInteropHelper(window).Handle;
-            WindowAPI.SetWindowPos(hWnd, WindowAPI.HWND_BOTTOM, 0, 0, 0, 0, WindowAPI.SWP_NOSIZE | WindowAPI.SWP_NOMOVE);
+            WindowsManager.SetWindowPos(hWnd, WindowsManager.HWND_BOTTOM, 0, 0, 0, 0, WindowsManager.SWP_NOSIZE | WindowsManager.SWP_NOMOVE);
 
         }
-        public static void SendToTop(Window window)
+        public static void SendToTop(System.Windows.Window window)
         {
             var hWnd = new WindowInteropHelper(window).Handle;
-            WindowAPI.SetWindowPos(hWnd, WindowAPI.HWND_TOP, 0, 0, 0, 0, WindowAPI.SWP_NOSIZE | WindowAPI.SWP_NOMOVE);
+            WindowsManager.SetWindowPos(hWnd, WindowsManager.HWND_TOP, 0, 0, 0, 0, WindowsManager.SWP_NOSIZE | WindowsManager.SWP_NOMOVE);
 
         }
         public enum TaskBarLocation { TOP, BOTTOM, LEFT, RIGHT }
@@ -442,10 +437,10 @@ namespace FoxDock
         /// Функция получения высоты Панели Задач, если она расположена снизу
         /// </summary>
         /// <returns>Высота</returns>
-        public static int GetTaskBarH(Window w)
+        public static int GetTaskBarH(System.Windows.Window w)
         {
-            WindowAPI.TaskBarLocation location = WindowAPI.GetTaskBarLocation(); //Получаем положение Панели Задач
-            if (location == WindowAPI.TaskBarLocation.BOTTOM) //Если она снизу
+            WindowsManager.TaskBarLocation location = WindowsManager.GetTaskBarLocation(); //Получаем положение Панели Задач
+            if (location == WindowsManager.TaskBarLocation.BOTTOM) //Если она снизу
             {
                 return Application.Current.Dispatcher.Invoke(() => (int)(WpfScreen.GetScreenFrom(w).DeviceBounds.Bottom - WpfScreen.GetScreenFrom(w).WorkingArea.Bottom));  //Возвращаем высоту Панели Задач
             }
@@ -455,7 +450,7 @@ namespace FoxDock
             }
         }
 
-        public static double[] GetDPI(Window window)
+        public static double[] GetDPI(System.Windows.Window window)
         {
             PresentationSource source = PresentationSource.FromVisual(window);
             if(source != null)

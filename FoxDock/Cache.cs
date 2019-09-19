@@ -38,6 +38,9 @@ namespace FoxDock
         White,
         Accent
     }
+    /// <summary>
+    /// Класс кеша
+    /// </summary>
     public class Cache
     {
         public List<string> dock_apps = new List<string>();

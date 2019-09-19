@@ -11,10 +11,18 @@ namespace FoxDock
 {
     public static class FileTools
     {
+        /// <summary>
+        /// Функция для получения пути к проводнику
+        /// </summary>
+        /// <returns>Путь</returns>
         public static string GetExplorerPath()
         {
             return Environment.GetEnvironmentVariable("windir") + "\\explorer.exe";
         }
+        /// <summary>
+        /// Функция для получения пути к последним файлам
+        /// </summary>
+        /// <returns>Путь</returns>
         public static string GetRecentsPath()
         {
             return Environment.GetFolderPath(Environment.SpecialFolder.Recent);
@@ -121,10 +129,5 @@ namespace FoxDock
             string app_name = System.IO.Path.GetFileNameWithoutExtension(path); //Получаем файлнейм
             return app_name; //Возвращаем правильный файлнейм
         }
-        /// <summary>
-        /// Проверка того запущено ли приложение
-        /// </summary>
-        /// <param name="path">Путь</param>
-        /// <returns>Результат</returns>
     }
 }

@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         Title="FoxDock" MouseDown="Window_MouseDown" Activated="DockMain_Activated" MouseMove="Dock_MouseMove" Topmost="True" SizeChanged="Window_SizeChanged" MouseEnter="Dock_MouseEnter" MouseLeave="Dock_MouseLeave" DragEnter="Main_Drop_Enter" DragLeave="Window_DragLeave" Drop="Main_Drop" AllowDrop="True" Height="80" ShowInTaskbar="False" ResizeMode="NoResize" WindowStyle="None" AllowsTransparency="True" Background="Transparent" Icon="icon.ico" WindowStartupLocation="Manual" Top="-100" Name="DockMain">
     <Window.Resources>
-        <ResourceDictionary Source="Styles/Main.xaml" />
+        <ResourceDictionary Source="Styles/DockStyles.xaml" />
     </Window.Resources>
     <Grid HorizontalAlignment="Center">
         <Grid.ContextMenu>
