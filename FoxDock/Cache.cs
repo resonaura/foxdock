@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace FoxDock
 {
@@ -59,5 +55,6 @@ namespace FoxDock
         public IndicatorColor IndicatorColor = IndicatorColor.Auto;
         public MenuColor MenuColor = MenuColor.Auto;
         public bool smart_disable = true;
+        public string iconPackName;
     }
 }

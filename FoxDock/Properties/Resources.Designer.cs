@@ -153,9 +153,9 @@ namespace FoxDock.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap recent_apps {
+        public static System.Drawing.Bitmap recent {
             get {
-                object obj = ResourceManager.GetObject("recent_apps", resourceCulture);
+                object obj = ResourceManager.GetObject("recent", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

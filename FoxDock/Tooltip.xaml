@@ -11,6 +11,9 @@
     </Window.Resources>
     <Grid>
         <StackPanel Margin="0,0,0,0" Name="fillMe" Height="35" VerticalAlignment="Top">
+            <StackPanel.RenderTransform>
+                <TranslateTransform X="0" x:Name="TrTransform"></TranslateTransform>
+            </StackPanel.RenderTransform>
             <Label Opacity="0" MinWidth="50" Content=""  Padding="10,5,10,15" Margin="0,0,0,0" HorizontalContentAlignment="Center" HorizontalAlignment="Left" Name="app_hint" Foreground="#ddd" Style="{DynamicResource Hint}">
                 <Label.RenderTransform>
                     <TransformGroup>

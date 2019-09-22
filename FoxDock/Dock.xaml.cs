@@ -8,19 +8,14 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Animation;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Interop;
 using System.IO;
-using System.Drawing;
 using System.Diagnostics;
 using System.Windows.Threading;
 using Point = System.Windows.Point;
 using Shell32;
 using Path = System.IO.Path;
-using Color = System.Windows.Media.Color;
-using Windows.ApplicationModel;
-using Windows.Management.Deployment;
 
 namespace FoxDock
 {
@@ -33,7 +28,7 @@ namespace FoxDock
         private readonly System.Timers.Timer mainTimer = new System.Timers.Timer();
 
         //Инициализируем окна
-        public Tooltip tooltip = new Tooltip();
+        public Tooltip tooltip;
         private Settings settings;
         private Dialog dialog;
         
@@ -66,12 +61,13 @@ namespace FoxDock
         private SHDocVw.ShellWindows shellWindows;
         private bool isMouseOnTheDock = false;
         private int inactiveSeconds = 0;
-        private readonly List<string> short_app_names = new List<string>();
+        private List<string> short_app_names = new List<string>();
+        public IconPack iPack = new IconPack();
         
         //private readonly BitmapSource fullTrashIcon = IconsWorker.GetSourceFromIcon(IconsWorker.GetTrashIcon(true));
         //private readonly BitmapSource emptyTrashIcon = IconsWorker.GetSourceFromIcon(IconsWorker.GetTrashIcon(false));
-        private readonly BitmapSource fullTrashIcon = IconsWorker.GetSourceFromBitmap(FoxDock.Properties.Resources.trashbin_full);
-        private readonly BitmapSource emptyTrashIcon = IconsWorker.GetSourceFromBitmap(FoxDock.Properties.Resources.trashbin_empty);
+        public BitmapSource fullTrashIcon = IconsWorker.GetSourceFromBitmap(FoxDock.Properties.Resources.trashbin_full);
+        public BitmapSource emptyTrashIcon = IconsWorker.GetSourceFromBitmap(FoxDock.Properties.Resources.trashbin_empty);
         private Point lastMousePosition = new Point();
         #endregion
 
@@ -95,9 +91,23 @@ namespace FoxDock
             //Загружаем кеш
             cache = CacheOperations.LoadCache(cache);
 
+            IconPacks.Init();
+            API.FileAssociations.EnsureAssociationsSet();
+
+            if (cache.iconPackName != "")
+            {
+                iPack = IconPacks.GetByName(cache.iconPackName);
+            }
+            emptyTrashIcon = iPack.TrashEmpty;
+            fullTrashIcon = iPack.TrashFull;
+
             if (settings == null)
             {
-                settings = new Settings(); //Инициализируем окно настроек, если оно не инициализированно
+                settings = new Settings(this); //Инициализируем окно настроек, если оно не инициализированно
+            }
+            if(tooltip == null)
+            {
+                tooltip = new Tooltip();
             }
 
             //Выполняем логику размера значков
@@ -125,13 +135,15 @@ namespace FoxDock
             //Для защиты от вылета используем try,catch
             try { API.WindowsManager.window = this; } catch { ConsoleLog("Ошибка задания основного окна для WindowAPI"); }
 
+
+            ExplorerIcon.Source = iPack.ExplorerIcon;
             //Получаем значки Проводника и Корзины и задаём их для соответствующих виджетов на Доке
             //ExplorerIcon.Source = IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(FileTools.GetExplorerPath()));
-            ExplorerIcon.Source = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.explorer));
-            //RecentIcon.Source = IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(FileTools.GetRecentsPath()));
-            RecentIcon.Source = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.recent_apps));
 
-            TrashIcon.Source = TrashCount() > 0 ? fullTrashIcon : emptyTrashIcon;
+            //RecentIcon.Source = IconsWorker.GetSourceFromIcon(IconsWorker.GetSystemIcon(FileTools.GetRecentsPath()));
+            RecentIcon.Source = iPack.Recent;
+
+            TrashIcon.Source = API.Shell32.TrashCount() > 0 ? fullTrashIcon : emptyTrashIcon;
 
             //Получаем высоту панели задач
             int taskbar = API.WindowsManager.GetTaskBarH(this);
@@ -181,7 +193,7 @@ namespace FoxDock
 
                 //Задаём Framerate для всех анимаций
                 Timeline.DesiredFrameRateProperty.OverrideMetadata(typeof(Timeline), new FrameworkPropertyMetadata { DefaultValue = 60 });
-
+                
                 //Выполняем стартовую анимацию появления дока
                 double top = System.Windows.SystemParameters.PrimaryScreenHeight - this.Height - taskbar_g;
                 isMouseOnTheDock = true;
@@ -196,6 +208,8 @@ namespace FoxDock
                 myDoubleAnimation.Completed += StartUpAnimation_Completed;
                 this.BeginAnimation(Window.TopProperty, myDoubleAnimation);
                 this.BeginAnimation(OpacityProperty, Animations.SingleAnimation(0, 1));
+
+               
             }
 
             Loaded += handler;
@@ -305,7 +319,7 @@ namespace FoxDock
         private void AddIconToPanel(string path)
         {
             //Создаём иконку
-            BitmapSource source = IconsWorker.SourceFromPath(path);
+            BitmapSource source = IconsWorker.SourceFromPath(path, iPack);
             if (source != null)
             {
                 //Создаём новый DockIcon и присваиваем ему все события
@@ -357,7 +371,14 @@ namespace FoxDock
             var offsetX = offset.X;
 
             //Изменяем позицию и размер подсказки
-            AnimateHint(offsetX + (image.Size) / 2 - (real_hint_width / 2) + 30 + 5, 0);
+            double val = ((image.Size) / 2 - (real_hint_width / 2) + 30 + 5);
+            double mt = offsetX - tooltip.app_hint.Margin.Left;
+            if(Math.Abs(mt) < 15)
+            {
+                val += mt;
+            }
+            AnimateHint(val, 0);
+
         }
         /// <summary>
         /// Обработчик события перемещения мыши по иконке
@@ -567,7 +588,7 @@ namespace FoxDock
                 new Action(() => {
                     try
                     {
-                        int trash_count = TrashCount();
+                        int trash_count = API.Shell32.TrashCount();
                         string trash_count_string = trash_count.ToString();
                         if(trash_count > 9)
                         {
@@ -758,23 +779,6 @@ namespace FoxDock
         {
             Debug.WriteLine(cdd);
         }
-        /// <summary>
-        /// Функция для получения кол-ва элементов Корзины
-        /// </summary>
-        /// <returns></returns>
-        private static int TrashCount()
-        {
-            try
-            {
-                Shell shell = new Shell();
-                Folder recycleBin = shell.NameSpace(10);
-                return recycleBin.Items().Count;
-            }
-            catch
-            {
-                return 0;
-            }
-        }
         
         /// <summary>
         /// Функция обработки успешного перетаскивания на Док
@@ -819,6 +823,7 @@ namespace FoxDock
                                 CacheOperations.StoreCache(cache);
 
                                 AddIconToPanel(fn);
+                                IconsWorker.UpdateDockIcons(this);
                             }
                             
                         }
@@ -1071,11 +1076,12 @@ namespace FoxDock
         /// <param name="left_pos">Позиция по левому краю</param>
         /// <param name="top_pos">Позиция по верху</param>
         /// 
-        private void AnimateHint(double left_pos, double top_pos)
+        private void AnimateHint(double left_pos, double top_pos, bool smooth = false)
         {
-            tooltip.app_hint.Margin = new Thickness(left_pos, top_pos, 0, 0);
+            tooltip.TrTransform.X = left_pos;
         }
 
+        private bool lockHintMove = false;
         /// <summary>
         /// Логика обработки события наведения на значок
         /// </summary>
@@ -1147,9 +1153,21 @@ namespace FoxDock
             var offsetX = offset.X;
 
             //Получаем смещение по левому краю для подсказки
-            double left = offsetX + (img.Size) / 2 - (real_hint_width / 2) + 30 + 5;
+            double left = offsetX;
 
-            AnimateHint(left, 0);
+            lockHintMove = true;
+            ThicknessAnimation thicknessAnimation = new ThicknessAnimation
+            {
+                From = tooltip.app_hint.Margin,
+                To = new Thickness(left, 0, 0, 0),
+                Duration = TimeSpan.FromMilliseconds(150),
+                EasingFunction = new QuarticEase { EasingMode = EasingMode.EaseOut }
+            };
+            thicknessAnimation.Completed += (x, t) =>
+            {
+                lockHintMove = false;
+            };
+            tooltip.app_hint.BeginAnimation(MarginProperty, thicknessAnimation);
         }
         /// <summary>
         /// Обработка события наведения на значок
@@ -1535,15 +1553,13 @@ namespace FoxDock
                 //Отображаем окно настроек
                 settings.Show();
                 settings.Activate();
-                settings.window = this;
             }
             catch //Если его нету
             {
                 //Создаём новый экземпляр и отображаем
-                settings = new Settings();
+                settings = new Settings(this);
                 settings.Show();
                 settings.Activate();
-                settings.window = this;
             }
         }
         /// <summary>
@@ -1673,7 +1689,7 @@ namespace FoxDock
                         //Перетаскиваем строки в кеше
                         cache.dock_apps = IconsMove.MoveString(down_index, cur_index, cache.dock_apps);
                         cache.dock_apps_path = IconsMove.MoveString(down_index, cur_index, cache.dock_apps_path);
-
+                        short_app_names = IconsMove.MoveString(down_index, cur_index, short_app_names);
                         //Сохраняем кеш
                         CacheOperations.StoreCache(cache);
 
@@ -1922,7 +1938,7 @@ namespace FoxDock
                         Folder RecyclingBin = shell.NameSpace(10);
                         RecyclingBin.MoveHere(fn);
 
-                        TrashIcon.Source = TrashCount() > 0 ? fullTrashIcon : emptyTrashIcon;
+                        TrashIcon.Source = API.Shell32.TrashCount() > 0 ? fullTrashIcon : emptyTrashIcon;
                     }
                     Task.Factory.StartNew(() =>
                     {
@@ -2093,7 +2109,7 @@ namespace FoxDock
             items.Add(ContextMenuTools.GenerateMenuItem("\uE74D", AppLanguage.GetDialogByLocale(AppLanguage.Dialog.ClearRecycleBin, locale), () =>
             {
                 API.WindowsManager.SHEmptyRecycleBin(IntPtr.Zero, null, API.WindowsManager.RecycleFlag.SHERB_EMPTY);
-                TrashIcon.Source = TrashCount() > 0 ? fullTrashIcon : emptyTrashIcon;
+                TrashIcon.Source = API.Shell32.TrashCount() > 0 ? fullTrashIcon : emptyTrashIcon;
                 return 1;
             },this));
             items.AddRange(ContextMenuTools.GetDefaultItems(this));

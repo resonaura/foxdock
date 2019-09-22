@@ -32,9 +32,10 @@ namespace FoxDock
 
         public static AppLanguage.Locale locale = AppLanguage.GetSystemLocale();
 
-        public Settings()
+        public Settings(Dock dock)
         {
             InitializeComponent();
+            window = dock;
 
             var theme = "0";
 
@@ -66,6 +67,42 @@ namespace FoxDock
 
             void handler(object s, RoutedEventArgs e)
             {
+                IconPacks.UpdatePacks();
+                if(Dock.cache.iconPackName == "" || (Dock.cache.iconPackName != "" && Dock.cache.iconPackName == "Clean"))
+                {
+                    DefaultIconPack.Background = new SolidColorBrush(Color.FromArgb(30, 255, 255, 255));
+                    DefaultIconPack.IsEnabled = false;
+                }
+                if (IconPacks.GetPacksList().Count > 0)
+                {
+                    IconPacksListItem ditm = DefaultIconPack;
+                    IconPacksList.Children.Clear();
+                    IconPacksList.Children.Add(ditm);
+                    foreach (IconPack ipack in IconPacks.GetPacksList())
+                    {
+                        IconPacksListItem iconPacksListItem = new IconPacksListItem
+                        {
+                            Txt = ipack.name,
+                            Author = ipack.author,
+                            Source1 = ipack.ExplorerIcon,
+                            Source2 = ipack.Recent,
+                            Source3 = ipack.TrashEmpty,
+                            Source4 = ipack.TrashFull,
+                            Foreground = DefaultIconPack.Foreground
+                        };
+                        iconPacksListItem.Click += DefaultIconPack_Click;
+                        if(Dock.cache.iconPackName != "")
+                        {
+                            if(Dock.cache.iconPackName == ipack.name)
+                            {
+                                iconPacksListItem.Background = new SolidColorBrush(Color.FromArgb(30, 255, 255, 255));
+                                iconPacksListItem.IsEnabled = false;
+                            }
+                        }
+
+                        IconPacksList.Children.Add(iconPacksListItem);
+                    }
+                }
                 Loaded -= handler;
             }
 
@@ -83,6 +120,8 @@ namespace FoxDock
             t_1_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsHomeTab, locale);
             t_2_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsPerfomanceTab, locale);
             t_3_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsCustomizeTab, locale);
+            t_4_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsIconPacksTab, locale);
+            t_5_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsAboutTab, locale);
 
             //Локализация подписей Настроек
             DockSettingsStartupLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsStartupLabel, locale);
@@ -121,6 +160,9 @@ namespace FoxDock
             Toggle_Loaded_Do(SmartDisableToggle);
             Toggle_Loaded_Do(AHToggle);
             Toggle_Loaded_Do(EnableTopmostToggle);
+
+            
+            
 
             switch (Dock.cache.background)
             {
@@ -229,10 +271,14 @@ namespace FoxDock
             HomeTabButton.IsEnabled = true;
             PerfomanceTabButton.IsEnabled = true;
             CustomizeTabButton.IsEnabled = true;
+            IconPackTabButton.IsEnabled = true;
+            AboutTabButton.IsEnabled = true;
 
             HomeTabButton.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
             PerfomanceTabButton.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
             CustomizeTabButton.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
+            IconPackTabButton.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
+            AboutTabButton.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
 
             DropShadowEffect noglow = new DropShadowEffect
             {
@@ -244,18 +290,26 @@ namespace FoxDock
             t_1_text.Effect = noglow;
             t_2_text.Effect = noglow;
             t_3_text.Effect = noglow;
+            t_4_text.Effect = noglow;
+            t_5_text.Effect = noglow;
 
             t_1_icon.Effect = noglow;
             t_2_icon.Effect = noglow;
             t_3_icon.Effect = noglow;
+            t_4_icon.Effect = noglow;
+            t_5_icon.Effect = noglow;
 
             t_1_text.Foreground = this.Foreground;
             t_2_text.Foreground = this.Foreground;
             t_3_text.Foreground = this.Foreground;
+            t_4_text.Foreground = this.Foreground;
+            t_5_text.Foreground = this.Foreground;
 
             t_1_icon.Foreground = this.Foreground;
             t_2_icon.Foreground = this.Foreground;
             t_3_icon.Foreground = this.Foreground;
+            t_4_icon.Foreground = this.Foreground;
+            t_5_icon.Foreground = this.Foreground;
 
             DropShadowEffect glow = new DropShadowEffect
             {
@@ -297,6 +351,18 @@ namespace FoxDock
                         t_3_text.Effect = glow;
                         t_3_icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
                         t_3_text.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                        break;
+                    case "IconPackTabButton":
+                        t_4_icon.Effect = glow;
+                        t_4_text.Effect = glow;
+                        t_4_icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                        t_4_text.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                        break;
+                    case "AboutTabButton":
+                        t_5_icon.Effect = glow;
+                        t_5_text.Effect = glow;
+                        t_5_icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                        t_5_text.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
                         break;
                 }
             }
@@ -867,6 +933,51 @@ namespace FoxDock
             {
                 ChangeDockSize(e.NewValue);
             }
+        }
+
+        private void IconPackTabButton_Click(object sender, RoutedEventArgs e)
+        {
+            ChangeTab(3);
+            UpdateMenuBySender(sender);
+        }
+
+        private void DefaultIconPack_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is IconPacksListItem ditem)
+            {
+                foreach (IconPacksListItem item in IconPacksList.Children)
+                {
+                    item.IsEnabled = true;
+                    item.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
+                }
+                ditem.Background = new SolidColorBrush(Color.FromArgb(30, 255, 255, 255));
+                ditem.IsEnabled = false;
+
+                string name = ditem.Txt;
+                if(name != "")
+                {
+                    Dispatcher.BeginInvoke((Action)(() =>
+                    {
+                        IconPack iconPack = IconPacks.GetByName(name);
+                        window.iPack = iconPack;
+                        window.fullTrashIcon = iconPack.TrashFull;
+                        window.emptyTrashIcon = iconPack.TrashEmpty;
+                        window.TrashIcon.Source = API.Shell32.TrashCount() > 0 ? window.fullTrashIcon : window.emptyTrashIcon;
+                        window.RecentIcon.Source = iconPack.Recent;
+                        window.ExplorerIcon.Source = iconPack.ExplorerIcon;
+
+                        IconsWorker.UpdateDockIcons(window);
+                    }));
+                    Dock.cache.iconPackName = name;
+                    CacheOperations.StoreCache(Dock.cache);
+                }
+            }
+        }
+
+        private void AboutTabButton_Click(object sender, RoutedEventArgs e)
+        {
+            ChangeTab(4);
+            UpdateMenuBySender(sender);
         }
     }
 }

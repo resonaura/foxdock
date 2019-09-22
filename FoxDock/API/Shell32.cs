@@ -170,5 +170,22 @@ namespace FoxDock.API
             [MethodImpl(MethodImplOptions.PreserveSig)]
             int GetOverlayImage(int iOverlay, ref int piIndex);
         }
+        /// <summary>
+        /// Функция для получения кол-ва элементов Корзины
+        /// </summary>
+        /// <returns></returns>
+        public static int TrashCount()
+        {
+            try
+            {
+                Shell shell = new Shell();
+                Folder recycleBin = shell.NameSpace(10);
+                return recycleBin.Items().Count;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
     }
 }

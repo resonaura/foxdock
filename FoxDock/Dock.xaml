@@ -5,7 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:fw="clr-namespace:SourceChord.FluentWPF;assembly=FluentWPF"
         xmlns:local="clr-namespace:FoxDock"
-        xmlns:controls="clr-namespace:BlurryControls.Controls;assembly=BlurryControls"
         mc:Ignorable="d"
         Title="FoxDock" MouseDown="Window_MouseDown" Activated="DockMain_Activated" MouseMove="Dock_MouseMove" Topmost="True" SizeChanged="Window_SizeChanged" MouseEnter="Dock_MouseEnter" MouseLeave="Dock_MouseLeave" DragEnter="Main_Drop_Enter" DragLeave="Window_DragLeave" Drop="Main_Drop" AllowDrop="True" Height="80" ShowInTaskbar="False" ResizeMode="NoResize" WindowStyle="None" AllowsTransparency="True" Background="Transparent" Icon="icon.ico" WindowStartupLocation="Manual" Top="-100" Name="DockMain">
     <Window.Resources>
@@ -62,17 +61,7 @@
                 </MenuItem>
             </ContextMenu>
         </Grid.ContextMenu>
-        <controls:BlurryUserControl Name="StarDust" Visibility="Hidden" Opacity=".2" BlurContainer="{Binding ElementName=DockIcons}" BlurRadius="30" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Center">
-            <controls:BlurryUserControl.OpacityMask>
-                <VisualBrush>
-                    <VisualBrush.Visual>
-                        <Border CornerRadius="5, 5, 0, 0" Background="White" Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}">
-
-                        </Border>
-                    </VisualBrush.Visual>
-                </VisualBrush>
-            </controls:BlurryUserControl.OpacityMask>
-        </controls:BlurryUserControl>
+        <StackPanel x:Name="StarDust"></StackPanel>
         <StackPanel Name="App_full_bg" Opacity="1">
             <Grid>
                 <Border CornerRadius="5, 5, 0, 0" Background="#fff" Name="WhiteOverlay" Opacity="0.0" Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>

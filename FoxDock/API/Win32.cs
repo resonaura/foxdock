@@ -9,6 +9,7 @@ using System.IO;
 using System.Drawing.Imaging;
 using static System.Environment;
 using System.Text;
+using System.Windows.Media.Imaging;
 
 namespace FoxDock.API
 {
@@ -299,5 +300,6 @@ namespace FoxDock.API
             }
         }
 
+        
     }
 }

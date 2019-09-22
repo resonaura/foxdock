@@ -145,8 +145,8 @@
   <data name="music" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\icons\music.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="recent_apps" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\icons\recent-apps.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="recent" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Icons\recent.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="trashbin_empty" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\icons\trashbin-empty.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

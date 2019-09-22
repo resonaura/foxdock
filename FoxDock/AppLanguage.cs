@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FoxDock
 {
@@ -51,6 +46,8 @@ namespace FoxDock
             SettingsHomeTab,
             SettingsPerfomanceTab,
             SettingsCustomizeTab,
+            SettingsIconPacksTab,
+            SettingsAboutTab,
             DockSettingsStartupLabel,
             DockSettingsDisableBlurLabel,
             DockSettingsEnableStarDustLabel,
@@ -131,6 +128,8 @@ namespace FoxDock
             [Dialog.SettingsHomeTab] = "Home",
             [Dialog.SettingsPerfomanceTab] = "Perfomance",
             [Dialog.SettingsCustomizeTab] = "Customize",
+            [Dialog.SettingsIconPacksTab] = "Icon Packs",
+            [Dialog.SettingsAboutTab] = "About",
             [Dialog.DockSettingsStartupLabel] = "Run FoxDock at Windows startup",
             [Dialog.DockSettingsDisableBlurLabel] = "Disable blur",
             [Dialog.DockSettingsEnableStarDustLabel] = "Enable StarDust",
@@ -176,6 +175,8 @@ namespace FoxDock
             [Dialog.SettingsHomeTab] = "Главная",
             [Dialog.SettingsPerfomanceTab] = "Производительность",
             [Dialog.SettingsCustomizeTab] = "Персонализация",
+            [Dialog.SettingsIconPacksTab] = "Наборы значков",
+            [Dialog.SettingsAboutTab] = "О приложении",
             [Dialog.DockSettingsStartupLabel] = "Запускать FoxDock при запуске Windows",
             [Dialog.DockSettingsDisableBlurLabel] = "Отключить размытие",
             [Dialog.DockSettingsEnableStarDustLabel] = "Включить StarDust",
@@ -221,6 +222,8 @@ namespace FoxDock
             [Dialog.SettingsHomeTab] = "Головна",
             [Dialog.SettingsPerfomanceTab] = "Продуктивність",
             [Dialog.SettingsCustomizeTab] = "Персоналізація",
+            [Dialog.SettingsIconPacksTab] = "Набори значків",
+            [Dialog.SettingsAboutTab] = "Про програму",
             [Dialog.DockSettingsStartupLabel] = "Запускати FoxDock під час запуску Windows",
             [Dialog.DockSettingsDisableBlurLabel] = "Вимкнути розмиття",
             [Dialog.DockSettingsEnableStarDustLabel] = "Ввімкнути StarDust",

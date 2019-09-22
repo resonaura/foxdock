@@ -6,6 +6,7 @@
         xmlns:fw="clr-namespace:SourceChord.FluentWPF;assembly=FluentWPF"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:FoxDock"
+        xmlns:properties="clr-namespace:FoxDock.Properties"
         mc:Ignorable="d"
         Title="Settings" ResizeMode="CanMinimize" fw:AcrylicWindow.NoiseOpacity="0.02" fw:AcrylicWindow.TintColor="#1a1a1a" fw:AcrylicWindow.TintOpacity=".8" fw:AcrylicWindow.Enabled="True" fw:AcrylicWindow.AcrylicWindowStyle="None"  Loaded="SettingsWindow_Loaded" Name="SettingsWindow" Height="520" Width="850" Background="Transparent">
     <Window.Resources>
@@ -56,7 +57,8 @@
                         <RowDefinition Height="50"></RowDefinition>
                         <RowDefinition Height="50"></RowDefinition>
                         <RowDefinition Height="50"></RowDefinition>
-
+                        <RowDefinition Height="50"></RowDefinition>
+                        <RowDefinition Height="50"></RowDefinition>
                         <RowDefinition Height="*"></RowDefinition>
                     </Grid.RowDefinitions>
                     <Button Background="{Binding Path=(fw:AccentColors.ImmersiveSystemAccentBrush)}" MouseEnter="MButton_MouseEnter" MouseLeave="MButton_MouseLeave" Cursor="Hand" Click="HomeTabButton_Click" Name="HomeTabButton" IsEnabled="False" Grid.Row="0" Padding="7" Style="{StaticResource ButtonAccentRevealStyle}">
@@ -83,6 +85,18 @@
                         <StackPanel Orientation="Horizontal"  HorizontalAlignment="Stretch" Width="250">
                             <TextBlock Name="t_3_icon" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe MDL2 Assets" Text="&#xE790;" FontSize="20" Height="25" Margin="10,5,0,0"/>
                             <TextBlock Name="t_3_text" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI Light" Text="Customize" FontSize="15" Margin="20,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button MouseEnter="MButton_MouseEnter" MouseLeave="MButton_MouseLeave" Background="Transparent" Cursor="Hand" Click="IconPackTabButton_Click"  Name="IconPackTabButton" Grid.Row="3" Padding="7" Style="{StaticResource ButtonAccentRevealStyle}">
+                        <StackPanel Orientation="Horizontal"  HorizontalAlignment="Stretch" Width="250">
+                            <TextBlock Name="t_4_icon" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe MDL2 Assets" Text="&#xE74C;" FontSize="20" Height="25" Margin="10,5,0,0"/>
+                            <TextBlock Name="t_4_text" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI Light" Text="Icon Packs" FontSize="15" Margin="20,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button MouseEnter="MButton_MouseEnter" MouseLeave="MButton_MouseLeave" Background="Transparent" Cursor="Hand" Click="AboutTabButton_Click"  Name="AboutTabButton" Grid.Row="4" Padding="7" Style="{StaticResource ButtonAccentRevealStyle}">
+                        <StackPanel Orientation="Horizontal"  HorizontalAlignment="Stretch" Width="250">
+                            <TextBlock Name="t_5_icon" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe MDL2 Assets" Text="&#xE946;" FontSize="20" Height="25" Margin="10,5,0,0"/>
+                            <TextBlock Name="t_5_text" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI Light" Text="About" FontSize="15" Margin="20,0,0,0"/>
                         </StackPanel>
                     </Button>
                 </Grid>
@@ -117,8 +131,8 @@
 
                             <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="0" Grid.Column="0" Foreground="{Binding Foreground, ElementName=SettingsWindow}" Name="DockSettingsDisableBlurLabel">Disable blur:</TextBlock>
                             <CheckBox Width="70" Grid.Row="0" Grid.Column="1" Cursor="Hand" Background="{Binding Foreground, ElementName=SettingsWindow}" Loaded="Toggle_Loaded" Name="DisableBlurToggle" Checked="DisableBlur_Checked" Unchecked="DisableBlur_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
-                            <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="1" Grid.Column="0" Foreground="{Binding Foreground, ElementName=SettingsWindow}" Name="DockSettingsEnableStarDustLabel">Enable StarDust:</TextBlock>
-                            <CheckBox Width="70" Grid.Row="1" Grid.Column="1" Cursor="Hand" Background="{Binding Foreground, ElementName=SettingsWindow}" Loaded="Toggle_Loaded" Name="StarDustEnableToggle" Checked="StarDustEnable_Checked" Unchecked="StarDustEnable_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
+                            <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="1" Visibility="Collapsed" Grid.Column="0" Foreground="{Binding Foreground, ElementName=SettingsWindow}" Name="DockSettingsEnableStarDustLabel">Enable StarDust:</TextBlock>
+                            <CheckBox Width="70" Grid.Row="1" Grid.Column="1" Visibility="Collapsed" Cursor="Hand" Background="{Binding Foreground, ElementName=SettingsWindow}" Loaded="Toggle_Loaded" Name="StarDustEnableToggle" Checked="StarDustEnable_Checked" Unchecked="StarDustEnable_Unchecked" Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
                             <TextBlock VerticalAlignment="Center"  Margin="5"  Grid.Row="2" Grid.Column="0" Foreground="{Binding Foreground, ElementName=SettingsWindow}" Name="DockSettingsSmartDisableLabel">Smart disable background tasks:</TextBlock>
                             <CheckBox Width="70" Grid.Row="2" Grid.Column="1" Cursor="Hand" Background="{Binding Foreground, ElementName=SettingsWindow}" Loaded="Toggle_Loaded" Name="SmartDisableToggle" Checked="SmartDisableToggle_Checked"  Unchecked="SmartDisableToggle_Unchecked"  Foreground="#fff" FontFamily="Segoe UI Light" Style="{DynamicResource CheckBoxStyle1}" />
                         </Grid>
@@ -209,6 +223,48 @@
                         </StackPanel>
 
 
+                    </TabItem>
+                    <TabItem Name="IconPacksTab">
+                        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel x:Name="IconPacksList">
+                                <local:IconPacksListItem Click="DefaultIconPack_Click" x:Name="DefaultIconPack" Txt="Clean" Author="WeRtOG" Source1="Icons/explorer.png" Source2="Icons/recent.png" Source3="Icons/trashbin-empty.png" Source4="Icons/trashbin-full.png" Foreground="{Binding Foreground, ElementName=SettingsWindow}"></local:IconPacksListItem>
+                            </StackPanel>
+                        </ScrollViewer>
+                        
+                    </TabItem>
+                    <TabItem Name="AboutTab">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <Viewbox Width="500" Height="200">
+                                <Canvas Width="2048" Height="2048">
+                                    <Path Data="M 1731.1 316.95
+Q 1438.2 24 1024 24 609.8 24 316.9 316.95 24 609.8 24 1024 24 1438.25 316.9 1731.1 609.8 2024 1024 2024 1438.2 2024 1731.1 1731.1 2024 1438.25 2024 1024 2024 609.8 1731.1 316.95 Z">
+                                        <Path.Fill>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Offset="0" Color="#66FFFFFF"></GradientStop>
+                                                <GradientStop Offset="1" Color="#19FFFFFF"></GradientStop>
+                                            </LinearGradientBrush>
+                                        </Path.Fill>
+                                    </Path>
+                                    <Path Canvas.Left="250" Canvas.Top="350" Data="M 1285.2 0
+L 1280.1 0 854.6 442.75 667.3 442.75 241.75 0 241.75 442.75 0 694.3 763.5 1313.3 1527 694.3 1285.2 442.75 1285.2 0 Z">
+                                        <Path.Fill>
+                                            <LinearGradientBrush Opacity=".4" StartPoint="0,0" EndPoint="1,0">
+                                                <GradientStop Offset="0" Color="White"></GradientStop>
+                                                <GradientStop Offset="1.2"></GradientStop>
+                                            </LinearGradientBrush>
+                                        </Path.Fill>
+                                    </Path>
+                                </Canvas>
+                            </Viewbox>
+                            <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <Label FontSize="48" Margin="-3" Height="63" Foreground="{Binding Foreground, ElementName=SettingsWindow}" FontFamily="Segoe UI">FoxDock</Label>
+                                <Label FontSize="15" FontFamily="Segoe UI" Foreground="{Binding Foreground, ElementName=SettingsWindow}" Opacity=".4">©Uk. Soft - Evolution</Label>
+                            </StackPanel>
+                        </Grid>
                     </TabItem>
                 </TabControl>
             </Grid>

@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Web;
 using System.Windows;
 using System.Windows.Interop;
@@ -187,20 +184,39 @@ namespace FoxDock
             }
             return null;
         }
-
+        public static void UpdateDockIcons(Dock dock, int index = -1)
+        {
+            if(dock.MainPanel.Children.Count > 0)
+            {
+                int i = 0;
+                foreach(DockIcon icon in dock.MainPanel.Children)
+                {
+                    if(index == -1 || (index != -1 && i == index))
+                    {
+                        if (i < Dock.cache.dock_apps_path.Count)
+                        {
+                            icon.Source.Freeze();
+                            icon.Source = SourceFromPath(Dock.cache.dock_apps_path[i], dock.iPack);
+                        }
+                    }
+                    
+                    i++;
+                }
+            }
+        }
         /// <summary>
         /// Функция получения значка по пути
         /// </summary>
         /// <param name="path">Путь к файлу/папке</param>
         /// <returns></returns>
-        public static BitmapSource SourceFromPath(string path)
+        public static BitmapSource SourceFromPath(string path, IconPack iPack)
         {
             //Тут всё почти так же, как и в предыдущей функции. Мне лень описывать)
             try
             {
                 if(Directory.Exists(path))
                 {
-                    Bitmap source = Properties.Resources.folder;
+                    BitmapSource source = iPack.Folder;
 
                     string myDocuments = API.Shell32.GetSFPath(Environment.SpecialFolder.MyDocuments);
                     string commonDocuments = API.Shell32.GetSFPath(Environment.SpecialFolder.CommonDocuments);
@@ -211,12 +227,12 @@ namespace FoxDock
                     string myVideos = API.Shell32.GetSFPath(Environment.SpecialFolder.MyVideos);
                     string commonVideos = API.Shell32.GetSFPath(Environment.SpecialFolder.CommonVideos);
 
-                    if (path == myDocuments || path == commonDocuments) source = Properties.Resources.documents;
-                    if (path == myMusic || path == commonMusic) source = Properties.Resources.music;
-                    if (path == myPictures || path == commonPictures) source = Properties.Resources.images;
-                    if (path == myVideos || path == commonVideos) source = Properties.Resources.videos;
+                    if (path == myDocuments || path == commonDocuments) source = iPack.Documents;
+                    if (path == myMusic || path == commonMusic) source = iPack.Music;
+                    if (path == myPictures || path == commonPictures) source = iPack.Images;
+                    if (path == myVideos || path == commonVideos) source = iPack.Videos;
 
-                    return GetSourceFromBitmap(source);
+                    return source;
                 }
                 if(File.Exists(path))
                 {
@@ -227,16 +243,27 @@ namespace FoxDock
                         switch(type)
                         {
                             case "image":
-                                return GetSourceFromBitmap(Properties.Resources.file_image);
+                                return iPack.FileImage;
                             case "audio":
-                                return GetSourceFromBitmap(Properties.Resources.file_music);
+                                return iPack.FileMusic;
                             case "video":
-                                return GetSourceFromBitmap(Properties.Resources.file_video);
+                                return iPack.FileVideo;
                             case "application":
                                 string extension = Path.GetExtension(path).ToUpper();
                                 if (extension != ".EXE" && extension != ".LNK")
                                 {
                                     return GetSourceFromBitmap(Properties.Resources.file_document);
+                                } else if(extension == ".EXE")
+                                {
+                                    string filename = Path.GetFileNameWithoutExtension(path).ToLower();
+
+                                    if(iPack.apps.ContainsKey(filename))
+                                    {
+                                        if(iPack.apps[filename] != null)
+                                        {
+                                            return iPack.apps[filename];
+                                        } 
+                                    }
                                 }
                                 break;
 
@@ -346,6 +373,14 @@ namespace FoxDock
         {
             return ResizeBitmap(bmp, 128, 128);
         }
+        public static BitmapSource SafeBitmapSourceFromPath(string path)
+        {
+            using (Bitmap bitmap = new Bitmap(path))
+            {
+                BitmapSource source = GetSourceFromBitmap(Optimize(bitmap));
+                return source;
+            }
+        }
         /// <summary>
         /// Функция для расчёта формулы Рыбьего Глаза
         /// </summary>
@@ -353,7 +388,7 @@ namespace FoxDock
         /// <returns>Результат</returns>
         public static float FishEye(float p)
         {
-            return -(p * (p - 2));
+            return p;
         }
         /// <summary>
         /// Локика рыбьего глаза для значков

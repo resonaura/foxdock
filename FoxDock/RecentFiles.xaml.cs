@@ -1,21 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using Path = System.IO.Path;
 
 namespace FoxDock
 {
@@ -241,7 +233,7 @@ namespace FoxDock
                             shortfilename = fileInfo.FullName;
                         }
 
-                        AddNew(shortfilename, IconsWorker.SourceFromPath(truepath), truepath);
+                        AddNew(shortfilename, IconsWorker.SourceFromPath(truepath, window.iPack), truepath);
                     } else
                     {
                         x--;
@@ -251,7 +243,7 @@ namespace FoxDock
                 
                 x++;
             }
-            AddNew(AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenInExplorer, Dock.locale), IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.explorer)), "explorer");
+            AddNew(AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenInExplorer, Dock.locale), window.iPack.ExplorerIcon, "explorer");
 
             Loaded += (a, b) =>
             {
