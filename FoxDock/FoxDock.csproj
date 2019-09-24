@@ -165,6 +165,9 @@
     <Compile Include="Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Spinner.xaml.cs">
+      <DependentUpon>Spinner.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Tooltip.xaml.cs">
       <DependentUpon>Tooltip.xaml</DependentUpon>
     </Compile>
@@ -199,6 +202,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Settings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Spinner.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

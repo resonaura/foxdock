@@ -1621,51 +1621,7 @@ namespace FoxDock
 
             double y = e.GetPosition(DockMain).Y - Draggable_icon.Height / 2;
             IconsWorker.FishEyeForIcons(gl_x / (float)DockMain.Width, this, lastCombined);
-
-            DockIcon img = lastCombined[fe_max_size_el];
-
-            if (img != null)
-            {
-                //Обновляем текст в объекте подсказки
-                //tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(1, 0, 0));
-                //Получаем текущий индекс
-                int current_index = MainPanel.Children.IndexOf(img);
-
-                string current_label;
-                if (current_index != -1) //Если индекс определён
-                {
-                    current_label = cache.dock_apps[current_index]; //Получаем текущую подсказку
-                }
-                else
-                {
-                    current_label = img.Label; //В противном случае берём подсказку из свойства объекта
-                }
-
-                if (current_label != tooltip.app_hint.Content.ToString())
-                {
-                    tooltip.app_hint.Content = current_label;
-                }
-                
-                
-                Label label = tooltip.app_hint; //Делаем особый клон текущей подсказки 
-
-                //Подстраиваем ширину клона в зависимости от содержания
-                label.Measure(new System.Windows.Size(Double.PositiveInfinity, Double.PositiveInfinity));
-                label.Arrange(new Rect(label.DesiredSize));
-
-                //Получаем ширину клона
-                double real_hint_width = label.ActualWidth;
-
-                
-                var element_Visual_Relative = img.TransformToVisual((Visual)Content);
-                System.Windows.Point offset = element_Visual_Relative.Transform(new System.Windows.Point(0, 0));
-                var offsetX = offset.X;
-                tooltip.hintTrans.X = offsetX + (img.Size) / 2 - (real_hint_width / 2) + 30 + 5;
-            }
-
-
-
-
+            
             //Если был зажат какой-либо значок
             if ((isDown || AbsIconDrag))
             {
@@ -1674,6 +1630,11 @@ namespace FoxDock
                 {
                     //Получаем зажатый значок
                     DockIcon dicon = down_icon as DockIcon;
+
+                    if(tooltip.app_hint.Opacity == 1)
+                    {
+                        tooltip.app_hint.BeginAnimation(OpacityProperty, Animations.SingleAnimation(1, 0));
+                    }
 
                     //Инициализируем перемещение
                     Draggable_icon.Source = dicon.Source;
@@ -1716,9 +1677,57 @@ namespace FoxDock
                         Draggable_icon.Source = null;
                         dr_ic = null;
                         Draggable_icon_an = true;
+                        if (tooltip.app_hint.Opacity == 0)
+                        {
+                            lastCombined = IconsWorker.GetCombined(MainPanel.Children, AIcons.Children);
+                            tooltip.app_hint.BeginAnimation(OpacityProperty, Animations.SingleAnimation(0, 1));
+                            Dock_MouseMove(sender, e);
+                        }
                     };
+                    
                     Timeline.SetDesiredFrameRate(myDoubleAnimation1, 30);
                     Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
+                    DockIcon img = lastCombined[fe_max_size_el];
+
+                    if (img != null)
+                    {
+                        //Обновляем текст в объекте подсказки
+                        //tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(1, 0, 0));
+                        //Получаем текущий индекс
+                        int current_index = MainPanel.Children.IndexOf(img);
+
+                        string current_label;
+                        if (current_index != -1) //Если индекс определён
+                        {
+                            current_label = cache.dock_apps[current_index]; //Получаем текущую подсказку
+                        }
+                        else
+                        {
+                            current_label = img.Label; //В противном случае берём подсказку из свойства объекта
+                        }
+
+                        if (current_label != tooltip.app_hint.Content.ToString())
+                        {
+                            tooltip.app_hint.Content = current_label;
+                        }
+
+
+                        Label label = tooltip.app_hint; //Делаем особый клон текущей подсказки 
+
+                        //Подстраиваем ширину клона в зависимости от содержания
+                        label.Measure(new System.Windows.Size(Double.PositiveInfinity, Double.PositiveInfinity));
+                        label.Arrange(new Rect(label.DesiredSize));
+
+                        //Получаем ширину клона
+                        double real_hint_width = label.ActualWidth;
+
+
+                        var element_Visual_Relative = img.TransformToVisual((Visual)Content);
+                        System.Windows.Point offset = element_Visual_Relative.Transform(new System.Windows.Point(0, 0));
+                        var offsetX = offset.X;
+                        tooltip.hintTrans.X = offsetX + (img.Size) / 2 - (real_hint_width / 2) + 30 + 5;
+                    }
+
                 }
             }
         }

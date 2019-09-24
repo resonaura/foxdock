@@ -225,11 +225,20 @@
 
                     </TabItem>
                     <TabItem Name="IconPacksTab">
-                        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-                            <StackPanel x:Name="IconPacksList">
-                                <local:IconPacksListItem Click="DefaultIconPack_Click" x:Name="DefaultIconPack" Txt="Clean" Author="WeRtOG" Source1="Icons/explorer.png" Source2="Icons/recent.png" Source3="Icons/trashbin-empty.png" Source4="Icons/trashbin-full.png" Foreground="{Binding Foreground, ElementName=SettingsWindow}"></local:IconPacksListItem>
-                            </StackPanel>
-                        </ScrollViewer>
+                        <Grid>
+                            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel x:Name="IconPacksList">
+                                    <local:IconPacksListItem Click="DefaultIconPack_Click" x:Name="DefaultIconPack" Txt="Clean" Author="WeRtOG" Source1="Icons/explorer.png" Source2="Icons/recent.png" Source3="Icons/trashbin-empty.png" Source4="Icons/trashbin-full.png" Foreground="{Binding Foreground, ElementName=SettingsWindow}"></local:IconPacksListItem>
+                                </StackPanel>
+                            </ScrollViewer>
+                            <Grid x:Name="IPSpinner" Opacity="0" Visibility="Hidden">
+                                <Grid.Background>
+                                    <SolidColorBrush Color="#111" Opacity=".8"></SolidColorBrush>
+                                </Grid.Background>
+                                <local:Spinner Width="48" Height="48"></local:Spinner>
+                            </Grid>
+                        </Grid>
+                        
                         
                     </TabItem>
                     <TabItem Name="AboutTab">

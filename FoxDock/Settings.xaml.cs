@@ -3,6 +3,7 @@ using SourceChord.FluentWPF;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -63,50 +64,6 @@ namespace FoxDock
                 AcrylicWindow.SetFallbackColor(this, Color.FromArgb(255, 200, 200, 200));
                 UpdateMenuBySender(HomeTabButton);
             }
-
-
-            void handler(object s, RoutedEventArgs e)
-            {
-                IconPacks.UpdatePacks();
-                if(Dock.cache.iconPackName == "" || (Dock.cache.iconPackName != "" && Dock.cache.iconPackName == "Clean"))
-                {
-                    DefaultIconPack.Background = new SolidColorBrush(Color.FromArgb(30, 255, 255, 255));
-                    DefaultIconPack.IsEnabled = false;
-                }
-                if (IconPacks.GetPacksList().Count > 0)
-                {
-                    IconPacksListItem ditm = DefaultIconPack;
-                    IconPacksList.Children.Clear();
-                    IconPacksList.Children.Add(ditm);
-                    foreach (IconPack ipack in IconPacks.GetPacksList())
-                    {
-                        IconPacksListItem iconPacksListItem = new IconPacksListItem
-                        {
-                            Txt = ipack.name,
-                            Author = ipack.author,
-                            Source1 = ipack.ExplorerIcon,
-                            Source2 = ipack.Recent,
-                            Source3 = ipack.TrashEmpty,
-                            Source4 = ipack.TrashFull,
-                            Foreground = DefaultIconPack.Foreground
-                        };
-                        iconPacksListItem.Click += DefaultIconPack_Click;
-                        if(Dock.cache.iconPackName != "")
-                        {
-                            if(Dock.cache.iconPackName == ipack.name)
-                            {
-                                iconPacksListItem.Background = new SolidColorBrush(Color.FromArgb(30, 255, 255, 255));
-                                iconPacksListItem.IsEnabled = false;
-                            }
-                        }
-
-                        IconPacksList.Children.Add(iconPacksListItem);
-                    }
-                }
-                Loaded -= handler;
-            }
-
-            Loaded += handler;
             Activated += Settings_Activated;
             
 
@@ -934,11 +891,66 @@ namespace FoxDock
                 ChangeDockSize(e.NewValue);
             }
         }
-
+        private bool IPacksUpdated = false;
         private void IconPackTabButton_Click(object sender, RoutedEventArgs e)
         {
             ChangeTab(3);
             UpdateMenuBySender(sender);
+            if (IPacksUpdated) return;
+            IPSpinner.Visibility = Visibility.Visible;
+            IPSpinner.BeginAnimation(OpacityProperty, Animations.SingleAnimation(0, 1));
+            Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(1000);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    IconPacks.UpdatePacks();
+                    if (Dock.cache.iconPackName == "" || (Dock.cache.iconPackName != "" && Dock.cache.iconPackName == "Clean"))
+                    {
+                        DefaultIconPack.Background = new SolidColorBrush(Color.FromArgb(30, 255, 255, 255));
+                        DefaultIconPack.IsEnabled = false;
+                    }
+                    if (IconPacks.GetPacksList().Count > 0)
+                    {
+
+                        IconPacksListItem ditm = DefaultIconPack;
+                        IconPacksList.Children.Clear();
+                        IconPacksList.Children.Add(ditm);
+                        foreach (IconPack ipack in IconPacks.GetPacksList())
+                        {
+                            IconPacksListItem iconPacksListItem = new IconPacksListItem
+                            {
+                                Txt = ipack.name,
+                                Author = ipack.author,
+                                Source1 = ipack.ExplorerIcon,
+                                Source2 = ipack.Recent,
+                                Source3 = ipack.TrashEmpty,
+                                Source4 = ipack.TrashFull,
+                                Foreground = DefaultIconPack.Foreground
+                            };
+                            iconPacksListItem.Click += DefaultIconPack_Click;
+                            if (Dock.cache.iconPackName != "")
+                            {
+                                if (Dock.cache.iconPackName == ipack.name)
+                                {
+                                    iconPacksListItem.Background = new SolidColorBrush(Color.FromArgb(30, 255, 255, 255));
+                                    iconPacksListItem.IsEnabled = false;
+                                }
+                            }
+
+                            IconPacksList.Children.Add(iconPacksListItem);
+                        }
+                        DoubleAnimation fadeOutSpinner = Animations.SingleAnimation(1, 0);
+                        fadeOutSpinner.Completed += (x, y) =>
+                        {
+                            IPSpinner.Visibility = Visibility.Hidden;
+                            IPacksUpdated = true;
+                        };
+                        IPSpinner.BeginAnimation(OpacityProperty, fadeOutSpinner);
+                    }
+                });
+                
+            });
         }
 
         private void DefaultIconPack_Click(object sender, RoutedEventArgs e)
