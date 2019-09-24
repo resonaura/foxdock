@@ -8,9 +8,12 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Web;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using Color = System.Drawing.Color;
 using Point = System.Drawing.Point;
 
 namespace FoxDock
@@ -121,7 +124,7 @@ namespace FoxDock
         /// <returns></returns>
         static Bitmap Process(Bitmap bitmap, Color color)
         {
-            Bitmap temp = new Bitmap(bitmap.Width, bitmap.Height, PixelFormat.Format24bppRgb);
+            Bitmap temp = new Bitmap(bitmap.Width, bitmap.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             Graphics g = Graphics.FromImage(temp);
             g.Clear(color);
             g.DrawImage(bitmap, Point.Empty);
@@ -381,72 +384,57 @@ namespace FoxDock
                 return source;
             }
         }
-        /// <summary>
-        /// Функция для расчёта формулы Рыбьего Глаза
-        /// </summary>
-        /// <param name="p">Процент</param>
-        /// <returns>Результат</returns>
-        public static float FishEye(float p)
+        //=ЕСЛИ(И(x >= -p; x <= p);((-ABS(x) + p/2) / p/2 + 0.25)*2;0)
+        private static double TriangleCalc(double i, double x, double p)
         {
-            return p;
+            
+            double rX = p - x + p + i;
+            if (rX >= -p && rX <= p)
+            {
+                return ((-Math.Abs(rX) + p / 2) / p / 2 + 0.25) * 2;
+            } else
+            {
+                return 0;
+            }
         }
         /// <summary>
         /// Локика рыбьего глаза для значков
         /// </summary>
         /// <param name="x">Смещение</param>
-        public static void FishEyeForIcons(float x, Dock dock)
+        public static void FishEyeForIcons(double x, Dock dock, List<DockIcon> combined)
         {
-            //Комбинируем пользовательские значки и виджеты
-            List<DockIcon> combined = new List<DockIcon>();
-            foreach (DockIcon di in dock.MainPanel.Children)
-            {
-                combined.Add(di);
-            }
-
-            foreach (DockIcon di in dock.AIcons.Children)
-            {
-                combined.Add(di);
-            }
-
             //Считаем ширину мнимой линии
-            float width = (combined.Count) * (dock.size + (float)combined.First().Margin.Left + dock.size + (float)combined.First().Margin.Right);
+            int width = (combined.Count) * (int)(dock.size + combined.First().Margin.Left + dock.size + combined.First().Margin.Right);
             if (width < 300)
             {
                 width = 300;
             }
 
             //Создаём большой массив с точкой мнимой линии
-            float[] big_array = new float[(int)width];
+            double[] big_array = new double[(int)width];
 
             //Дальше немного эльфийской магии (или мне просто лень комментировать)
             int eye_size = 800;
             for (int i = 0; i < eye_size; i++)
             {
-                float m_val = 0;
-                int peak = 0;
-                if (i < eye_size / 2)
-                {
-                    peak = i;
-                }
-                else
-                {
-                    peak = eye_size - i;
-                }
-                float percent = (float)peak / ((float)eye_size / 2);
-                float eye_result = FishEye(percent);
+                double m_val = 0;
+                int peak = i < eye_size / 2 ? i : eye_size - i;
+                double eye_result = peak / ((double)eye_size / 2);
                 //..Debug.WriteLine(peak);
 
                 m_val = eye_size / 2 * eye_result;
 
-                int index = (int)(i + width * x + dock.size + 5 - eye_size / 2);
+                int index = (int)(i + (width * x) + dock.size + 5 - (eye_size / 2));
 
                 if (index < width && index >= 0)
                 {
                     big_array[index] = m_val;
                 }
             }
-            float[] single_array = new float[(int)combined.Count];
+            double[] single_array = new double[combined.Count];
 
+            double max_s = 0;
+            int max_i = 0;
             if (!dock.panelIconsAnimating)
             {
                 for (int i = 0; i < combined.Count; i++)
@@ -467,30 +455,10 @@ namespace FoxDock
                     DockIcon image = combined[i] as DockIcon;
                     double newsize = dock.size * (big_array[m] / eye_size * 0.3 + 1);
 
-                    if (newsize >= dock.fe_max_size - 1)
+                    if(newsize > max_s)
                     {
-                        dock.fe_max_size = newsize;
-                        if (!dock.isHovered && dock.fe_max_size_el != i)
-                        {
-                            //Img_MouseEnterDo(combined[i]);
-                            if (i < dock.MainPanel.Children.Count)
-                            {
-                                ContextMenuTools.SetContextIcon((DockIcon)dock.MainPanel.Children[i], dock);
-                                dock.context_icon = dock.MainPanel.Children[i];
-                            }
-                            dock.fe_max_size_el = i;
-                        }
-                        else
-                        {
-                            if (!dock.isHovered)
-                            {
-                                //Img_MouseMoveDo(combined[fe_max_size_el]);
-                                if (i < dock.MainPanel.Children.Count)
-                                {
-                                    dock.context_icon = dock.MainPanel.Children[dock.fe_max_size_el];
-                                }
-                            }
-                        }
+                        max_i = i;
+                        max_s = newsize;
                     }
 
                     if (!dock.panelIconsAnimated)
@@ -520,7 +488,31 @@ namespace FoxDock
                         }
                     }
                 }
+
+                if(max_i != dock.fe_max_size)
+                {
+                    if (max_i < dock.MainPanel.Children.Count)
+                    {
+                        dock.context_icon = dock.MainPanel.Children[max_i];
+                    }
+                    dock.fe_max_size_el = max_i;
+                }
+
             }
+        }
+
+        public static List<DockIcon> GetCombined(UIElementCollection uI1, UIElementCollection uL2)
+        {
+            List<DockIcon> combined = new List<DockIcon>();
+            foreach (DockIcon di in uI1)
+            {
+                combined.Add(di);
+            }
+            foreach (DockIcon di in uL2)
+            {
+                combined.Add(di);
+            }
+            return combined;
         }
     }
 }

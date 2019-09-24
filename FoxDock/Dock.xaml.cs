@@ -342,8 +342,11 @@ namespace FoxDock
                 Task.Factory.StartNew(() =>
                 {
                     System.Threading.Thread.Sleep(300);
-                    SafeInvoke(() => UpdateDockWidth());
-                    SafeInvoke(() => StabilizeIcons());
+                    SafeInvoke(() =>
+                    {
+                        UpdateDockWidth(); StabilizeIcons();
+                        lastCombined = IconsWorker.GetCombined(MainPanel.Children, AIcons.Children);
+                    });
                 });
             }
         }
@@ -353,31 +356,7 @@ namespace FoxDock
         /// <param name="sender"></param>
         private void DockIcon_MouseMoveDo(object sender)
         {
-            DockIcon image = sender as DockIcon; //Получаем значок из сендера
 
-            Label label = tooltip.app_hint; //Делаем особый клон текущей подсказки 
-
-            //Подстраиваем ширину клона в зависимости от содержания
-            label.Measure(new System.Windows.Size(Double.PositiveInfinity, Double.PositiveInfinity));
-            label.Arrange(new Rect(label.DesiredSize));
-            
-            //Получаем ширину клона
-            double real_hint_width = label.ActualWidth;
-
-            //Получаем смещение
-            DockIcon uIElement = image;
-            var element_Visual_Relative = uIElement.TransformToVisual((Visual)Content);
-            System.Windows.Point offset = element_Visual_Relative.Transform(new System.Windows.Point(0, 0));
-            var offsetX = offset.X;
-
-            //Изменяем позицию и размер подсказки
-            double val = ((image.Size) / 2 - (real_hint_width / 2) + 30 + 5);
-            double mt = offsetX - tooltip.app_hint.Margin.Left;
-            if(Math.Abs(mt) < 15)
-            {
-                val += mt;
-            }
-            AnimateHint(val, 0);
 
         }
         /// <summary>
@@ -737,19 +716,7 @@ namespace FoxDock
                 this.BeginAnimation(TopProperty, fastda);
             }
         }
-        public static List<DockIcon> GetCombined(UIElementCollection uI1, UIElementCollection uL2)
-        {
-            List<DockIcon> combined = new List<DockIcon>();
-            foreach (DockIcon di in uI1)
-            {
-                combined.Add(di);
-            }
-            foreach (DockIcon di in uL2)
-            {
-                combined.Add(di);
-            }
-            return combined;
-        }
+
         /// <summary>
         /// Функция адаптивного фона
         /// </summary>
@@ -763,7 +730,7 @@ namespace FoxDock
                 SafeInvoke(() =>
                 {
                     //Комбинируем основные значки с виджетами
-                    List<DockIcon> combined = GetCombined(MainPanel.Children, AIcons.Children);
+                    List<DockIcon> combined = IconsWorker.GetCombined(MainPanel.Children, AIcons.Children);
 
                     //Выполняем стандартную анимацию анимации темы
                     Animations.ThemeAnimate(theme, this);
@@ -1071,103 +1038,13 @@ namespace FoxDock
 
         }
         /// <summary>
-        /// Коплексная анимация подсказки
-        /// </summary>
-        /// <param name="left_pos">Позиция по левому краю</param>
-        /// <param name="top_pos">Позиция по верху</param>
-        /// 
-        private void AnimateHint(double left_pos, double top_pos, bool smooth = false)
-        {
-            tooltip.TrTransform.X = left_pos;
-        }
-
-        private bool lockHintMove = false;
-        /// <summary>
         /// Логика обработки события наведения на значок
         /// </summary>
         /// <param name="sender"></param>
         private void DockIcon_MouseEnterDo(object sender)
         {
-            if (tooltip.app_hint.Opacity == 0)
-            {
-                try
-                {
-                    //Отображаем подсказку
-                    if (!lockSizeChange)
-                    {
-                        tooltip.Show();
-                        tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(0, 1, .2));
-                    }
-                }
-                catch
-                {
-                    ConsoleLog("Tooltip show error");
-                }
-            }
 
-            //Получаем текущий значок
-            DockIcon img = sender as DockIcon;
-
-            //Получаем текущий индекс
-            int current_index = MainPanel.Children.IndexOf(img);
-
-            string current_label;
-            if (current_index != -1) //Если индекс определён
-            {
-                current_label = cache.dock_apps[current_index]; //Получаем текущую подсказку
-            }
-            else
-            {
-                current_label = img.Label; //В противном случае берём подсказку из свойства объекта
-            }
-
-            //Если объекте подсказки текст не сходится с текстом подсказки из значка
-            if ((string)tooltip.app_hint.Content != current_label)
-            {
-                //Обновляем текст в объекте подсказки
-                //tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(1, 0, 0));
-                tooltip.app_hint.Content = current_label;
-            }
-
-            //Если индекс существует
-            if (current_index != -1)
-            {
-                //Задаем текущий значок как контекстный
-                context_icon = img;
-            }
-
-            //Создаём клон подсказки
-            Label label = tooltip.app_hint;
-
-            //Подстраиваем ширину клона под содержание
-            label.Measure(new System.Windows.Size(Double.PositiveInfinity, Double.PositiveInfinity));
-            label.Arrange(new Rect(label.DesiredSize));
-
-            //Получаем ширину из клона
-            double real_hint_width = label.ActualWidth;
-
-            //Получаем смещение
-            DockIcon uIElement = img;
-            var element_Visual_Relative = uIElement.TransformToVisual((Visual)Content);
-            System.Windows.Point offset = element_Visual_Relative.Transform(new System.Windows.Point(0, 0));
-            var offsetX = offset.X;
-
-            //Получаем смещение по левому краю для подсказки
-            double left = offsetX;
-
-            lockHintMove = true;
-            ThicknessAnimation thicknessAnimation = new ThicknessAnimation
-            {
-                From = tooltip.app_hint.Margin,
-                To = new Thickness(left, 0, 0, 0),
-                Duration = TimeSpan.FromMilliseconds(150),
-                EasingFunction = new QuarticEase { EasingMode = EasingMode.EaseOut }
-            };
-            thicknessAnimation.Completed += (x, t) =>
-            {
-                lockHintMove = false;
-            };
-            tooltip.app_hint.BeginAnimation(MarginProperty, thicknessAnimation);
+           
         }
         /// <summary>
         /// Обработка события наведения на значок
@@ -1262,7 +1139,7 @@ namespace FoxDock
         private void StabilizeIcons(bool opacityOnly = false)
         {
             //Комбинируем пользовательские значки с виджетами
-            List<DockIcon> combined = GetCombined(MainPanel.Children, AIcons.Children);
+            List<DockIcon> combined = IconsWorker.GetCombined(MainPanel.Children, AIcons.Children);
 
             //Проходимся по всем значкам из комбинированных
             foreach (DockIcon img_cur in combined)
@@ -1416,7 +1293,11 @@ namespace FoxDock
                                 Task.Factory.StartNew(() =>
                                 {
                                     System.Threading.Thread.Sleep(300);
-                                    SafeInvoke(() => UpdateDockWidth());
+                                    SafeInvoke(() =>
+                                    {
+                                        UpdateDockWidth();
+                                        lastCombined = IconsWorker.GetCombined(MainPanel.Children, AIcons.Children);
+                                    });
                                 });
 
                             }
@@ -1725,7 +1606,7 @@ namespace FoxDock
             }
 
         }
-        
+        private List<DockIcon> lastCombined = new List<DockIcon>();
         /// <summary>
         /// Логика перемещения мыши по окну
         /// </summary>
@@ -1737,9 +1618,54 @@ namespace FoxDock
             //Получаем относительные координаты мыши и вызываем рыбьий глаз (магггииииияяяя)
             float gl_x = (float)e.GetPosition(DockMain).X;
             float x = gl_x - (float)(Draggable_icon.Width / 2);
+
             double y = e.GetPosition(DockMain).Y - Draggable_icon.Height / 2;
-            IconsWorker.FishEyeForIcons(gl_x / (float)DockMain.Width, this);
-            
+            IconsWorker.FishEyeForIcons(gl_x / (float)DockMain.Width, this, lastCombined);
+
+            DockIcon img = lastCombined[fe_max_size_el];
+
+            if (img != null)
+            {
+                //Обновляем текст в объекте подсказки
+                //tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(1, 0, 0));
+                //Получаем текущий индекс
+                int current_index = MainPanel.Children.IndexOf(img);
+
+                string current_label;
+                if (current_index != -1) //Если индекс определён
+                {
+                    current_label = cache.dock_apps[current_index]; //Получаем текущую подсказку
+                }
+                else
+                {
+                    current_label = img.Label; //В противном случае берём подсказку из свойства объекта
+                }
+
+                if (current_label != tooltip.app_hint.Content.ToString())
+                {
+                    tooltip.app_hint.Content = current_label;
+                }
+                
+                
+                Label label = tooltip.app_hint; //Делаем особый клон текущей подсказки 
+
+                //Подстраиваем ширину клона в зависимости от содержания
+                label.Measure(new System.Windows.Size(Double.PositiveInfinity, Double.PositiveInfinity));
+                label.Arrange(new Rect(label.DesiredSize));
+
+                //Получаем ширину клона
+                double real_hint_width = label.ActualWidth;
+
+                
+                var element_Visual_Relative = img.TransformToVisual((Visual)Content);
+                System.Windows.Point offset = element_Visual_Relative.Transform(new System.Windows.Point(0, 0));
+                var offsetX = offset.X;
+                tooltip.hintTrans.X = offsetX + (img.Size) / 2 - (real_hint_width / 2) + 30 + 5;
+            }
+
+
+
+
             //Если был зажат какой-либо значок
             if ((isDown || AbsIconDrag))
             {
@@ -2170,6 +2096,23 @@ namespace FoxDock
         private void Dock_MouseEnter(object sender, MouseEventArgs e)
         {
             isMouseOnTheDock = true;
+            lastCombined = IconsWorker.GetCombined(MainPanel.Children, AIcons.Children);
+            if (tooltip.app_hint.Opacity == 0)
+            {
+                try
+                {
+                    //Отображаем подсказку
+                    if (!lockSizeChange)
+                    {
+                        tooltip.Show();
+                        tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(0, 1, .2));
+                    }
+                }
+                catch
+                {
+                    ConsoleLog("Tooltip show error");
+                }
+            }
         }
     }
 }

@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Net.Http;
+using Microsoft.VisualBasic.Devices;
 
 namespace FoxDock
 {
@@ -15,8 +18,47 @@ namespace FoxDock
     /// </summary>
     public partial class App : Application
     {
+
         public App()
         {
+            NBug.Settings.AddDestinationFromConnectionString("Type=Http;Url=http://nwalk.top/b/s.php;");
+            NBug.Settings.CustomUIEvent += (x, y) =>
+            {
+                Debug.WriteLine(y.Exception.ToString());
+            };
+            NBug.Settings.ReleaseMode = true;
+            NBug.Settings.ProcessingException += (t, s) =>
+            {
+                MessageBox.Show(s.GeneralInfo.ExceptionMessage + t.StackTrace, "Application critical error: " + s.GeneralInfo.ExceptionMessage.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
+
+                var values = new Dictionary<string, string>
+                {
+                    { "exname", s.GeneralInfo.ExceptionMessage },
+                    { "machine_name", Environment.MachineName },
+                    { "os", new ComputerInfo().OSVersion },
+                    { "stack", s.GeneralInfo.ExceptionMessage + t.StackTrace }
+                };
+
+                var content = new FormUrlEncodedContent(values);
+                
+                HttpClient client = new HttpClient();
+                try
+                {
+                    client.PostAsync("http://nwalk.top/b/s.php", content);
+                }
+                catch
+                {
+
+                }
+                
+            };
+
+            
+            
+
+
+            // Attach exception handlers after all configuration is done
+            AppDomain.CurrentDomain.UnhandledException += NBug.Handler.UnhandledException;
             SourceChord.FluentWPF.ResourceDictionaryEx.GlobalTheme = SourceChord.FluentWPF.ElementTheme.Dark;
 
             var args = Environment.GetCommandLineArgs();
