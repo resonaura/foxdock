@@ -59,6 +59,7 @@
                         <RowDefinition Height="50"></RowDefinition>
                         <RowDefinition Height="50"></RowDefinition>
                         <RowDefinition Height="50"></RowDefinition>
+                        <RowDefinition Height="50"></RowDefinition>
                         <RowDefinition Height="*"></RowDefinition>
                     </Grid.RowDefinitions>
                     <Button Background="{Binding Path=(fw:AccentColors.ImmersiveSystemAccentBrush)}" MouseEnter="MButton_MouseEnter" MouseLeave="MButton_MouseLeave" Cursor="Hand" Click="HomeTabButton_Click" Name="HomeTabButton" IsEnabled="False" Grid.Row="0" Padding="7" Style="{StaticResource ButtonAccentRevealStyle}">
@@ -93,10 +94,16 @@
                             <TextBlock Name="t_4_text" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI Light" Text="Icon Packs" FontSize="15" Margin="20,0,0,0"/>
                         </StackPanel>
                     </Button>
-                    <Button MouseEnter="MButton_MouseEnter" MouseLeave="MButton_MouseLeave" Background="Transparent" Cursor="Hand" Click="AboutTabButton_Click"  Name="AboutTabButton" Grid.Row="4" Padding="7" Style="{StaticResource ButtonAccentRevealStyle}">
+                    <Button MouseEnter="MButton_MouseEnter" MouseLeave="MButton_MouseLeave" Background="Transparent" Cursor="Hand" Click="HelpTabButton_Click"  Name="HelpTabButton" Grid.Row="4" Padding="7" Style="{StaticResource ButtonAccentRevealStyle}">
                         <StackPanel Orientation="Horizontal"  HorizontalAlignment="Stretch" Width="250">
-                            <TextBlock Name="t_5_icon" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe MDL2 Assets" Text="&#xE946;" FontSize="20" Height="25" Margin="10,5,0,0"/>
-                            <TextBlock Name="t_5_text" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI Light" Text="About" FontSize="15" Margin="20,0,0,0"/>
+                            <TextBlock Name="t_5_icon" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe MDL2 Assets" Text="&#xE897;" FontSize="20" Height="25" Margin="10,5,0,0"/>
+                            <TextBlock Name="t_5_text" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI Light" Text="Help" FontSize="15" Margin="20,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button MouseEnter="MButton_MouseEnter" MouseLeave="MButton_MouseLeave" Background="Transparent" Cursor="Hand" Click="AboutTabButton_Click"  Name="AboutTabButton" Grid.Row="5" Padding="7" Style="{StaticResource ButtonAccentRevealStyle}">
+                        <StackPanel Orientation="Horizontal"  HorizontalAlignment="Stretch" Width="250">
+                            <TextBlock Name="t_6_icon" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe MDL2 Assets" Text="&#xE946;" FontSize="20" Height="25" Margin="10,5,0,0"/>
+                            <TextBlock Name="t_6_text" Foreground="{Binding Foreground, ElementName=SettingsWindow}" VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Segoe UI Light" Text="About" FontSize="15" Margin="20,0,0,0"/>
                         </StackPanel>
                     </Button>
                 </Grid>
@@ -240,6 +247,9 @@
                         </Grid>
                         
                         
+                    </TabItem>
+                    <TabItem Name="HelpTab">
+                        <Label Name="DockSettingsNoHelp" Foreground="{Binding Foreground, ElementName=SettingsWindow}">Help is not existing...</Label>
                     </TabItem>
                     <TabItem Name="AboutTab">
                         <Grid>

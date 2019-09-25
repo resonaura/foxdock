@@ -33,6 +33,7 @@ namespace FoxDock
         public BitmapSource Videos = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.videos));
         public BitmapSource Folder = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.folder));
         public IDictionary<string, BitmapSource> apps = new Dictionary<string, BitmapSource>();
+        public IDictionary<string, BitmapSource> ext = new Dictionary<string, BitmapSource>();
     }
     class IconPacks
     {
@@ -153,6 +154,20 @@ namespace FoxDock
                                 {
                                     iconPack.apps.Add(Path.GetFileNameWithoutExtension(appIcon), IconsWorker.SafeBitmapSourceFromPath(appIcon));
                                 } 
+                            }
+                        }
+
+                        string extFolder = folder + "\\Extensions";
+                        if (Directory.Exists(extFolder))
+                        {
+                            List<string> extIcons = Directory.EnumerateFiles(extFolder).ToList();
+                            if (extIcons.Count > 0)
+                            {
+                                foreach (string extIcon in extIcons)
+                                {
+                                    string ext = Path.GetFileNameWithoutExtension(extIcon);
+                                    iconPack.ext.Add(ext, IconsWorker.SafeBitmapSourceFromPath(extIcon));
+                                }
                             }
                         }
                         iconPacks.Add(iconPack);

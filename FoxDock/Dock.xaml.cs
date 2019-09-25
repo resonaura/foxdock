@@ -52,7 +52,7 @@ namespace FoxDock
         private bool startup_animation_completed = false;
         private bool AbsIconDrag = false;
         private bool Draggable_icon_an = true;
-        public double fe_max_size = 0;
+        public double fe_max_size = -1;
         public int fe_max_size_el = 0;
         public bool panelIconsAnimated = false;
         public bool panelIconsAnimating = false;
@@ -245,9 +245,9 @@ namespace FoxDock
             //Добавляем значки из кеша на Док
             if (cache.dock_apps_path != null)
             {
-                foreach (string path in cache.dock_apps_path) { short_app_names.Add(Path.GetFileNameWithoutExtension(path)); AddIconToPanel(path); StabilizeIcons(); UpdateDockWidth(); }
+                foreach (string path in cache.dock_apps_path) { short_app_names.Add(Path.GetFileNameWithoutExtension(path)); AddIconToPanel(path); }
+                StabilizeIcons(); UpdateDockWidth();
             }
-            UpdateDockWidth();
 
             //Разблокируем слайдер
             lock_slider = false;
@@ -331,42 +331,23 @@ namespace FoxDock
                 dockIcon.MouseDown += DockIcon_MouseDown;
                 dockIcon.MouseEnter += DockIcon_MouseEnter;
                 dockIcon.MouseLeave += DockIcon_MouseLeave;
-                dockIcon.MouseMove += DockIcon_MouseMove;
                 dockIcon.MouseUp += DockIcon_MouseUp;
 
                 //Получаем свободный индекс для добавления нового элемента
                 int index = MainPanel.Children.Count;
                 MainPanel.Children.Insert(index, dockIcon);
 
-                //В новом потоке спустя 300 мс. обновляем ширину дока
+                //В новом потоке обновляем ширину дока
                 Task.Factory.StartNew(() =>
                 {
-                    System.Threading.Thread.Sleep(300);
+                    System.Threading.Thread.Sleep(0);
                     SafeInvoke(() =>
                     {
-                        UpdateDockWidth(); StabilizeIcons();
+                        UpdateDockWidth();
                         lastCombined = IconsWorker.GetCombined(MainPanel.Children, AIcons.Children);
                     });
                 });
             }
-        }
-        /// <summary>
-        /// Выполнение логики передвиженыя мыши по иконке
-        /// </summary>
-        /// <param name="sender"></param>
-        private void DockIcon_MouseMoveDo(object sender)
-        {
-
-
-        }
-        /// <summary>
-        /// Обработчик события перемещения мыши по иконке
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void DockIcon_MouseMove(object sender, MouseEventArgs e)
-        {
-            DockIcon_MouseMoveDo(sender);
         }
         
         /// <summary>
@@ -1038,26 +1019,13 @@ namespace FoxDock
 
         }
         /// <summary>
-        /// Логика обработки события наведения на значок
-        /// </summary>
-        /// <param name="sender"></param>
-        private void DockIcon_MouseEnterDo(object sender)
-        {
-
-           
-        }
-        /// <summary>
         /// Обработка события наведения на значок
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void DockIcon_MouseEnter(object sender, MouseEventArgs e)
         {
-            Task.Factory.StartNew(() =>
-            {
-                isHovered = true;
-                SafeInvoke(() => DockIcon_MouseEnterDo(sender));
-            });
+            isHovered = true;
         }
         /// <summary>
         /// Обработка появления перетаскивания на Док
@@ -1155,12 +1123,14 @@ namespace FoxDock
                         From = img_cur.Size,
                         To = size,
                         Duration = TimeSpan.FromMilliseconds(200),
-                        EasingFunction = new SineEase()
+                        EasingFunction = new SineEase(),
+                        FillBehavior = FillBehavior.Stop
                     };
                     doubleAnimation.Completed += (x, y) =>
                     {
                         tooltip.Hide();
                         panelIconsAnimating = false;
+                        img_cur.Size = size;
                     };
                     tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(1, 0, .2));
                     img_cur.BeginAnimation(DockIcon.SizeProperty, doubleAnimation);
@@ -1289,10 +1259,10 @@ namespace FoxDock
                                 //Удаляем текущий значок
                                 MainPanel.Children.Remove(image);
 
-                                //Спустя 300 мс. обновляем ширину Дока
+                                //Спустя 30 мс. обновляем ширину Дока
                                 Task.Factory.StartNew(() =>
                                 {
-                                    System.Threading.Thread.Sleep(300);
+                                    System.Threading.Thread.Sleep(30);
                                     SafeInvoke(() =>
                                     {
                                         UpdateDockWidth();
@@ -1620,7 +1590,7 @@ namespace FoxDock
             float x = gl_x - (float)(Draggable_icon.Width / 2);
 
             double y = e.GetPosition(DockMain).Y - Draggable_icon.Height / 2;
-            IconsWorker.FishEyeForIcons(gl_x / (float)DockMain.Width, this, lastCombined);
+            IconsWorker.FishEye(gl_x, this, lastCombined);
             
             //Если был зажат какой-либо значок
             if ((isDown || AbsIconDrag))
@@ -1687,47 +1657,51 @@ namespace FoxDock
                     
                     Timeline.SetDesiredFrameRate(myDoubleAnimation1, 30);
                     Draggable_icon.BeginAnimation(DockIcon.OpacityProperty, myDoubleAnimation1);
-                    DockIcon img = lastCombined[fe_max_size_el];
 
-                    if (img != null)
+                }
+            }
+
+            if(!AbsIconDrag)
+            {
+                DockIcon img = lastCombined[fe_max_size_el];
+
+                if (img != null)
+                {
+                    //Обновляем текст в объекте подсказки
+                    //tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(1, 0, 0));
+                    //Получаем текущий индекс
+                    int current_index = MainPanel.Children.IndexOf(img);
+
+                    string current_label;
+                    if (current_index != -1) //Если индекс определён
                     {
-                        //Обновляем текст в объекте подсказки
-                        //tooltip.app_hint.BeginAnimation(Label.OpacityProperty, Animations.SingleAnimation(1, 0, 0));
-                        //Получаем текущий индекс
-                        int current_index = MainPanel.Children.IndexOf(img);
-
-                        string current_label;
-                        if (current_index != -1) //Если индекс определён
-                        {
-                            current_label = cache.dock_apps[current_index]; //Получаем текущую подсказку
-                        }
-                        else
-                        {
-                            current_label = img.Label; //В противном случае берём подсказку из свойства объекта
-                        }
-
-                        if (current_label != tooltip.app_hint.Content.ToString())
-                        {
-                            tooltip.app_hint.Content = current_label;
-                        }
-
-
-                        Label label = tooltip.app_hint; //Делаем особый клон текущей подсказки 
-
-                        //Подстраиваем ширину клона в зависимости от содержания
-                        label.Measure(new System.Windows.Size(Double.PositiveInfinity, Double.PositiveInfinity));
-                        label.Arrange(new Rect(label.DesiredSize));
-
-                        //Получаем ширину клона
-                        double real_hint_width = label.ActualWidth;
-
-
-                        var element_Visual_Relative = img.TransformToVisual((Visual)Content);
-                        System.Windows.Point offset = element_Visual_Relative.Transform(new System.Windows.Point(0, 0));
-                        var offsetX = offset.X;
-                        tooltip.hintTrans.X = offsetX + (img.Size) / 2 - (real_hint_width / 2) + 30 + 5;
+                        current_label = cache.dock_apps[current_index]; //Получаем текущую подсказку
+                    }
+                    else
+                    {
+                        current_label = img.Label; //В противном случае берём подсказку из свойства объекта
                     }
 
+                    if (current_label != tooltip.app_hint.Content.ToString())
+                    {
+                        tooltip.app_hint.Content = current_label;
+                    }
+
+
+                    Label label = tooltip.app_hint; //Делаем особый клон текущей подсказки 
+
+                    //Подстраиваем ширину клона в зависимости от содержания
+                    label.Measure(new System.Windows.Size(Double.PositiveInfinity, Double.PositiveInfinity));
+                    label.Arrange(new Rect(label.DesiredSize));
+
+                    //Получаем ширину клона
+                    double real_hint_width = label.ActualWidth;
+
+
+                    var element_Visual_Relative = img.TransformToVisual((Visual)Content);
+                    System.Windows.Point offset = element_Visual_Relative.Transform(new System.Windows.Point(0, 0));
+                    var offsetX = offset.X;
+                    tooltip.hintTrans.X = offsetX + (img.Size) / 2 - (real_hint_width / 2) + 30 + 5;
                 }
             }
         }

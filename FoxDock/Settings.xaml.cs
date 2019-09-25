@@ -78,7 +78,8 @@ namespace FoxDock
             t_2_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsPerfomanceTab, locale);
             t_3_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsCustomizeTab, locale);
             t_4_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsIconPacksTab, locale);
-            t_5_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsAboutTab, locale);
+            t_5_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsHelpTab, locale);
+            t_6_text.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.SettingsAboutTab, locale);
 
             //Локализация подписей Настроек
             DockSettingsStartupLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsStartupLabel, locale);
@@ -94,6 +95,7 @@ namespace FoxDock
             DockSettingsBGHColorLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsBGHColorLabel, locale);
             DockSettingsBGIColorLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsBGIColorLabel, locale);
             DockSettingsBGNColorLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsBGNColorLabel, locale);
+            DockSettingsNoHelp.Content = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsNoHelp, locale);
 
             //Грузим кеш и делаем активным нужный цвет фона
             Dock.cache = CacheOperations.LoadCache(Dock.cache);
@@ -230,12 +232,14 @@ namespace FoxDock
             CustomizeTabButton.IsEnabled = true;
             IconPackTabButton.IsEnabled = true;
             AboutTabButton.IsEnabled = true;
+            HelpTabButton.IsEnabled = true;
 
             HomeTabButton.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
             PerfomanceTabButton.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
             CustomizeTabButton.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
             IconPackTabButton.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
             AboutTabButton.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
+            HelpTabButton.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
 
             DropShadowEffect noglow = new DropShadowEffect
             {
@@ -249,24 +253,28 @@ namespace FoxDock
             t_3_text.Effect = noglow;
             t_4_text.Effect = noglow;
             t_5_text.Effect = noglow;
+            t_6_text.Effect = noglow;
 
             t_1_icon.Effect = noglow;
             t_2_icon.Effect = noglow;
             t_3_icon.Effect = noglow;
             t_4_icon.Effect = noglow;
             t_5_icon.Effect = noglow;
+            t_6_icon.Effect = noglow;
 
             t_1_text.Foreground = this.Foreground;
             t_2_text.Foreground = this.Foreground;
             t_3_text.Foreground = this.Foreground;
             t_4_text.Foreground = this.Foreground;
             t_5_text.Foreground = this.Foreground;
+            t_6_text.Foreground = this.Foreground;
 
             t_1_icon.Foreground = this.Foreground;
             t_2_icon.Foreground = this.Foreground;
             t_3_icon.Foreground = this.Foreground;
             t_4_icon.Foreground = this.Foreground;
             t_5_icon.Foreground = this.Foreground;
+            t_6_icon.Foreground = this.Foreground;
 
             DropShadowEffect glow = new DropShadowEffect
             {
@@ -315,11 +323,17 @@ namespace FoxDock
                         t_4_icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
                         t_4_text.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
                         break;
-                    case "AboutTabButton":
+                    case "HelpTabButton":
                         t_5_icon.Effect = glow;
                         t_5_text.Effect = glow;
                         t_5_icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
                         t_5_text.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                        break;
+                    case "AboutTabButton":
+                        t_6_icon.Effect = glow;
+                        t_6_text.Effect = glow;
+                        t_6_icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                        t_6_text.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
                         break;
                 }
             }
@@ -907,7 +921,8 @@ namespace FoxDock
                     IconPacks.UpdatePacks();
                     if (Dock.cache.iconPackName == "" || (Dock.cache.iconPackName != "" && Dock.cache.iconPackName == "Clean"))
                     {
-                        DefaultIconPack.Background = new SolidColorBrush(Color.FromArgb(30, 255, 255, 255));
+                        SolidColorBrush fr = this.Foreground as SolidColorBrush;
+                        DefaultIconPack.Background = new SolidColorBrush(Color.FromArgb(50, fr.Color.R, fr.Color.G, fr.Color.B));
                         DefaultIconPack.IsEnabled = false;
                     }
                     if (IconPacks.GetPacksList().Count > 0)
@@ -933,7 +948,8 @@ namespace FoxDock
                             {
                                 if (Dock.cache.iconPackName == ipack.name)
                                 {
-                                    iconPacksListItem.Background = new SolidColorBrush(Color.FromArgb(30, 255, 255, 255));
+                                    SolidColorBrush fr = this.Foreground as SolidColorBrush;
+                                    iconPacksListItem.Background = new SolidColorBrush(Color.FromArgb(50, fr.Color.R, fr.Color.G, fr.Color.B));
                                     iconPacksListItem.IsEnabled = false;
                                 }
                             }
@@ -962,7 +978,8 @@ namespace FoxDock
                     item.IsEnabled = true;
                     item.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
                 }
-                ditem.Background = new SolidColorBrush(Color.FromArgb(30, 255, 255, 255));
+                SolidColorBrush fr = this.Foreground as SolidColorBrush;
+                ditem.Background = new SolidColorBrush(Color.FromArgb(50, fr.Color.R, fr.Color.G, fr.Color.B));
                 ditem.IsEnabled = false;
 
                 string name = ditem.Txt;
@@ -987,6 +1004,12 @@ namespace FoxDock
         }
 
         private void AboutTabButton_Click(object sender, RoutedEventArgs e)
+        {
+            ChangeTab(5);
+            UpdateMenuBySender(sender);
+        }
+
+        private void HelpTabButton_Click(object sender, RoutedEventArgs e)
         {
             ChangeTab(4);
             UpdateMenuBySender(sender);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Animation;
 
 namespace FoxDock
@@ -66,6 +67,20 @@ namespace FoxDock
                     EasingFunction = new BackEase()
                 };
                 DialogPanel.BeginAnimation(StackPanel.MarginProperty, topAnimation);
+
+                if(isRenameWindow)
+                {
+                    FocusManager.SetFocusedElement(MainDialog, RenameBox);
+                    RenameBox.Focus();
+                    RenameBox.KeyUp += (x, y) =>
+                    {
+                        if(y.Key == Key.Enter)
+                        {
+                            FocusManager.SetFocusedElement(MainDialog, YesButton);
+                            YesButton.Focus();
+                        }
+                    };
+                }
             }
             Loaded += handler;
         }

@@ -19,6 +19,7 @@ namespace FoxDock
         public static readonly DependencyProperty LabelProperty = DependencyProperty.Register("Label", typeof(string), typeof(DockIcon));
         public static readonly DependencyProperty HighlightColorProperty = DependencyProperty.Register("HighlightColor", typeof(string), typeof(DockIcon));
         public static readonly DependencyProperty NotifyCountProperty = DependencyProperty.Register("NotifyCount", typeof(string), typeof(DockIcon));
+        public static readonly DependencyProperty IsHoveredProperty = DependencyProperty.Register("IsHovered", typeof(bool), typeof(DockIcon));
 
         //Задаём основные события
         public static readonly RoutedEvent ClickEvent = EventManager.RegisterRoutedEvent("Click", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(DockIcon));
@@ -151,6 +152,10 @@ namespace FoxDock
                 SetValue(LabelProperty, value);
             }
         }
+        public bool IsHovered
+        {
+            get { return (bool)GetValue(IsHoveredProperty); }
+        }
         /// <summary>
         /// Функция инициализации иконки Дока
         /// </summary>
@@ -159,6 +164,15 @@ namespace FoxDock
             InitializeComponent();
             PreviewMouseLeftButtonUp += (sender, args) => OnClick();
             this.DataContext = this;
+            this.MouseEnter += (a, b) =>
+            {
+                SetValue(IsHoveredProperty, true);
+            };
+            this.MouseLeave += (c, d) =>
+            {
+                SetValue(IsHoveredProperty, false);
+            };
+
         }
     }
 }

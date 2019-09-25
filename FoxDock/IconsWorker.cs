@@ -239,6 +239,14 @@ namespace FoxDock
                 }
                 if(File.Exists(path))
                 {
+                    string extension = Path.GetExtension(path).ToLower().Replace(".", string.Empty);
+                    if (iPack.ext.ContainsKey(extension))
+                    {
+                        if (iPack.ext[extension] != null)
+                        {
+                            return iPack.ext[extension];
+                        }
+                    }
                     string mimeType = MimeMapping.GetMimeMapping(path);
                     if(mimeType != "")
                     {
@@ -252,11 +260,11 @@ namespace FoxDock
                             case "video":
                                 return iPack.FileVideo;
                             case "application":
-                                string extension = Path.GetExtension(path).ToUpper();
-                                if (extension != ".EXE" && extension != ".LNK")
+                                
+                                if (extension != "exe" && extension != "lnk")
                                 {
                                     return GetSourceFromBitmap(Properties.Resources.file_document);
-                                } else if(extension == ".EXE")
+                                } else if(extension == "exe")
                                 {
                                     string filename = Path.GetFileNameWithoutExtension(path).ToLower();
 
@@ -384,112 +392,74 @@ namespace FoxDock
                 return source;
             }
         }
-        //=ЕСЛИ(И(x >= -p; x <= p);((-ABS(x) + p/2) / p/2 + 0.25)*2;0)
-        private static double TriangleCalc(double i, double x, double p)
+        private static double FishEyeCalc(int i, double k, int size)
         {
-            
-            double rX = p - x + p + i;
-            if (rX >= -p && rX <= p)
-            {
-                return ((-Math.Abs(rX) + p / 2) / p / 2 + 0.25) * 2;
-            } else
-            {
-                return 0;
-            }
+            double rX = -k + 1 + i;
+            return rX >= -size && rX <= size ? ((-Math.Abs(rX) + size / 2) / size / 2 + 0.25) * 2 : 0;
         }
         /// <summary>
         /// Локика рыбьего глаза для значков
         /// </summary>
         /// <param name="x">Смещение</param>
-        public static void FishEyeForIcons(double x, Dock dock, List<DockIcon> combined)
+        public static void FishEye(double x, Dock dock, List<DockIcon> combined)
         {
-            //Считаем ширину мнимой линии
-            int width = (combined.Count) * (int)(dock.size + combined.First().Margin.Left + dock.size + combined.First().Margin.Right);
-            if (width < 300)
-            {
-                width = 300;
-            }
-
-            //Создаём большой массив с точкой мнимой линии
-            double[] big_array = new double[(int)width];
-
-            //Дальше немного эльфийской магии (или мне просто лень комментировать)
-            int eye_size = 800;
-            for (int i = 0; i < eye_size; i++)
-            {
-                double m_val = 0;
-                int peak = i < eye_size / 2 ? i : eye_size - i;
-                double eye_result = peak / ((double)eye_size / 2);
-                //..Debug.WriteLine(peak);
-
-                m_val = eye_size / 2 * eye_result;
-
-                int index = (int)(i + (width * x) + dock.size + 5 - (eye_size / 2));
-
-                if (index < width && index >= 0)
-                {
-                    big_array[index] = m_val;
-                }
-            }
-            double[] single_array = new double[combined.Count];
+            int width = (int)dock.ActualWidth;
+            int eye_size = 300;
 
             double max_s = 0;
             int max_i = 0;
+
             if (!dock.panelIconsAnimating)
             {
                 for (int i = 0; i < combined.Count; i++)
                 {
-                    int m = (int)(width / combined.Count) * (i + 1);
-                    if (m >= big_array.Length)
+                    if (combined[i] is DockIcon ic)
                     {
-                        m = big_array.Length - 1;
-                    }
-
-                    if (m < 0)
-                    {
-                        m = 0;
-                    }
-
-                    single_array[i] = big_array[m];
-
-                    DockIcon image = combined[i] as DockIcon;
-                    double newsize = dock.size * (big_array[m] / eye_size * 0.3 + 1);
-
-                    if(newsize > max_s)
-                    {
-                        max_i = i;
-                        max_s = newsize;
-                    }
-
-                    if (!dock.panelIconsAnimated)
-                    {
-                        DoubleAnimation doubleAnimation = new DoubleAnimation
+                        int ic_start_x = (int)(width / combined.Count + ic.Margin.Left + ic.Margin.Right) * i;
+                        if (ic.Label != null)
                         {
-                            From = image.Size,
-                            To = newsize,
-                            Duration = TimeSpan.FromMilliseconds(100),
-                            EasingFunction = new SineEase(),
-                            FillBehavior = FillBehavior.Stop
-                        };
-                        doubleAnimation.Completed += (a, e) =>
-                        {
-                            dock.panelIconsAnimated = true;
-                            dock.panelIconsAnimating = false;
-                        };
-                        image.BeginAnimation(DockIcon.SizeProperty, doubleAnimation);
-                        dock.panelIconsAnimating = true;
-                    }
-                    else
-                    {
+                            ic_start_x += (int)(dock.MainSeparator.Margin.Left * 2 + dock.MainSeparator.Width);
+                        }
 
-                        if (image.Size != newsize)
+                        double zoom = 0.15;
+                        double newsize = dock.size * (1 + zoom * FishEyeCalc(ic_start_x, x - (dock.size * 1 + zoom) / 2, eye_size));
+
+                        if (newsize > max_s)
                         {
-                            image.Size = newsize;
+                            max_i = i;
+                            max_s = newsize;
+                        }
+
+                        if (!dock.panelIconsAnimated)
+                        {
+                            DoubleAnimation doubleAnimation = new DoubleAnimation
+                            {
+                                From = ic.Size,
+                                To = newsize,
+                                Duration = TimeSpan.FromMilliseconds(100),
+                                EasingFunction = new SineEase(),
+                                FillBehavior = FillBehavior.Stop
+                            };
+                            doubleAnimation.Completed += (a, e) =>
+                            {
+                                dock.panelIconsAnimated = true;
+                                dock.panelIconsAnimating = false;
+                            };
+                            ic.BeginAnimation(DockIcon.SizeProperty, doubleAnimation);
+                            dock.panelIconsAnimating = true;
+                        }
+                        else
+                        {
+
+                            if (ic.Size != newsize)
+                            {
+                                ic.Size = newsize;
+                            }
                         }
                     }
                 }
 
-                if(max_i != dock.fe_max_size)
+                if (max_i != dock.fe_max_size)
                 {
                     if (max_i < dock.MainPanel.Children.Count)
                     {
@@ -497,10 +467,9 @@ namespace FoxDock
                     }
                     dock.fe_max_size_el = max_i;
                 }
-
             }
         }
-
+        
         public static List<DockIcon> GetCombined(UIElementCollection uI1, UIElementCollection uL2)
         {
             List<DockIcon> combined = new List<DockIcon>();

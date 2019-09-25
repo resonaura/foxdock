@@ -16,12 +16,13 @@
             <Border.Effect>
                 <DropShadowEffect Direction="271" BlurRadius="26" ShadowDepth="15" Opacity="0.5"/>
             </Border.Effect>
-            <StackPanel VerticalAlignment="Center">
+            <StackPanel VerticalAlignment="Center" Name="MainDialog">
                 <TextBlock Padding="30" Width="350" TextWrapping="Wrap" TextAlignment="Center" Foreground="#ddd" HorizontalAlignment="Center" Name="DialogLabel"></TextBlock>
-                <TextBox Margin="0,0,0,20" MaxLength="50" MaxLines="1" Style="{StaticResource TextBoxRevealStyle}" Name="RenameBox" Width="200" Height="30"></TextBox>
+                <TextBox Margin="0,0,0,20" MaxLength="50" MaxLines="1" Style="{StaticResource TextBoxRevealStyle}" Name="RenameBox" Width="240" Height="35"></TextBox>
                 <StackPanel Orientation="Horizontal" Margin="0, 0, 0, 0" HorizontalAlignment="Center">
-                    <Button Click="NoButton_Click" Name="NoButton" Cursor="Hand" Style="{StaticResource ButtonAccentRevealStyle}" Content="No" Foreground="White" Width="150" Height="30" Margin="5"></Button>
-                    <Button Click="YesButton_Click" Name="YesButton" Cursor="Hand" Style="{StaticResource ButtonAccentRevealStyle}" Content="Yes" Foreground="White" Width="150" Height="30" Margin="5"></Button>
+                    <Button Click="YesButton_Click" Name="YesButton" Cursor="Hand" Style="{StaticResource ButtonAccentRevealStyle}" Content="Yes" Foreground="White" Width="150" Height="35" Margin="5"></Button>
+                    <Button Click="NoButton_Click" Name="NoButton" Cursor="Hand" Style="{StaticResource ButtonAccentRevealStyle}" Content="No" Foreground="White" Width="150" Height="35" Margin="5"></Button>
+                    
                 </StackPanel>
             </StackPanel>
         </Border>
