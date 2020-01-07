@@ -84,6 +84,7 @@ namespace FoxDock
             //Локализация подписей Настроек
             DockSettingsStartupLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsStartupLabel, locale);
             DockSettingsDisableBlurLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsDisableBlurLabel, locale);
+            DockSettingsFishEyeLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsEnableFishEyeLabel, locale);
             DockSettingsEnableStarDustLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsEnableStarDustLabel, locale);
             DockSettingsSmartDisableLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsSmartDisableLabel, locale);
             DockSettingsPanelScaleLabel.Text = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.DockSettingsPanelScaleLabel, locale);
@@ -104,6 +105,7 @@ namespace FoxDock
             //Задаём значение всем параметрам настроек
             StartupToggle.IsChecked = Dock.cache.runAtStartup;
             DisableBlurToggle.IsChecked = Dock.cache.disableBlur;
+            FishEyeToggle.IsChecked = Dock.cache.enable_fish_eye;
             StarDustEnableToggle.IsChecked = Dock.cache.enableStarDust;
             SmartDisableToggle.IsChecked = Dock.cache.smart_disable;
             EnableTopmostToggle.IsChecked = Dock.cache.enableTopmost;
@@ -115,6 +117,7 @@ namespace FoxDock
             //Выполняем логику для слайдеров настроек
             Toggle_Loaded_Do(StartupToggle);
             Toggle_Loaded_Do(DisableBlurToggle);
+            Toggle_Loaded_Do(FishEyeToggle);
             Toggle_Loaded_Do(StarDustEnableToggle);
             Toggle_Loaded_Do(SmartDisableToggle);
             Toggle_Loaded_Do(AHToggle);
@@ -381,17 +384,13 @@ namespace FoxDock
         }
         public static void AddApplicationToStartup()
         {
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
-            {
-                key.SetValue("FoxDock", "\"" + System.Reflection.Assembly.GetExecutingAssembly().Location + "\"");
-            }
+            using RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            key.SetValue("FoxDock", "\"" + System.Reflection.Assembly.GetExecutingAssembly().Location + "\"");
         }
         public static void RemoveApplicationFromStartup()
         {
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
-            {
-                key.DeleteValue("FoxDock", false);
-            }
+            using RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            key.DeleteValue("FoxDock", false);
         }
         private void StartupToggle_Checked(object sender, RoutedEventArgs e)
         {
@@ -856,16 +855,7 @@ namespace FoxDock
                         window.size = (int)(Dock.defsize * dsize);
 
                         //Комбинируем основные значки с виджетами
-                        List<DockIcon> combined = new List<DockIcon>();
-                        foreach (DockIcon di in window.MainPanel.Children)
-                        {
-                            combined.Add(di);
-                        }
-                        foreach (DockIcon di in window.AIcons.Children)
-                        {
-                            combined.Add(di);
-                        }
-
+                        List<DockIcon> combined = IconsWorker.GetIcons(window.DockIcons);
                         foreach (DockIcon img in combined)
                         {
                             DoubleAnimation da = new DoubleAnimation
@@ -875,11 +865,20 @@ namespace FoxDock
                                 Duration = TimeSpan.FromMilliseconds(100),
                                 EasingFunction = new SineEase()
                             };
-
+                            da.Completed += (a, b) =>
+                            {
+                                if(img.MaskPadding > 0 && img.MaskMargin > 0)
+                                {
+                                    img.MaskPadding = window.iPack.MaskPadding * dsize;
+                                    img.MaskMargin = window.iPack.MaskMargin * dsize;
+                                }
+                                
+                            };
                             img.BeginAnimation(DockIcon.SizeProperty, da);
+                            
                         }
 
-                        double new_h = window.size + window.size / 2.5;
+                        double new_h = window.size + window.size / 2;
                         double new_top = System.Windows.SystemParameters.PrimaryScreenHeight - new_h;
 
                         window.UpdateDockWidth();
@@ -937,10 +936,10 @@ namespace FoxDock
                             {
                                 Txt = ipack.name,
                                 Author = ipack.author,
-                                Source1 = ipack.ExplorerIcon,
-                                Source2 = ipack.Recent,
-                                Source3 = ipack.TrashEmpty,
-                                Source4 = ipack.TrashFull,
+                                Source1 = IconPacks.GetIconFromPath(ipack.ExplorerIcon),
+                                Source2 = IconPacks.GetIconFromPath(ipack.Recent),
+                                Source3 = IconPacks.GetIconFromPath(ipack.TrashEmpty),
+                                Source4 = IconPacks.GetIconFromPath(ipack.TrashFull),
                                 Foreground = DefaultIconPack.Foreground
                             };
                             iconPacksListItem.Click += DefaultIconPack_Click;
@@ -989,11 +988,11 @@ namespace FoxDock
                     {
                         IconPack iconPack = IconPacks.GetByName(name);
                         window.iPack = iconPack;
-                        window.fullTrashIcon = iconPack.TrashFull;
-                        window.emptyTrashIcon = iconPack.TrashEmpty;
+                        window.fullTrashIcon = IconPacks.GetIconFromPath(iconPack.TrashFull);
+                        window.emptyTrashIcon = IconPacks.GetIconFromPath(iconPack.TrashEmpty);
                         window.TrashIcon.Source = API.Shell32.TrashCount() > 0 ? window.fullTrashIcon : window.emptyTrashIcon;
-                        window.RecentIcon.Source = iconPack.Recent;
-                        window.ExplorerIcon.Source = iconPack.ExplorerIcon;
+                        window.RecentIcon.Source = IconPacks.GetIconFromPath(iconPack.Recent);
+                        window.ExplorerIcon.Source = IconPacks.GetIconFromPath(iconPack.ExplorerIcon);
 
                         IconsWorker.UpdateDockIcons(window);
                     }));
@@ -1013,6 +1012,18 @@ namespace FoxDock
         {
             ChangeTab(4);
             UpdateMenuBySender(sender);
+        }
+
+        private void FishEyeToggle_Unchecked(object sender, RoutedEventArgs e)
+        {
+            Dock.cache.enable_fish_eye = false;
+            CacheOperations.StoreCache(Dock.cache);
+        }
+
+        private void FishEyeToggle_Checked(object sender, RoutedEventArgs e)
+        {
+            Dock.cache.enable_fish_eye = true;
+            CacheOperations.StoreCache(Dock.cache);
         }
     }
 }

@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
@@ -25,6 +26,17 @@ namespace FoxDock
             InitializeComponent();
 
             this.Title = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.Tooltip, locale);
+            this.Loaded += Tooltip_Loaded;
+        }
+
+        private void Tooltip_Loaded(object sender, RoutedEventArgs e)
+        {
+            WindowInteropHelper wndHelper = new WindowInteropHelper(this);
+
+            int exStyle = (int)API.Win32.GetWindowLong(wndHelper.Handle, (int)API.Win32.GetWindowLongFields.GWL_EXSTYLE);
+
+            exStyle |= (int)API.Win32.ExtendedWindowStyles.WS_EX_TOOLWINDOW;
+            API.Win32.SetWindowLong(wndHelper.Handle, (int)API.Win32.GetWindowLongFields.GWL_EXSTYLE, (IntPtr)exStyle);
         }
     }
 }

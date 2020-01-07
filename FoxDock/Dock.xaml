@@ -75,15 +75,17 @@
         
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Name="DockIcons" >
-            <StackPanel Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Center" Name="MainPanel" Orientation="Horizontal" HorizontalAlignment="Center">
+            <StackPanel Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Bottom" Name="MainPanel" Orientation="Horizontal" HorizontalAlignment="Center">
 
 
             </StackPanel>
-            <Border x:Name="MainSeparator" Width="2" Margin="10" Background="White" CornerRadius="1" Height="50" Opacity=".2"></Border>
+            <local:DockSeparator x:Name="MainSeparator"></local:DockSeparator>
+            <StackPanel Visibility="Collapsed" VerticalAlignment="Center" Name="SHIcons"></StackPanel>
+            <local:DockSeparator Visibility="Collapsed" x:Name="SHSeparator"></local:DockSeparator>
             <StackPanel VerticalAlignment="Center" Name="AIcons" HorizontalAlignment="Center" Orientation="Horizontal">
-                <local:DockIcon x:Name="RecentIcon" MouseEnter="DockIcon_MouseEnter" MouseLeave="DockIcon_MouseLeave" Size="56" Label="Recent files" MouseUp="RecentIcon_MouseUp"></local:DockIcon>
-                <local:DockIcon x:Name="ExplorerIcon" MouseEnter="DockIcon_MouseEnter" MouseLeave="DockIcon_MouseLeave" MouseUp="ExplorerIcon_MouseUp" Size="56" Label="Explorer"></local:DockIcon>
-                <local:DockIcon AllowDrop="True" MouseUp="TrashIcon_MouseUp" DragEnter="TrashIcon_DragEnter" Drop="TrashIcon_Drop"  x:Name="TrashIcon" MouseEnter="DockIcon_MouseEnter" MouseLeave="DockIcon_MouseLeave" Size="56" Label="Recycle Bin"></local:DockIcon>
+                <local:DockIcon x:Name="RecentIcon" MouseMove="DockIcon_MouseMove" MouseEnter="DockIcon_MouseEnter" MouseLeave="DockIcon_MouseLeave" Size="56" Label="Recent files" MouseUp="RecentIcon_MouseUp"></local:DockIcon>
+                <local:DockIcon x:Name="ExplorerIcon" MouseMove="DockIcon_MouseMove" MouseEnter="DockIcon_MouseEnter" MouseLeave="DockIcon_MouseLeave" MouseUp="ExplorerIcon_MouseUp" Size="56" Label="Explorer"></local:DockIcon>
+                <local:DockIcon AllowDrop="True" MouseMove="DockIcon_MouseMove" MouseUp="TrashIcon_MouseUp" DragEnter="TrashIcon_DragEnter" Drop="TrashIcon_Drop"  x:Name="TrashIcon" MouseEnter="DockIcon_MouseEnter" MouseLeave="DockIcon_MouseLeave" Size="56" Label="Recycle Bin"></local:DockIcon>
             </StackPanel>
         </StackPanel>
 

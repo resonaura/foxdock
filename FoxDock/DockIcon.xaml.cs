@@ -20,7 +20,10 @@ namespace FoxDock
         public static readonly DependencyProperty HighlightColorProperty = DependencyProperty.Register("HighlightColor", typeof(string), typeof(DockIcon));
         public static readonly DependencyProperty NotifyCountProperty = DependencyProperty.Register("NotifyCount", typeof(string), typeof(DockIcon));
         public static readonly DependencyProperty IsHoveredProperty = DependencyProperty.Register("IsHovered", typeof(bool), typeof(DockIcon));
-
+        public static readonly DependencyProperty MaskCornerRadiusProperty = DependencyProperty.Register("MaskCornerRadius", typeof(int), typeof(DockIcon));
+        public static readonly DependencyProperty MaskPaddingProperty = DependencyProperty.Register("MaskPadding", typeof(double), typeof(DockIcon));
+        public static readonly DependencyProperty MaskMarginProperty = DependencyProperty.Register("MaskMargin", typeof(double), typeof(DockIcon));
+        public static readonly DependencyProperty MaskBackgroundProperty = DependencyProperty.Register("MaskBackground", typeof(Brush), typeof(DockIcon));
         //Задаём основные события
         public static readonly RoutedEvent ClickEvent = EventManager.RegisterRoutedEvent("Click", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(DockIcon));
         public event RoutedEventHandler Click
@@ -91,6 +94,38 @@ namespace FoxDock
                 }
                 
                 SetValue(HighlightColorProperty, value);
+            }
+        }
+        public int MaskCornerRadius
+        {
+            get { return (int)GetValue(MaskCornerRadiusProperty); }
+            set
+            {
+                SetValue(MaskCornerRadiusProperty, value);
+            }
+        }
+        public double MaskPadding
+        {
+            get { return (double)GetValue(MaskPaddingProperty); }
+            set
+            {
+                SetValue(MaskPaddingProperty, value);
+            }
+        }
+        public double MaskMargin
+        {
+            get { return (double)GetValue(MaskMarginProperty); }
+            set
+            {
+                SetValue(MaskMarginProperty, value);
+            }
+        }
+        public Brush MaskBackground
+        {
+            get { return (Brush)GetValue(MaskBackgroundProperty); }
+            set
+            {
+                SetValue(MaskBackgroundProperty, value);
             }
         }
         /// <summary>

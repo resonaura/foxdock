@@ -199,7 +199,22 @@ namespace FoxDock
                         if (i < Dock.cache.dock_apps_path.Count)
                         {
                             icon.Source.Freeze();
-                            icon.Source = SourceFromPath(Dock.cache.dock_apps_path[i], dock.iPack);
+                            Dictionary<bool, BitmapSource> d = SourceFromPath(Dock.cache.dock_apps_path[i], dock.iPack);
+                            icon.Source = d.Values.First();
+                            bool maskneeded = d.Keys.First();
+                            if(maskneeded)
+                            {
+                                icon.MaskCornerRadius = dock.iPack.MaskCornerRadius;
+                                icon.MaskBackground = dock.iPack.MaskBackground;
+                                icon.MaskPadding = dock.iPack.MaskPadding * dock.size / Dock.defsize;
+                                icon.MaskMargin = dock.iPack.MaskMargin * dock.size / Dock.defsize;
+                            } else
+                            {
+                                icon.MaskCornerRadius = 0;
+                                icon.MaskBackground = new SolidColorBrush();
+                                icon.MaskPadding = 0;
+                                icon.MaskMargin = 0;
+                            }
                         }
                     }
                     
@@ -212,14 +227,15 @@ namespace FoxDock
         /// </summary>
         /// <param name="path">Путь к файлу/папке</param>
         /// <returns></returns>
-        public static BitmapSource SourceFromPath(string path, IconPack iPack)
+        public static Dictionary<bool, BitmapSource> SourceFromPath(string path, IconPack iPack)
         {
+            Dictionary<bool, BitmapSource> result = new Dictionary<bool, BitmapSource>();
             //Тут всё почти так же, как и в предыдущей функции. Мне лень описывать)
             try
             {
                 if(Directory.Exists(path))
                 {
-                    BitmapSource source = iPack.Folder;
+                    BitmapSource source = IconPacks.GetIconFromPath(iPack.Folder);
 
                     string myDocuments = API.Shell32.GetSFPath(Environment.SpecialFolder.MyDocuments);
                     string commonDocuments = API.Shell32.GetSFPath(Environment.SpecialFolder.CommonDocuments);
@@ -230,12 +246,13 @@ namespace FoxDock
                     string myVideos = API.Shell32.GetSFPath(Environment.SpecialFolder.MyVideos);
                     string commonVideos = API.Shell32.GetSFPath(Environment.SpecialFolder.CommonVideos);
 
-                    if (path == myDocuments || path == commonDocuments) source = iPack.Documents;
-                    if (path == myMusic || path == commonMusic) source = iPack.Music;
-                    if (path == myPictures || path == commonPictures) source = iPack.Images;
-                    if (path == myVideos || path == commonVideos) source = iPack.Videos;
+                    if (path == myDocuments || path == commonDocuments) source = IconPacks.GetIconFromPath(iPack.Documents);
+                    if (path == myMusic || path == commonMusic) source = IconPacks.GetIconFromPath(iPack.Music);
+                    if (path == myPictures || path == commonPictures) source = IconPacks.GetIconFromPath(iPack.Images);
+                    if (path == myVideos || path == commonVideos) source = IconPacks.GetIconFromPath(iPack.Videos);
 
-                    return source;
+                    result.Add(false, source);
+                    return result;
                 }
                 if(File.Exists(path))
                 {
@@ -244,7 +261,8 @@ namespace FoxDock
                     {
                         if (iPack.ext[extension] != null)
                         {
-                            return iPack.ext[extension];
+                            result.Add(false, IconPacks.GetIconFromPath(iPack.ext[extension]));
+                            return result;
                         }
                     }
                     string mimeType = MimeMapping.GetMimeMapping(path);
@@ -254,16 +272,20 @@ namespace FoxDock
                         switch(type)
                         {
                             case "image":
-                                return iPack.FileImage;
+                                result.Add(false, IconPacks.GetIconFromPath(iPack.FileImage));
+                                return result;
                             case "audio":
-                                return iPack.FileMusic;
+                                result.Add(false, IconPacks.GetIconFromPath(iPack.FileMusic));
+                                return result;
                             case "video":
-                                return iPack.FileVideo;
+                                result.Add(false, IconPacks.GetIconFromPath(iPack.FileVideo));
+                                return result;
                             case "application":
                                 
                                 if (extension != "exe" && extension != "lnk")
                                 {
-                                    return GetSourceFromBitmap(Properties.Resources.file_document);
+                                    result.Add(false, IconPacks.GetIconFromPath(iPack.FileDocument));
+                                    return result;
                                 } else if(extension == "exe")
                                 {
                                     string filename = Path.GetFileNameWithoutExtension(path).ToLower();
@@ -272,7 +294,8 @@ namespace FoxDock
                                     {
                                         if(iPack.apps[filename] != null)
                                         {
-                                            return iPack.apps[filename];
+                                            result.Add(false, IconPacks.GetIconFromPath(iPack.apps[filename]));
+                                            return result;
                                         } 
                                     }
                                 }
@@ -289,18 +312,21 @@ namespace FoxDock
                 API.Shell32.SHGFI uFlags = API.Shell32.SHGFI.SHGFI_SYSICONINDEX;
                 if (API.Shell32.SHGetFileInfo(path, dwFileAttributes, out psfi, (uint)Marshal.SizeOf((object)psfi), uFlags) == 0)
                 {
-                    return (BitmapSource)null;
+                    result.Add(true, null);
+                    return result;
                 }
 
                 int i = psfi.iIcon;
 
-                return GetSourceFromIcon(GetShellIcon(i));
+                result.Add(true, GetSourceFromIcon(GetShellIcon(i)));
+                return result;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
             }
-            return (BitmapSource)null;
+            result.Add(true, null);
+            return result;
         }
 
         /// <summary>
@@ -386,11 +412,9 @@ namespace FoxDock
         }
         public static BitmapSource SafeBitmapSourceFromPath(string path)
         {
-            using (Bitmap bitmap = new Bitmap(path))
-            {
-                BitmapSource source = GetSourceFromBitmap(Optimize(bitmap));
-                return source;
-            }
+            using Bitmap bitmap = new Bitmap(path);
+            BitmapSource source = GetSourceFromBitmap(Optimize(bitmap));
+            return source;
         }
         private static double FishEyeCalc(int i, double k, int size)
         {
@@ -403,7 +427,7 @@ namespace FoxDock
         /// <param name="x">Смещение</param>
         public static void FishEye(double x, Dock dock, List<DockIcon> combined)
         {
-            int width = (int)dock.ActualWidth;
+            int width = (int)(dock.Width);
             int eye_size = 300;
 
             double max_s = 0;
@@ -416,12 +440,10 @@ namespace FoxDock
                     if (combined[i] is DockIcon ic)
                     {
                         int ic_start_x = (int)(width / combined.Count + ic.Margin.Left + ic.Margin.Right) * i;
-                        if (ic.Label != null)
-                        {
-                            ic_start_x += (int)(dock.MainSeparator.Margin.Left * 2 + dock.MainSeparator.Width);
-                        }
+                        ic_start_x += (int)dock.Margin.Left;
 
-                        double zoom = 0.15;
+
+                        double zoom = 0.2;
                         double newsize = dock.size * (1 + zoom * FishEyeCalc(ic_start_x, x - (dock.size * 1 + zoom) / 2, eye_size));
 
                         if (newsize > max_s)
@@ -470,18 +492,73 @@ namespace FoxDock
             }
         }
         
-        public static List<DockIcon> GetCombined(UIElementCollection uI1, UIElementCollection uL2)
+        public static List<DockIcon> GetIcons(StackPanel DockIcons)
         {
             List<DockIcon> combined = new List<DockIcon>();
-            foreach (DockIcon di in uI1)
+            
+            foreach(UIElement uIElement in DockIcons.Children)
             {
-                combined.Add(di);
+                if (uIElement is StackPanel sp)
+                {
+                    foreach (UIElement element in sp.Children)
+                    {
+                        if (element is DockIcon di)
+                        {
+                            combined.Add(di);
+                        }
+                    }
+                }
             }
-            foreach (DockIcon di in uL2)
-            {
-                combined.Add(di);
-            }
+
             return combined;
+        }
+        public static double CalcSeparatorOffset(DockIcon icon, StackPanel DockIcons)
+        {
+            double offset = 0;
+            foreach (UIElement uIElement in DockIcons.Children)
+            {
+                if(uIElement is DockSeparator separator)
+                {
+                    offset = separator.ActualWidth + separator.Margin.Left + separator.Margin.Right;
+                } else if (uIElement is StackPanel sp)
+                {
+                    foreach (UIElement element in sp.Children)
+                    {
+                        if (element == icon) return offset; 
+                    }
+                }
+            }
+            return offset;
+        }
+        public static double GetSeparatorsWidth(StackPanel DockIcons)
+        {
+            double offset = 0;
+            foreach (UIElement uIElement in DockIcons.Children)
+            {
+                if (uIElement is DockSeparator separator)
+                {
+                    offset = separator.ActualWidth + separator.Margin.Left + separator.Margin.Right + 5; 
+                }
+            }
+            return offset;
+        }
+        public static double GetDockIconsCount(StackPanel DockIcons)
+        {
+            double result = 0;
+            foreach (UIElement uIElement in DockIcons.Children)
+            {
+                if (uIElement is StackPanel sp)
+                {
+                    foreach (UIElement element in sp.Children)
+                    {
+                        if (element is DockIcon di)
+                        {
+                            result++;
+                        }
+                    }
+                }
+            }
+            return result;
         }
     }
 }

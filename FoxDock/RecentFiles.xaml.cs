@@ -88,7 +88,7 @@ namespace FoxDock
             label.VerticalContentAlignment = VerticalAlignment.Center;
             label.Height = 25;
             label.Padding = new Thickness(10, 5, 10, 5);
-            label.Margin = new Thickness(10, 0, 0, 0);
+            label.Margin = new Thickness(20, 10, 10, 10);
             label.Style = (Style)Resources["CoolLabel"];
             label.MaxWidth = 600;
             grid.Children.Add(label);
@@ -120,18 +120,12 @@ namespace FoxDock
             };
             grid.MouseEnter += (x, y) =>
             {
-                foreach(Grid g in container.Children)
-                {
-                    g.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(g.Opacity, .5, .04));
-                }
-                (x as Grid).BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation((x as Grid).Opacity, 1, 0.04));
+
+                (x as Grid).Background = new SolidColorBrush(Color.FromArgb(20, 255, 255, 255));
             };
-            this.MouseLeave += (x, y) =>
+            grid.MouseLeave += (x, y) =>
             {
-                foreach (Grid g in container.Children)
-                {
-                    g.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(g.Opacity, 1, 0.2));
-                }
+                (x as Grid).Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
             };
             container.Children.Insert(0, grid);
 
@@ -199,8 +193,8 @@ namespace FoxDock
                     white_opacity = 1;
                     break;
                 case DockBackground.Gray:
-                    black_opacity = 0.7;
-                    white_opacity = 0.3;
+                    black_opacity = 0.9;
+                    white_opacity = 0.1;
                     break;
                 case DockBackground.Accent:
                     accent_opacity = 1;
@@ -213,40 +207,41 @@ namespace FoxDock
             Overlays.Opacity = Dock.cache.bg_trans;
 
             IsClosed = false;
-            string path = Environment.GetFolderPath(Environment.SpecialFolder.Recent);
-            DirectoryInfo d = new DirectoryInfo(path);
-            IOrderedEnumerable<FileInfo> Files = d.GetFiles().OrderByDescending(f => f.LastWriteTime);
-
-            int limit = 6;
-            int x = 0;
-            foreach (FileInfo file in Files)
-            {
-                if (x < limit)
-                {
-                    string truepath = FileTools.GetRealAppPath(file.FullName);
-                    if(File.Exists(truepath) || Directory.Exists(truepath))
-                    {
-                        FileInfo fileInfo = new FileInfo(truepath);
-                        string shortfilename = fileInfo.Name;
-                        if (shortfilename == "")
-                        {
-                            shortfilename = fileInfo.FullName;
-                        }
-
-                        AddNew(shortfilename, IconsWorker.SourceFromPath(truepath, window.iPack), truepath);
-                    } else
-                    {
-                        x--;
-                    }
-                    
-                }
-                
-                x++;
-            }
-            AddNew(AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenInExplorer, Dock.locale), window.iPack.ExplorerIcon, "explorer");
-
             Loaded += (a, b) =>
             {
+                string path = Environment.GetFolderPath(Environment.SpecialFolder.Recent);
+                DirectoryInfo d = new DirectoryInfo(path);
+                IOrderedEnumerable<FileInfo> Files = d.GetFiles().OrderByDescending(f => f.LastWriteTime);
+
+                int limit = 6;
+                int x = 0;
+                foreach (FileInfo file in Files)
+                {
+                    if (x < limit)
+                    {
+                        string truepath = FileTools.GetRealAppPath(file.FullName);
+                        if (File.Exists(truepath) || Directory.Exists(truepath))
+                        {
+                            FileInfo fileInfo = new FileInfo(truepath);
+                            string shortfilename = fileInfo.Name;
+                            if (shortfilename == "")
+                            {
+                                shortfilename = fileInfo.FullName;
+                            }
+
+                            AddNew(shortfilename, IconsWorker.SourceFromPath(truepath, window.iPack).Values.First(), truepath);
+                        }
+                        else
+                        {
+                            x--;
+                        }
+
+                    }
+
+                    x++;
+                }
+                AddNew(AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenInExplorer, Dock.locale), IconPacks.GetIconFromPath(window.iPack.ExplorerIcon), "explorer");
+
                 TranslateTransform offsetTransform = new TranslateTransform();
                 DoubleAnimation anim = new DoubleAnimation
                 {

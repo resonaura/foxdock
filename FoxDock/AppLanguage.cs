@@ -52,6 +52,7 @@ namespace FoxDock
             DockSettingsNoHelp,
             DockSettingsStartupLabel,
             DockSettingsDisableBlurLabel,
+            DockSettingsEnableFishEyeLabel,
             DockSettingsEnableStarDustLabel,
             DockSettingsPanelScaleLabel,
             DockSettingsBackgroundOpacityLabel,
@@ -66,7 +67,9 @@ namespace FoxDock
             Tooltip,
             RecentFiles,
             OpenInExplorer,
-            RenameIcon
+            RenameIcon,
+            NightMode,
+            DayMode
         }
 
         //Основные функции
@@ -88,6 +91,8 @@ namespace FoxDock
                     return Locale.RU;
                 case "uk":
                     return Locale.UA;
+                default:
+                    break;
             }
             return Locale.EN;
         }
@@ -136,6 +141,7 @@ namespace FoxDock
             [Dialog.DockSettingsNoHelp] = "Help is not existing...",
             [Dialog.DockSettingsStartupLabel] = "Run FoxDock at Windows startup",
             [Dialog.DockSettingsDisableBlurLabel] = "Disable blur",
+            [Dialog.DockSettingsEnableFishEyeLabel] = "Enable Fish Eye hover effect",
             [Dialog.DockSettingsEnableStarDustLabel] = "Enable StarDust",
             [Dialog.DockSettingsPanelScaleLabel] = "Panel scale:",
             [Dialog.DockSettingsBackgroundOpacityLabel] = "Dock background opacity:",
@@ -150,7 +156,9 @@ namespace FoxDock
             [Dialog.Tooltip] = "Tooltip",
             [Dialog.RecentFiles] = "Recent items",
             [Dialog.OpenInExplorer] = "Open in Explorer",
-            [Dialog.RenameIcon] = "Rename icon"
+            [Dialog.RenameIcon] = "Rename icon",
+            [Dialog.NightMode] = "Night mode",
+            [Dialog.DayMode] = "Day mode"
         };
         private static readonly Dictionary<Dialog, string> RU_DICT = new Dictionary<Dialog, string>()
         {
@@ -185,6 +193,7 @@ namespace FoxDock
             [Dialog.DockSettingsNoHelp] = "Хелпа нема...",
             [Dialog.DockSettingsStartupLabel] = "Запускать FoxDock при запуске Windows",
             [Dialog.DockSettingsDisableBlurLabel] = "Отключить размытие",
+            [Dialog.DockSettingsEnableFishEyeLabel] = "Включить эффект наведения (рыбий глаз)",
             [Dialog.DockSettingsEnableStarDustLabel] = "Включить StarDust",
             [Dialog.DockSettingsPanelScaleLabel] = "Размер значков:",
             [Dialog.DockSettingsBackgroundOpacityLabel] = "Непрозрачность фона док-бара:",
@@ -199,7 +208,9 @@ namespace FoxDock
             [Dialog.Tooltip] = "Подсказка",
             [Dialog.RecentFiles] = "Недавние документы",
             [Dialog.OpenInExplorer] = "Открыть в Проводнике",
-            [Dialog.RenameIcon] = "Переименовать значок"
+            [Dialog.RenameIcon] = "Переименовать значок",
+            [Dialog.NightMode] = "Ночной режим",
+            [Dialog.DayMode] = "Дневной режим"
         };
         private static readonly Dictionary<Dialog, string> UA_DICT = new Dictionary<Dialog, string>()
         {
@@ -234,6 +245,7 @@ namespace FoxDock
             [Dialog.DockSettingsNoHelp] = "Хелпу немає...",
             [Dialog.DockSettingsStartupLabel] = "Запускати FoxDock під час запуску Windows",
             [Dialog.DockSettingsDisableBlurLabel] = "Вимкнути розмиття",
+            [Dialog.DockSettingsEnableFishEyeLabel] = "Ввімкнути ефект наведення (риб'яче око)",
             [Dialog.DockSettingsEnableStarDustLabel] = "Ввімкнути StarDust",
             [Dialog.DockSettingsPanelScaleLabel] = "Розмір значків:",
             [Dialog.DockSettingsBackgroundOpacityLabel] = "Непрозорість фону док-бару:",
@@ -248,7 +260,9 @@ namespace FoxDock
             [Dialog.Tooltip] = "Підсказка",
             [Dialog.RecentFiles] = "Недавні документи",
             [Dialog.OpenInExplorer] = "Відкрити у Провіднику",
-            [Dialog.RenameIcon] = "Перейменувати значок"
+            [Dialog.RenameIcon] = "Перейменувати значок",
+            [Dialog.NightMode] = "Нічний режим",
+            [Dialog.DayMode] = "Денний режим"
         };
 
         //Комбинированный словарь
@@ -257,6 +271,6 @@ namespace FoxDock
             [Locale.RU] = RU_DICT,
             [Locale.UA] = UA_DICT
         };
-        
+
     }
 }

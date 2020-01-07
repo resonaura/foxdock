@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Windows.Media;
 
 namespace FoxDock
 {
@@ -55,6 +56,7 @@ namespace FoxDock
         public IndicatorColor IndicatorColor = IndicatorColor.Auto;
         public MenuColor MenuColor = MenuColor.Auto;
         public bool smart_disable = true;
+        public bool enable_fish_eye = true;
         public string iconPackName;
     }
 }

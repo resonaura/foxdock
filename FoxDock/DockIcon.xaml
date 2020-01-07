@@ -8,41 +8,49 @@
              d:DesignHeight="70" d:DesignWidth="66" MinWidth="66" MinHeight="70" Margin="0, 5, 0, 0">
     <Grid>
         <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-            <Image RenderOptions.EdgeMode="Aliased"  RenderSize="96, 96" Margin="5" Width="{Binding Size}" Height="{Binding Size}" x:Name="Icon" Source="{Binding Source}">
-                <Image.Resources>
-                    <Storyboard x:Key="MouseDownAnimation" TargetName="Icon" TargetProperty="(Image.Opacity)">
-                        <DoubleAnimation To="0.5" Duration="0:0:0.25">
-                            <DoubleAnimation.EasingFunction>
-                                <SineEase></SineEase>
-                            </DoubleAnimation.EasingFunction>
-                        </DoubleAnimation>
-                    </Storyboard>
-                    <Storyboard x:Key="MouseUpAnimation" TargetName="Icon" TargetProperty="(Image.Opacity)">
-                        <DoubleAnimation To="1" Duration="0:0:0.25">
-                            <DoubleAnimation.EasingFunction>
-                                <SineEase></SineEase>
-                            </DoubleAnimation.EasingFunction>
-                        </DoubleAnimation>
-                    </Storyboard>
-                </Image.Resources>
-                <Image.Triggers>
-                    <EventTrigger RoutedEvent="Image.MouseLeftButtonDown">
-                        <BeginStoryboard Storyboard="{StaticResource MouseDownAnimation}"/>
-                    </EventTrigger>
-                    <EventTrigger RoutedEvent="Image.MouseRightButtonDown">
-                        <BeginStoryboard Storyboard="{StaticResource MouseDownAnimation}"/>
-                    </EventTrigger>
-                    <EventTrigger RoutedEvent="Image.MouseRightButtonUp">
-                        <BeginStoryboard Storyboard="{StaticResource MouseUpAnimation}"/>
-                    </EventTrigger>
-                    <EventTrigger RoutedEvent="Image.MouseLeftButtonUp">
-                        <BeginStoryboard Storyboard="{StaticResource MouseUpAnimation}"/>
-                    </EventTrigger>
-                    <EventTrigger RoutedEvent="Image.MouseLeave">
-                        <BeginStoryboard Storyboard="{StaticResource MouseUpAnimation}"/>
-                    </EventTrigger>
-                </Image.Triggers>
-            </Image>
+            <Grid Margin="5" Width="{Binding Size}" Height="{Binding Size}">
+                <Border Margin="{Binding MaskMargin}" CornerRadius="{Binding MaskCornerRadius}" Background="{Binding MaskBackground}">
+                    <Grid>
+                        <Image RenderOptions.EdgeMode="Aliased" RenderOptions.BitmapScalingMode="HighQuality" Margin="{Binding MaskPadding}" x:Name="Icon" Source="{Binding Source}">
+                            <Image.Resources>
+                                <Storyboard x:Key="MouseDownAnimation" TargetName="Icon" TargetProperty="(Image.Opacity)">
+                                    <DoubleAnimation To="0.5" Duration="0:0:0.25">
+                                        <DoubleAnimation.EasingFunction>
+                                            <SineEase></SineEase>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                                <Storyboard x:Key="MouseUpAnimation" TargetName="Icon" TargetProperty="(Image.Opacity)">
+                                    <DoubleAnimation To="1" Duration="0:0:0.25">
+                                        <DoubleAnimation.EasingFunction>
+                                            <SineEase></SineEase>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                            </Image.Resources>
+                            <Image.Triggers>
+                                <EventTrigger RoutedEvent="Image.MouseLeftButtonDown">
+                                    <BeginStoryboard Storyboard="{StaticResource MouseDownAnimation}"/>
+                                </EventTrigger>
+                                <EventTrigger RoutedEvent="Image.MouseRightButtonDown">
+                                    <BeginStoryboard Storyboard="{StaticResource MouseDownAnimation}"/>
+                                </EventTrigger>
+                                <EventTrigger RoutedEvent="Image.MouseRightButtonUp">
+                                    <BeginStoryboard Storyboard="{StaticResource MouseUpAnimation}"/>
+                                </EventTrigger>
+                                <EventTrigger RoutedEvent="Image.MouseLeftButtonUp">
+                                    <BeginStoryboard Storyboard="{StaticResource MouseUpAnimation}"/>
+                                </EventTrigger>
+                                <EventTrigger RoutedEvent="Image.MouseLeave">
+                                    <BeginStoryboard Storyboard="{StaticResource MouseUpAnimation}"/>
+                                </EventTrigger>
+                            </Image.Triggers>
+                        </Image>
+                    </Grid>
+                </Border>
+
+            </Grid>
+            
             <StackPanel Height="10"  VerticalAlignment="Center" HorizontalAlignment="Center">
                 <Border VerticalAlignment="Center" x:Name="HighlightDot" Opacity="0" Width="5" Height="5" Background="White" CornerRadius="100">
                     <Border.Effect>

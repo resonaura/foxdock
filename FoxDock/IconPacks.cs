@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml.Serialization;
 
@@ -14,42 +15,84 @@ namespace FoxDock
     {
         public string Title;
         public string Author;
+        public int MaskCornerRadius;
+        public double MaskPadding;
+        public double MaskMargin;
+        public int MaskBackgroundA;
+        public int MaskBackgroundR;
+        public int MaskBackgroundG;
+        public int MaskBackgroundB;
     }
     public class IconPack
     {
+        public int MaskCornerRadius;
+        public double MaskPadding;
+        public double MaskMargin;
+        public Brush MaskBackground;
         public string name;
         public string author;
-        public BitmapSource ExplorerIcon = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.explorer));
-        public BitmapSource TrashFull = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.trashbin_full));
-        public BitmapSource TrashEmpty = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.trashbin_empty));
-        public BitmapSource Recent = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.recent));
-        public BitmapSource FileDocument = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.file_document));
-        public BitmapSource FileImage = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.file_image));
-        public BitmapSource FileMusic = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.file_music));
-        public BitmapSource FileVideo = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.file_video));
-        public BitmapSource Documents = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.documents));
-        public BitmapSource Images = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.images));
-        public BitmapSource Music = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.music));
-        public BitmapSource Videos = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.videos));
-        public BitmapSource Folder = IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.folder));
-        public IDictionary<string, BitmapSource> apps = new Dictionary<string, BitmapSource>();
-        public IDictionary<string, BitmapSource> ext = new Dictionary<string, BitmapSource>();
+        public string ExplorerIcon = "Default.Explorer";
+        public string TrashFull = "Default.TrashFull";
+        public string TrashEmpty = "Default.TrashEmpty";
+        public string Recent = "Default.Recent";
+        public string BulbOn = "Default.BulbOn";
+        public string BulbOff = "Default.BulbOff";
+        public string FileDocument = "Default.File.Document";
+        public string FileImage = "Default.File.Image";
+        public string FileMusic = "Default.File.Music";
+        public string FileVideo = "Default.File.Video";
+        public string Documents = "Default.Documents";
+        public string Images = "Default.Images";
+        public string Music = "Default.Music";
+        public string Videos = "Default.Videos";
+        public string Folder = "Default.Folder";
+
+        public IDictionary<string, string> apps = new Dictionary<string, string>();
+        public IDictionary<string, string> ext = new Dictionary<string, string>();
     }
     class IconPacks
     {
         private static readonly string appPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
         private static readonly string iconPacksFolder = appPath + "\\IconPack";
         private static readonly List<IconPack> iconPacks = new List<IconPack>();
-        public static void Init()
+        public static void Init(bool onstartup = false, string startuppackname = "")
         {
             if (!Directory.Exists(iconPacksFolder))
             {
                 Directory.CreateDirectory(iconPacksFolder);
             }
 
-            UpdatePacks();
+            UpdatePacks(onstartup, startuppackname);
         }
-        public static void UpdatePacks()
+        public static BitmapSource GetIconFromPath(string path)
+        {
+            switch(path) {
+                case "Default.Explorer":
+                    return IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.explorer));
+                case "Default.TrashFull":
+                    return IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.trashbin_full));
+                case "Default.TrashEmpty":
+                    return IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.trashbin_empty));
+                case "Default.Recent":
+                    return IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.recent));
+                case "Default.BulbOn":
+                    return IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.smarthome_bulb_on));
+                case "Default.BulbOff":
+                    return IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.smarthome_bulb_off));
+                case "Default.File.Document":
+                    return IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.file_document));
+                case "Default.File.Image":
+                    return IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.file_image));
+                case "Default.File.Music":
+                    return IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.file_music));
+                case "Default.File.Videos":
+                    return IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.file_video));
+                case "Default.Folder":
+                    return IconsWorker.GetSourceFromBitmap(IconsWorker.Optimize(FoxDock.Properties.Resources.folder));
+            }
+            return IconsWorker.SafeBitmapSourceFromPath(path);
+        }
+        public static void UpdatePacks(bool onstartup = false, string startuppackname = "")
         {
             if (Directory.Exists(iconPacksFolder))
             {
@@ -65,7 +108,7 @@ namespace FoxDock
                         IconPackManifest manifest = new IconPackManifest();
 
                         string manifestFile = folder + "\\manifest.xml";
-                        if(File.Exists(manifestFile))
+                        if (File.Exists(manifestFile))
                         {
                             //Вызываем сериалайзер
                             XmlSerializer serializer = new XmlSerializer(typeof(IconPackManifest));
@@ -80,14 +123,12 @@ namespace FoxDock
                                     text = streamReader.ReadToEnd();
                                 }
 
-                                using (Stream reader = new FileStream(manifestFile, FileMode.Open))
+                                using Stream reader = new FileStream(manifestFile, FileMode.Open);
+                                //Если есть кодовое слово в начале
+                                if (reader != null && text.Contains("<IconPackManifest xmlns"))
                                 {
-                                    //Если есть кодовое слово в начале
-                                    if (reader != null && text.Contains("<IconPackManifest xmlns"))
-                                    {
-                                        //Десириализируем манифест
-                                        manifest = (IconPackManifest)serializer.Deserialize(reader);
-                                    }
+                                    //Десириализируем манифест
+                                    manifest = (IconPackManifest)serializer.Deserialize(reader);
                                 }
                             }
                             catch
@@ -99,7 +140,8 @@ namespace FoxDock
                         if (manifest.Title != null)
                         {
                             iconPack.name = manifest.Title;
-                        } else
+                        }
+                        else
                         {
                             iconPack.name = new DirectoryInfo(folder).Name;
                         }
@@ -111,66 +153,77 @@ namespace FoxDock
                         {
                             iconPack.author = "Unknown";
                         }
-
-                        string systemFolder = folder + "\\System";
-                        if (Directory.Exists(systemFolder))
+                        iconPack.MaskCornerRadius = manifest.MaskCornerRadius;
+                        iconPack.MaskPadding = manifest.MaskPadding;
+                        iconPack.MaskMargin = manifest.MaskMargin;
+                        iconPack.MaskBackground = new SolidColorBrush(Color.FromArgb((byte)manifest.MaskBackgroundA, (byte)manifest.MaskBackgroundR, (byte)manifest.MaskBackgroundG, (byte)manifest.MaskBackgroundB));
+                        if (!onstartup || onstartup && startuppackname == manifest.Title)
                         {
-                            string explorerIconPath = systemFolder + "\\explorer.png";
-                            string trashFullIconPath = systemFolder + "\\trashbin-full.png";
-                            string trashEmptyIconPath = systemFolder + "\\trashbin-empty.png";
-                            string recentIconPath = systemFolder + "\\recent.png";
-                            string fileDocumentIconPath = systemFolder + "\\file_document.png";
-                            string fileImageIconPath = systemFolder + "\\file_image.png";
-                            string fileMusicIconPath = systemFolder + "\\file_music.png";
-                            string fileVideoIconPath = systemFolder + "\\file_video.png";
-                            string documentsIconPath = systemFolder + "\\documents.png";
-                            string imagesIconPath = systemFolder + "\\images.png";
-                            string musicIconPath = systemFolder + "\\music.png";
-                            string videosIconPath = systemFolder + "\\videos.png";
-                            string folderIconPath = systemFolder + "\\folder.png";
-
-                            if (File.Exists(explorerIconPath)) iconPack.ExplorerIcon = IconsWorker.SafeBitmapSourceFromPath(explorerIconPath);
-                            if (File.Exists(trashFullIconPath)) iconPack.TrashFull = IconsWorker.SafeBitmapSourceFromPath(trashFullIconPath);
-                            if (File.Exists(trashEmptyIconPath)) iconPack.TrashEmpty = IconsWorker.SafeBitmapSourceFromPath(trashEmptyIconPath);
-                            if (File.Exists(recentIconPath)) iconPack.Recent = IconsWorker.SafeBitmapSourceFromPath(recentIconPath);
-                            if (File.Exists(fileDocumentIconPath)) iconPack.FileDocument = IconsWorker.SafeBitmapSourceFromPath(fileDocumentIconPath);
-                            if (File.Exists(fileImageIconPath)) iconPack.FileImage = IconsWorker.SafeBitmapSourceFromPath(fileImageIconPath);
-                            if (File.Exists(fileMusicIconPath)) iconPack.FileMusic = IconsWorker.SafeBitmapSourceFromPath(fileMusicIconPath);
-                            if (File.Exists(fileVideoIconPath)) iconPack.FileVideo = IconsWorker.SafeBitmapSourceFromPath(fileVideoIconPath);
-                            if (File.Exists(documentsIconPath)) iconPack.Documents = IconsWorker.SafeBitmapSourceFromPath(documentsIconPath);
-                            if (File.Exists(imagesIconPath)) iconPack.Images = IconsWorker.SafeBitmapSourceFromPath(imagesIconPath);
-                            if (File.Exists(musicIconPath)) iconPack.Music = IconsWorker.SafeBitmapSourceFromPath(musicIconPath);
-                            if (File.Exists(videosIconPath)) iconPack.Videos = IconsWorker.SafeBitmapSourceFromPath(videosIconPath);
-                            if (File.Exists(folderIconPath)) iconPack.Folder = IconsWorker.SafeBitmapSourceFromPath(folderIconPath);
-                        }
-
-                        string appsFolder = folder + "\\Apps";
-                        if (Directory.Exists(appsFolder))
-                        {
-                            List<string> appsIcons = Directory.EnumerateFiles(appsFolder).ToList();
-                            if(appsIcons.Count > 0)
+                            string systemFolder = folder + "\\System";
+                            if (Directory.Exists(systemFolder))
                             {
-                                foreach(string appIcon in appsIcons)
-                                {
-                                    iconPack.apps.Add(Path.GetFileNameWithoutExtension(appIcon), IconsWorker.SafeBitmapSourceFromPath(appIcon));
-                                } 
+                                string explorerIconPath = systemFolder + "\\explorer.png";
+                                string trashFullIconPath = systemFolder + "\\trashbin-full.png";
+                                string trashEmptyIconPath = systemFolder + "\\trashbin-empty.png";
+                                string recentIconPath = systemFolder + "\\recent.png";
+                                string fileDocumentIconPath = systemFolder + "\\file_document.png";
+                                string fileImageIconPath = systemFolder + "\\file_image.png";
+                                string fileMusicIconPath = systemFolder + "\\file_music.png";
+                                string fileVideoIconPath = systemFolder + "\\file_video.png";
+                                string documentsIconPath = systemFolder + "\\documents.png";
+                                string imagesIconPath = systemFolder + "\\images.png";
+                                string musicIconPath = systemFolder + "\\music.png";
+                                string videosIconPath = systemFolder + "\\videos.png";
+                                string folderIconPath = systemFolder + "\\folder.png";
+
+                                if (File.Exists(explorerIconPath)) iconPack.ExplorerIcon = explorerIconPath;
+                                if (File.Exists(trashFullIconPath)) iconPack.TrashFull = trashFullIconPath;
+                                if (File.Exists(trashEmptyIconPath)) iconPack.TrashEmpty = trashEmptyIconPath;
+                                if (File.Exists(recentIconPath)) iconPack.Recent = recentIconPath;
+                                if (File.Exists(fileDocumentIconPath)) iconPack.FileDocument = fileDocumentIconPath;
+                                if (File.Exists(fileImageIconPath)) iconPack.FileImage = fileImageIconPath;
+                                if (File.Exists(fileMusicIconPath)) iconPack.FileMusic = fileMusicIconPath;
+                                if (File.Exists(fileVideoIconPath)) iconPack.FileVideo = fileVideoIconPath;
+                                if (File.Exists(documentsIconPath)) iconPack.Documents = documentsIconPath;
+                                if (File.Exists(imagesIconPath)) iconPack.Images = imagesIconPath;
+                                if (File.Exists(musicIconPath)) iconPack.Music = musicIconPath;
+                                if (File.Exists(videosIconPath)) iconPack.Videos = videosIconPath;
+                                if (File.Exists(folderIconPath)) iconPack.Folder = folderIconPath;
                             }
-                        }
 
-                        string extFolder = folder + "\\Extensions";
-                        if (Directory.Exists(extFolder))
-                        {
-                            List<string> extIcons = Directory.EnumerateFiles(extFolder).ToList();
-                            if (extIcons.Count > 0)
+                            string appsFolder = folder + "\\Apps";
+                            if (Directory.Exists(appsFolder))
                             {
-                                foreach (string extIcon in extIcons)
+                                List<string> appsIcons = Directory.EnumerateFiles(appsFolder).ToList();
+                                if (appsIcons.Count > 0)
                                 {
-                                    string ext = Path.GetFileNameWithoutExtension(extIcon);
-                                    iconPack.ext.Add(ext, IconsWorker.SafeBitmapSourceFromPath(extIcon));
+                                    foreach (string appIcon in appsIcons)
+                                    {
+                                        iconPack.apps.Add(Path.GetFileNameWithoutExtension(appIcon), appIcon);
+                                    }
                                 }
                             }
+
+                            string extFolder = folder + "\\Extensions";
+                            if (Directory.Exists(extFolder))
+                            {
+                                List<string> extIcons = Directory.EnumerateFiles(extFolder).ToList();
+                                if (extIcons.Count > 0)
+                                {
+                                    foreach (string extIcon in extIcons)
+                                    {
+                                        string ext = Path.GetFileNameWithoutExtension(extIcon);
+                                        iconPack.ext.Add(ext, extIcon);
+                                    }
+                                }
+                            }
+                            iconPacks.Add(iconPack);
+
+                            if(onstartup)
+                            {
+                                break;
+                            }
                         }
-                        iconPacks.Add(iconPack);
                     }
                 }
                 

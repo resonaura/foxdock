@@ -163,6 +163,26 @@ namespace FoxDock.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap smarthome_bulb_off {
+            get {
+                object obj = ResourceManager.GetObject("smarthome_bulb_off", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap smarthome_bulb_on {
+            get {
+                object obj = ResourceManager.GetObject("smarthome_bulb_on", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap trashbin_empty {
             get {
                 object obj = ResourceManager.GetObject("trashbin_empty", resourceCulture);

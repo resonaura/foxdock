@@ -136,7 +136,7 @@ namespace FoxDock
             }
 
             //Проходимся по всем основным иконкам и виджетам
-            foreach (DockIcon ic in IconsWorker.GetCombined(dock.MainPanel.Children, dock.AIcons.Children))
+            foreach (DockIcon ic in IconsWorker.GetIcons(dock.DockIcons))
             {
                 ic.HighlightColor = hcolor; //Задаём цвет
             }
