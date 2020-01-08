@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -162,8 +164,6 @@ namespace FoxDock
         {
             InitializeComponent();
             this.Title = AppLanguage.GetDialogByLocale(AppLanguage.Dialog.RecentFiles, locale);
-            this.Top = -1000;
-            this.Left = -1000;
             Dock.cache = CacheOperations.LoadCache(Dock.cache);
             window = w;
             //WindowAPI.SendToTop(w);
@@ -209,52 +209,69 @@ namespace FoxDock
             IsClosed = false;
             Loaded += (a, b) =>
             {
-                string path = Environment.GetFolderPath(Environment.SpecialFolder.Recent);
-                DirectoryInfo d = new DirectoryInfo(path);
-                IOrderedEnumerable<FileInfo> Files = d.GetFiles().OrderByDescending(f => f.LastWriteTime);
-
-                int limit = 6;
-                int x = 0;
-                foreach (FileInfo file in Files)
+                Task.Factory.StartNew(() =>
                 {
-                    if (x < limit)
+                    string path = Environment.GetFolderPath(Environment.SpecialFolder.Recent);
+                    DirectoryInfo d = new DirectoryInfo(path);
+                    IOrderedEnumerable<FileInfo> Files = d.GetFiles().OrderByDescending(f => f.LastWriteTime);
+
+                    int limit = 6;
+                    int x = 0;
+                    foreach (FileInfo file in Files)
                     {
-                        string truepath = FileTools.GetRealAppPath(file.FullName);
-                        if (File.Exists(truepath) || Directory.Exists(truepath))
+                        if (x < limit)
                         {
-                            FileInfo fileInfo = new FileInfo(truepath);
-                            string shortfilename = fileInfo.Name;
-                            if (shortfilename == "")
+                            string truepath = FileTools.GetRealAppPath(file.FullName);
+                            if (File.Exists(truepath) || Directory.Exists(truepath))
                             {
-                                shortfilename = fileInfo.FullName;
+                                FileInfo fileInfo = new FileInfo(truepath);
+                                string shortfilename = fileInfo.Name;
+                                if (shortfilename == "")
+                                {
+                                    shortfilename = fileInfo.FullName;
+                                }
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    AddNew(shortfilename, IconsWorker.SourceFromPath(truepath, window.iPack).Values.First(), truepath);
+                                });
+                            }
+                            else
+                            {
+                                x--;
                             }
 
-                            AddNew(shortfilename, IconsWorker.SourceFromPath(truepath, window.iPack).Values.First(), truepath);
-                        }
-                        else
-                        {
-                            x--;
                         }
 
+                        x++;
                     }
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        AddNew(AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenInExplorer, Dock.locale), IconPacks.GetIconFromPath(window.iPack.ExplorerIcon), "explorer");
+                        
+                        TranslateTransform offsetTransform = new TranslateTransform();
+                        DoubleAnimation anim = new DoubleAnimation
+                        {
+                            From = 30,
+                            To = 0,
+                            Duration = TimeSpan.FromMilliseconds(200),
+                            EasingFunction = new QuarticEase()
+                        };
+                        offsetTransform.BeginAnimation(TranslateTransform.YProperty, anim);
+                        MainD.RenderTransform = offsetTransform;
+                        MainD.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(0, 1));
 
-                    x++;
-                }
-                AddNew(AppLanguage.GetDialogByLocale(AppLanguage.Dialog.OpenInExplorer, Dock.locale), IconPacks.GetIconFromPath(window.iPack.ExplorerIcon), "explorer");
+                        double x = API.WindowsManager.GetMousePosition().X / window.dpiX; //Получаем положение мыши по X
+                        Width = container.ActualWidth + 50;
+                        Height = container.ActualHeight + 60;
+                        Left = x - Width / 2;
+                        Top = window.Top - Height - 10;
+                        API.Acryl.EnableBlur(this);
+                    });
+                });
+                
+                
 
-                TranslateTransform offsetTransform = new TranslateTransform();
-                DoubleAnimation anim = new DoubleAnimation
-                {
-                    From = 30,
-                    To = 0,
-                    Duration = TimeSpan.FromMilliseconds(200),
-                    EasingFunction = new QuarticEase()
-                };
-                offsetTransform.BeginAnimation(TranslateTransform.YProperty, anim);
-                MainD.RenderTransform = offsetTransform;
-                MainD.BeginAnimation(Grid.OpacityProperty, Animations.SingleAnimation(0, 1));
-
-                API.Acryl.EnableBlur(this);
+                
             };
         }
 

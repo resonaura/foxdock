@@ -37,7 +37,7 @@ namespace FoxDock
         public static bool lock_slider = true;
         private readonly bool isInitedAS = false;
         private readonly int taskbar_g = 0;
-        private double dpiX = 1;
+        public double dpiX = 1;
         private double dpiY = 1;
         public static int defsize = 53;
         public int size = (int)(defsize * cache.scaleFactor);
@@ -2290,11 +2290,6 @@ namespace FoxDock
                 recentFiles.Show();
                 API.WindowsManager.SetForegroundWindow(new WindowInteropHelper(recentFiles).Handle);
                 RecentIcon.Highlight = true;
-                double x = API.WindowsManager.GetMousePosition().X / dpiX; //Получаем положение мыши по X
-                recentFiles.Width = recentFiles.container.ActualWidth + 50;
-                recentFiles.Height = recentFiles.container.ActualHeight + 60;
-                recentFiles.Left = x - recentFiles.Width/2;
-                recentFiles.Top = this.Top - recentFiles.Height - 10;
             }
         }
 
