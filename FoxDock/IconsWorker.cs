@@ -187,8 +187,9 @@ namespace FoxDock
             }
             return null;
         }
-        public static void UpdateDockIcons(Dock dock, int index = -1)
+        public static void UpdateDockIcons(DockWindow dock, int index = -1)
         {
+            /*
             if(dock.MainPanel.Children.Count > 0)
             {
                 int i = 0;
@@ -196,18 +197,18 @@ namespace FoxDock
                 {
                     if(index == -1 || (index != -1 && i == index))
                     {
-                        if (i < Dock.cache.dock_apps_path.Count)
+                        if (i < DockWindow.cache.dock_apps_path.Count)
                         {
                             icon.Source.Freeze();
-                            Dictionary<bool, BitmapSource> d = SourceFromPath(Dock.cache.dock_apps_path[i], dock.iPack);
+                            Dictionary<bool, BitmapSource> d = SourceFromPath(DockWindow.cache.dock_apps_path[i], dock.iPack);
                             icon.Source = d.Values.First();
                             bool maskneeded = d.Keys.First();
                             if(maskneeded)
                             {
                                 icon.MaskCornerRadius = dock.iPack.MaskCornerRadius;
                                 icon.MaskBackground = dock.iPack.MaskBackground;
-                                icon.MaskPadding = dock.iPack.MaskPadding * dock.size / Dock.defsize;
-                                icon.MaskMargin = dock.iPack.MaskMargin * dock.size / Dock.defsize;
+                                icon.MaskPadding = dock.iPack.MaskPadding * dock.size / DockWindow.defsize;
+                                icon.MaskMargin = dock.iPack.MaskMargin * dock.size / DockWindow.defsize;
                             } else
                             {
                                 icon.MaskCornerRadius = 0;
@@ -221,6 +222,7 @@ namespace FoxDock
                     i++;
                 }
             }
+            */
         }
         /// <summary>
         /// Функция получения значка по пути
@@ -424,11 +426,11 @@ namespace FoxDock
         /// <summary>
         /// Локика рыбьего глаза для значков
         /// </summary>
-        /// <param name="x">Смещение</param>
-        public static void FishEye(double x, Dock dock, List<DockIcon> combined)
+        /*/// <param name="x">Смещение</param>
+        public static void FishEye(double x, DockWindow dock, List<DockIcon> combined)
         {
             int width = (int)(dock.Width);
-            int eye_size = 300;
+            int eye_size = 50;
 
             double max_s = 0;
             int max_i = 0;
@@ -443,7 +445,7 @@ namespace FoxDock
                         ic_start_x += (int)dock.Margin.Left;
 
 
-                        double zoom = 0.2;
+                        double zoom = 0.3;
                         double newsize = dock.size * (1 + zoom * FishEyeCalc(ic_start_x, x - (dock.size * 1 + zoom) / 2, eye_size));
 
                         if (newsize > max_s)
@@ -491,7 +493,7 @@ namespace FoxDock
                 }
             }
         }
-        
+        */
         public static List<DockIcon> GetIcons(StackPanel DockIcons)
         {
             List<DockIcon> combined = new List<DockIcon>();

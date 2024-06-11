@@ -1,0 +1,56 @@
+﻿<UserControl x:Class="FoxDock.RecentFilesItem"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:FoxDock"
+             mc:Ignorable="d" 
+              Foreground="White" Cursor="Hand" MinWidth="300" MaxWidth="600" Height="70">
+    <UserControl.Resources>
+        <ResourceDictionary Source="Styles/RecentFilesStyles.xaml" />
+    </UserControl.Resources>
+    <Border Name="MainBorder" CornerRadius="10">
+        <Border.Background>
+            <SolidColorBrush Color="White" Opacity="0"></SolidColorBrush>
+        </Border.Background>
+        <Border.Triggers>
+            <EventTrigger RoutedEvent="Border.MouseEnter">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation To=".1" 
+                                    Storyboard.TargetProperty="(Button.Background).(SolidColorBrush.Opacity)" 
+                                    FillBehavior="HoldEnd" 
+                                    Duration="0:0:0.1">
+                            <DoubleAnimation.EasingFunction>
+                                <SineEase></SineEase>
+                            </DoubleAnimation.EasingFunction>
+                        </DoubleAnimation>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+            <EventTrigger RoutedEvent="Border.MouseLeave">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation To="0" 
+                                    Storyboard.TargetProperty="(Button.Background).(SolidColorBrush.Opacity)" 
+                                    FillBehavior="HoldEnd" 
+                                    Duration="0:0:0.1">
+                            <DoubleAnimation.EasingFunction>
+                                <SineEase></SineEase>
+                            </DoubleAnimation.EasingFunction>
+                        </DoubleAnimation>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Border.Triggers>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="70"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Image x:Name="Icon" Width="56" Height="56" Grid.Column="0"></Image>
+            <Label HorizontalAlignment="Left" MaxWidth="600" Height="25" Margin="10, 10, 10, 10" Padding="10, 5, 10, 5" Content=""  Name="FileLabel" Style="{StaticResource CoolLabel}" Grid.Column="1"></Label>
+        </Grid>
+    </Border>
+    
+</UserControl>

@@ -51,10 +51,10 @@ namespace FoxDock
             {
                 if (value != "0" && NotifyCounter.Opacity == 0)
                 {
-                    NotifyCounter.BeginAnimation(OpacityProperty, Animations.SingleAnimation(NotifyCounter.Opacity, 1, .3));
+                    //NotifyCounter.BeginAnimation(OpacityProperty, Animations.SingleAnimation(NotifyCounter.Opacity, 1, .3));
                 } else if(value == "0" && NotifyCounter.Opacity == 1)
                 {
-                    NotifyCounter.BeginAnimation(OpacityProperty, Animations.SingleAnimation(NotifyCounter.Opacity, 0, .3));
+                    //NotifyCounter.BeginAnimation(OpacityProperty, Animations.SingleAnimation(NotifyCounter.Opacity, 0, .3));
                 }
                 NotifyLabel.Content = value;
                 SetValue(NotifyCountProperty, value);

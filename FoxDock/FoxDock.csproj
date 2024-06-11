@@ -153,7 +153,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Animations.cs" />
     <Compile Include="API\FileAssociation.cs" />
     <Compile Include="API\GDI32.cs" />
     <Compile Include="API\Shell32.cs" />
@@ -164,7 +163,9 @@
     <Compile Include="BrushAnimation.cs" />
     <Compile Include="Cache.cs" />
     <Compile Include="CacheOperations.cs" />
-    <Compile Include="ContextMenuTools.cs" />
+    <Compile Include="Dock.xaml.cs">
+      <DependentUpon>Dock.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DockIcon.xaml.cs">
       <DependentUpon>DockIcon.xaml</DependentUpon>
     </Compile>
@@ -187,11 +188,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="RecentFiles.xaml.cs">
-      <DependentUpon>RecentFiles.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Settings.xaml.cs">
-      <DependentUpon>Settings.xaml</DependentUpon>
+    <Compile Include="RecentFilesItem.xaml.cs">
+      <DependentUpon>RecentFilesItem.xaml</DependentUpon>
     </Compile>
     <Compile Include="Spinner.xaml.cs">
       <DependentUpon>Spinner.xaml</DependentUpon>
@@ -199,15 +197,16 @@
     <Compile Include="Tooltip.xaml.cs">
       <DependentUpon>Tooltip.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Dialog.xaml.cs">
-      <DependentUpon>Dialog.xaml</DependentUpon>
-    </Compile>
     <Compile Include="API\WindowsManager.cs" />
+    <Page Include="Dock.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="DockIcon.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Dock.xaml">
+    <Page Include="DockWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -217,8 +216,8 @@
     </Compile>
     <Compile Include="API\Acryl.cs" />
     <Compile Include="API\Win32.cs" />
-    <Compile Include="Dock.xaml.cs">
-      <DependentUpon>Dock.xaml</DependentUpon>
+    <Compile Include="DockWindow.xaml.cs">
+      <DependentUpon>DockWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Page Include="DockSeparator.xaml">
@@ -233,11 +232,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="RecentFiles.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Settings.xaml">
+    <Page Include="RecentFilesItem.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -262,10 +257,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Tooltip.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Dialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

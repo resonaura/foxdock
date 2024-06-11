@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<IconPackManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Title>Shirae Color</Title>
+  <Author></Author>
+  <MaskCornerRadius>15</MaskCornerRadius>
+  <MaskPadding>10</MaskPadding>
+  <MaskMargin>0</MaskMargin>
+  <MaskBackgroundA>20</MaskBackgroundA>
+  <MaskBackgroundR>255</MaskBackgroundR>
+  <MaskBackgroundG>255</MaskBackgroundG>
+  <MaskBackgroundB>255</MaskBackgroundB>
+</IconPackManifest>

@@ -1,15 +1,15 @@
-﻿<Window x:Class="FoxDock.Dock"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:fw="clr-namespace:SourceChord.FluentWPF;assembly=FluentWPF"
-        xmlns:local="clr-namespace:FoxDock"
-        mc:Ignorable="d"
-        Title="FoxDock" MouseDown="Window_MouseDown" Activated="DockMain_Activated" MouseMove="Dock_MouseMove" Topmost="True" SizeChanged="Window_SizeChanged" MouseEnter="Dock_MouseEnter" MouseLeave="Dock_MouseLeave" DragEnter="Main_Drop_Enter" DragLeave="Window_DragLeave" Drop="Main_Drop" AllowDrop="True" Height="80" ShowInTaskbar="False" ResizeMode="NoResize" WindowStyle="None" AllowsTransparency="True" Background="Transparent" Icon="icon.ico" WindowStartupLocation="Manual" Top="-100" Name="DockMain">
-    <Window.Resources>
+﻿<UserControl x:Class="FoxDock.Dock"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:FoxDock"
+             xmlns:fw="clr-namespace:SourceChord.FluentWPF;assembly=FluentWPF"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800" Height="80" Name="DockMain">
+    <UserControl.Resources>
         <ResourceDictionary Source="Styles/DockStyles.xaml" />
-    </Window.Resources>
+    </UserControl.Resources>
     <Grid HorizontalAlignment="Center">
         <Grid.ContextMenu>
             <ContextMenu ItemTemplate="{StaticResource MenuItemStyle}" Margin="20" Style="{StaticResource DarkContextMenu}" Name="MainContextMenu">
@@ -17,44 +17,44 @@
                     <DropShadowEffect Direction="271" BlurRadius="20" Opacity="0.5">
                     </DropShadowEffect>
                 </ContextMenu.Effect>
-                <MenuItem CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Parent}" Click="CloseSomeAppButton_Click"  Name="CloseSomeAppButton" Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Close">
+                <MenuItem CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Parent}"  Name="CloseSomeAppButton" Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Close">
                     <MenuItem.Icon>
                         <TextBlock VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" Text="&#xE8BB;" FontSize="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Parent}" Click="OpenNewButton_Click"  Name="OpenNewButton" Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Open new">
+                <MenuItem CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Parent}" Name="OpenNewButton" Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Open new">
                     <MenuItem.Icon>
                         <TextBlock x:Name="SampleMenuIcon" VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" Text="&#xE8A7;" FontSize="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Parent}"  Click="RenameButton_Click"  Name="RenameButton" Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Rename icon">
+                <MenuItem CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Parent}"  Name="RenameButton" Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Rename icon">
                     <MenuItem.Icon>
                         <TextBlock VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" Text="&#xE8AC;" FontSize="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Parent}"  Click="RemoveFromDockButton_Click" Name="RemoveFromDockButton" Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Remove from Dock">
+                <MenuItem CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Parent}" Name="RemoveFromDockButton" Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Remove from Dock">
                     <MenuItem.Icon>
                         <TextBlock VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" Text="&#xECC9;" FontSize="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator Margin="5" Opacity=".2" Background="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Height="2"></Separator>
-                <MenuItem Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Lock Dock" Name="LockDockButton" Click="LockDockButton_Click">
+                <MenuItem Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Lock Dock" Name="LockDockButton">
                     <MenuItem.Icon>
                         <TextBlock VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" Name="LockDockIcon" Text="&#xE72E;" FontSize="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator Margin="5" Opacity=".2" Background="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Height="2"></Separator>
-                <MenuItem Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Dock settings" Name="SettingsButton" Click="SettingsButton_Click">
+                <MenuItem Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}"  Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Dock settings" Name="SettingsButton">
                     <MenuItem.Icon>
                         <TextBlock VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" Text="&#xE713;" FontSize="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}" Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Restart Dock" Name="RestartButton" Click="RestartButton_Click">
+                <MenuItem Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}" Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Restart Dock" Name="RestartButton">
                     <MenuItem.Icon>
                         <TextBlock VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" Text="&#xE777;" FontSize="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}" Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Exit" Click="CloseDock_Click" Name="ExitButton">
+                <MenuItem Template="{DynamicResource DarkCoolMenuItem}" Style="{StaticResource DarkMenuItem}" Padding="0, 0, 0, 0" Background="Transparent" Foreground="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ContextMenu}, Path=Foreground}" Header="Exit" Name="ExitButton">
                     <MenuItem.Icon>
                         <TextBlock VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" Text="&#xE7E8;" FontSize="14"/>
                     </MenuItem.Icon>
@@ -64,15 +64,15 @@
         <StackPanel x:Name="StarDust"></StackPanel>
         <StackPanel Name="App_full_bg" Opacity="1">
             <Grid>
-                <Border CornerRadius="5, 5, 0, 0" Background="#fff" Name="WhiteOverlay" Opacity="0.0" Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
-                <Border CornerRadius="5, 5, 0, 0" Background="#000" Name="BlackOverlay" Opacity="0.1" Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
-                <Border CornerRadius="5, 5, 0, 0" Name="App_bg" Opacity="0" Background="{x:Static fw:AccentColors.ImmersiveSystemAccentDark1Brush}"  Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
+                <Border CornerRadius="10, 10, 10, 10" Background="#fff" Name="WhiteOverlay" Opacity="0.0" Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
+                <Border CornerRadius="10, 10, 10, 10" Background="#000" Name="BlackOverlay" Opacity="0.6" Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
+                <Border CornerRadius="10, 10, 10, 10" Name="App_bg" Opacity="0" Background="{x:Static fw:AccentColors.ImmersiveSystemAccentDark1Brush}"  Width="{Binding ActualWidth, ElementName=DockMain}" Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Top"></Border>
             </Grid>
 
         </StackPanel>
-        
 
-        
+
+
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Name="DockIcons" >
             <StackPanel Height="{Binding ActualHeight, ElementName=DockMain}" VerticalAlignment="Bottom" Name="MainPanel" Orientation="Horizontal" HorizontalAlignment="Center">
@@ -80,20 +80,20 @@
 
             </StackPanel>
             <local:DockSeparator x:Name="MainSeparator"></local:DockSeparator>
-            <StackPanel Visibility="Collapsed" VerticalAlignment="Center" Name="SHIcons"></StackPanel>
+            <StackPanel Orientation="Horizontal" Visibility="Collapsed" VerticalAlignment="Center" Name="SHIcons"></StackPanel>
             <local:DockSeparator Visibility="Collapsed" x:Name="SHSeparator"></local:DockSeparator>
             <StackPanel VerticalAlignment="Center" Name="AIcons" HorizontalAlignment="Center" Orientation="Horizontal">
-                <local:DockIcon x:Name="RecentIcon" MouseMove="DockIcon_MouseMove" MouseEnter="DockIcon_MouseEnter" MouseLeave="DockIcon_MouseLeave" Size="56" Label="Recent files" MouseUp="RecentIcon_MouseUp"></local:DockIcon>
-                <local:DockIcon x:Name="ExplorerIcon" MouseMove="DockIcon_MouseMove" MouseEnter="DockIcon_MouseEnter" MouseLeave="DockIcon_MouseLeave" MouseUp="ExplorerIcon_MouseUp" Size="56" Label="Explorer"></local:DockIcon>
-                <local:DockIcon AllowDrop="True" MouseMove="DockIcon_MouseMove" MouseUp="TrashIcon_MouseUp" DragEnter="TrashIcon_DragEnter" Drop="TrashIcon_Drop"  x:Name="TrashIcon" MouseEnter="DockIcon_MouseEnter" MouseLeave="DockIcon_MouseLeave" Size="56" Label="Recycle Bin"></local:DockIcon>
+                <local:DockIcon x:Name="RecentIcon" ></local:DockIcon>
+                <local:DockIcon x:Name="ExplorerIcon"></local:DockIcon>
+                <local:DockIcon AllowDrop="True" x:Name="TrashIcon" Size="56" Label="Recycle Bin"></local:DockIcon>
             </StackPanel>
         </StackPanel>
 
-        <Image MouseDown="Draggable_icon_MouseDown" MouseUp="Draggable_icon_MouseUp"  Name="Draggable_icon" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,0" Width="64" Height="64" >
+        <Image Name="Draggable_icon" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,0" Width="64" Height="64" >
             <Image.Effect>
                 <DropShadowEffect BlurRadius="20" Direction="270" Opacity="0.3"/>
             </Image.Effect>
         </Image>
 
     </Grid>
-</Window>
+</UserControl>

@@ -14,7 +14,7 @@ namespace FoxDock.API
 {
     class WindowsManager
     {
-        public static Dock window = new Dock();
+        public static DockWindow window = new DockWindow();
 
         [DllImport("user32.dll", EntryPoint = "GetWindowText",
         ExactSpelling = false, CharSet = CharSet.Auto, SetLastError = true)]
