@@ -6,6 +6,7 @@
 [![Framework](https://img.shields.io/badge/Framework-.NET%20Framework%204.7.2-512BD4.svg?logo=dotnet&logoColor=white)](FoxDock/FoxDock.csproj)
 [![UI](https://img.shields.io/badge/UI-WPF%20%7C%20FluentWPF%20%7C%20MaterialDesign-blue.svg)](FoxDock)
 [![Status](https://img.shields.io/badge/Status-Historical%20Archive%20(2019--2020)-orange.svg)](#disclaimer--legacy-notice)
+
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/resonaura)
 
 A customizable, macOS-inspired desktop application dock for Windows, built with C# and WPF to bring fluid animations, icon magnification, themeable icon packs, and acrylic blur aesthetics to the Windows desktop.
