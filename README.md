@@ -9,6 +9,11 @@
 
 A customizable, macOS-inspired desktop application dock for Windows, built with C# and WPF to bring fluid animations, icon magnification, themeable icon packs, and acrylic blur aesthetics to the Windows desktop.
 
+
+<p align="center">
+  <img src="media/foxdock-desktop.jpg" width="800" alt="FoxDock Windows Fluent Application Dock" />
+</p>
+
 ---
 
 > [!WARNING]
